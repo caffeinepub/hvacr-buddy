@@ -1,25 +1,29 @@
 # HVACR Buddy
 
 ## Current State
-The Learn route renders a placeholder via `<SectionPage title="Learn" />`. No actual content or navigation exists in the Learn section.
+The Diagnose section has three tools: Symptom-based, Measurement-based, and Field HVAC Assistant. No photo-based diagnostic exists.
 
 ## Requested Changes (Diff)
 
 ### Add
-- `LearnPage.tsx`: Full Learn section with three tabs: Study, Videos, Diagrams
-  - Study tab: 4 topics (HVAC Basics, Electrical Fundamentals, Multimeter Usage, Refrigeration Concepts) with selectable cards that expand to show concise content
-  - Videos tab: 4 categories (EPA 608 Prep, Electrical & Schematics, Refrigerant Diagnostics, HVAC Tools & Procedures) with 2-3 video links per category (YouTube embeds or links)
-  - Diagrams tab: 5 diagrams (Refrigeration Cycle, 24V Control Circuit, Contactor Wiring, Capacitor Wiring, Airflow Diagram) displayed as selectable items with descriptive text/SVG placeholder
+- Photo Diagnostic tool inside the Diagnose section
+- User can take a photo (camera) or upload a photo from device
+- After photo is added, show a component selector with common HVAC parts
+- User selects which components are visible in the photo (pattern-based, manual selection)
+- For each selected component, display: name, what it does, common issues, what to check next
+- Component data for: capacitor, contactor, wiring, refrigerant gauges, evaporator coil
 
 ### Modify
-- `App.tsx`: Update learnRoute to use `LearnPage` instead of `SectionPage`
+- Diagnose section: add Photo Diagnostic as a fourth tool tab/option
 
 ### Remove
-- Nothing removed
+- Nothing
 
 ## Implementation Plan
-1. Create `LearnPage.tsx` with tab navigation (Study / Videos / Diagrams)
-2. Study tab: card list, click to expand with brief educational content
-3. Videos tab: category list, click to see 2-3 curated YouTube links per category
-4. Diagrams tab: list of diagrams, click to view a simple labeled description or inline SVG
-5. Update `App.tsx` learnRoute to import and use `LearnPage`
+1. Create `PhotoDiagnostic` React component
+2. Add camera capture (input type=camera) and file upload (input type=file, accept=image/*)
+3. Show photo preview after capture/upload
+4. Display selectable component chips/buttons for the 5 common HVAC components
+5. On selection, show expandable cards with: name, what it does, common issues, what to check next
+6. Wire into Diagnose section as a new tool option
+7. No backend changes needed -- all logic is frontend only

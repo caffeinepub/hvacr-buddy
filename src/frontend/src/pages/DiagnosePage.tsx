@@ -8,11 +8,16 @@ import { Link } from "@tanstack/react-router";
 import {
   AlertCircle,
   ArrowLeft,
+  Camera,
   CheckCircle2,
+  ChevronRight,
   Search,
+  Upload,
   Wrench,
+  X,
+  Zap,
 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 interface Scenario {
   id: string;
@@ -678,6 +683,287 @@ function FieldAssistantTab() {
   );
 }
 
+// ─── Photo Diagnostic ────────────────────────────────────────────────────────
+
+interface HvacComponent {
+  id: string;
+  name: string;
+  whatItDoes: string;
+  commonIssues: string;
+  checkNext: string;
+}
+
+const HVAC_COMPONENTS: HvacComponent[] = [
+  {
+    id: "capacitor",
+    name: "Capacitor",
+    whatItDoes: "Helps start and run the compressor and fan motors.",
+    commonIssues:
+      "Weak or failed capacitor — causes hard starts, motor humming, or unit not starting.",
+    checkNext:
+      "Test microfarad rating with a multimeter or capacitor tester. Compare to the rated value on the label.",
+  },
+  {
+    id: "contactor",
+    name: "Contactor",
+    whatItDoes: "Controls power flow to the compressor and condenser fan.",
+    commonIssues:
+      "Burnt or pitted contacts, no coil voltage, or contacts stuck open/closed.",
+    checkNext:
+      "Check voltage across the coil (24V). Inspect contacts for pitting or burning. Test continuity when engaged.",
+  },
+  {
+    id: "wiring",
+    name: "Wiring",
+    whatItDoes:
+      "Carries control voltage and line voltage throughout the system.",
+    commonIssues:
+      "Loose connections, broken wires, or burnt insulation causing intermittent faults.",
+    checkNext:
+      "Check continuity with a multimeter. Inspect for loose terminals, corrosion, or heat damage.",
+  },
+  {
+    id: "gauges",
+    name: "Refrigerant Gauges",
+    whatItDoes: "Measure suction and head pressure in the refrigerant circuit.",
+    commonIssues:
+      "Inaccurate readings due to gauge error, Schrader valve leaks, or contaminated hoses.",
+    checkNext:
+      "Zero the gauges before use. Check Schrader cores for leaks. Compare readings to expected pressures for the refrigerant type.",
+  },
+  {
+    id: "evaporator-coil",
+    name: "Evaporator Coil",
+    whatItDoes: "Absorbs heat from the indoor air to cool the space.",
+    commonIssues:
+      "Iced coil from low airflow or low refrigerant. Dirty coil reducing efficiency.",
+    checkNext:
+      "Check for ice buildup. Inspect and replace the air filter. Measure suction pressure and superheat.",
+  },
+];
+
+// accent color per component for visual distinction
+const COMPONENT_ACCENT: Record<string, string> = {
+  capacitor: "text-amber-500",
+  contactor: "text-blue-500",
+  wiring: "text-orange-500",
+  gauges: "text-teal-500",
+  "evaporator-coil": "text-cyan-500",
+};
+
+const COMPONENT_BG: Record<string, string> = {
+  capacitor: "bg-amber-500/10 border-amber-500/30",
+  contactor: "bg-blue-500/10 border-blue-500/30",
+  wiring: "bg-orange-500/10 border-orange-500/30",
+  gauges: "bg-teal-500/10 border-teal-500/30",
+  "evaporator-coil": "bg-cyan-500/10 border-cyan-500/30",
+};
+
+function PhotoDiagnosticTab() {
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
+
+  function handleFile(file: File | undefined) {
+    if (!file) return;
+    if (photoUrl) URL.revokeObjectURL(photoUrl);
+    setPhotoUrl(URL.createObjectURL(file));
+    setSelected(new Set());
+  }
+
+  function handleClear() {
+    if (photoUrl) URL.revokeObjectURL(photoUrl);
+    setPhotoUrl(null);
+    setSelected(new Set());
+  }
+
+  function toggleComponent(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  const selectedComponents = HVAC_COMPONENTS.filter((c) => selected.has(c.id));
+
+  return (
+    <div className="space-y-6">
+      {/* Step 1 — Photo capture/upload */}
+      {!photoUrl ? (
+        <div className="rounded-xl border-2 border-dashed border-border bg-muted/30 p-8 text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center">
+              <Camera className="h-7 w-7 text-muted-foreground" />
+            </div>
+          </div>
+          <div>
+            <p className="font-medium text-foreground">Add a Photo</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Take or upload a photo of the HVAC components you want to inspect.
+            </p>
+          </div>
+          <div className="flex justify-center gap-3 flex-wrap">
+            <Button
+              variant="default"
+              onClick={() => cameraInputRef.current?.click()}
+              className="gap-2"
+              data-ocid="photo_diagnostic.upload_button"
+            >
+              <Camera className="h-4 w-4" />
+              Take Photo
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => uploadInputRef.current?.click()}
+              className="gap-2"
+              data-ocid="photo_diagnostic.upload_button"
+            >
+              <Upload className="h-4 w-4" />
+              Upload Photo
+            </Button>
+          </div>
+          {/* Hidden inputs */}
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => handleFile(e.target.files?.[0])}
+          />
+          <input
+            ref={uploadInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => handleFile(e.target.files?.[0])}
+          />
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {/* Photo preview */}
+          <div className="relative rounded-xl overflow-hidden border border-border">
+            <img
+              src={photoUrl}
+              alt="Uploaded HVAC component"
+              className="w-full max-h-72 object-cover"
+            />
+            <button
+              type="button"
+              onClick={handleClear}
+              className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/90 border border-border flex items-center justify-center hover:bg-background transition-colors"
+              data-ocid="photo_diagnostic.close_button"
+              aria-label="Remove photo"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Step 2 — Component selector */}
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-foreground">
+              Select the components visible in the photo:
+            </p>
+            <div
+              className="flex flex-wrap gap-2"
+              data-ocid="photo_diagnostic.panel"
+            >
+              {HVAC_COMPONENTS.map((comp) => {
+                const isSelected = selected.has(comp.id);
+                return (
+                  <button
+                    key={comp.id}
+                    type="button"
+                    onClick={() => toggleComponent(comp.id)}
+                    className={`px-3 py-1.5 rounded-full border text-sm font-medium transition-all ${
+                      isSelected
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background text-foreground border-border hover:border-primary/50 hover:bg-secondary"
+                    }`}
+                    data-ocid="photo_diagnostic.toggle"
+                  >
+                    {comp.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Step 3 — Analysis results */}
+          {selectedComponents.length > 0 && (
+            <div className="space-y-4 pt-2">
+              <div className="flex items-center gap-2">
+                <Zap className="h-4 w-4 text-primary" />
+                <p className="text-sm font-semibold text-foreground">
+                  Analysis Results
+                </p>
+              </div>
+              {selectedComponents.map((comp, i) => (
+                <Card
+                  key={comp.id}
+                  className={`border ${COMPONENT_BG[comp.id]}`}
+                  data-ocid={`photo_diagnostic.item.${i + 1}`}
+                >
+                  <CardHeader className="pb-3">
+                    <CardTitle
+                      className={`text-base font-semibold flex items-center gap-2 ${COMPONENT_ACCENT[comp.id]}`}
+                    >
+                      <ChevronRight className="h-4 w-4 flex-shrink-0" />
+                      {comp.name}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+                        What It Does
+                      </p>
+                      <p className="text-sm text-foreground">
+                        {comp.whatItDoes}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+                        Common Issues
+                      </p>
+                      <p className="text-sm text-foreground">
+                        {comp.commonIssues}
+                      </p>
+                    </div>
+                    <div className="pt-1 border-t border-border/50">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+                        What to Check Next
+                      </p>
+                      <p className="text-sm text-foreground">
+                        {comp.checkNext}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Prompt if no component selected yet */}
+          {selected.size === 0 && (
+            <p
+              className="text-sm text-muted-foreground text-center py-4"
+              data-ocid="photo_diagnostic.empty_state"
+            >
+              Tap a component above to see its analysis.
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
 export default function DiagnosePage() {
@@ -703,33 +989,43 @@ export default function DiagnosePage() {
           <div>
             <h1 className="text-2xl font-bold text-foreground">Diagnose</h1>
             <p className="text-sm text-muted-foreground">
-              Search by symptom or enter measurements for a quick diagnosis.
+              Search by symptom, measurements, or analyze a photo.
             </p>
           </div>
         </div>
 
         <Tabs defaultValue="symptom" className="w-full">
-          <TabsList className="mb-5 w-full" data-ocid="diagnose.tab">
+          <TabsList
+            className="mb-5 w-full grid grid-cols-4"
+            data-ocid="diagnose.tab"
+          >
             <TabsTrigger
               value="symptom"
-              className="flex-1"
+              className="text-xs px-1"
               data-ocid="diagnose.symptom.tab"
             >
-              Symptom Search
+              Symptom
             </TabsTrigger>
             <TabsTrigger
               value="measurements"
-              className="flex-1"
+              className="text-xs px-1"
               data-ocid="diagnose.measurements.tab"
             >
               Measurements
             </TabsTrigger>
             <TabsTrigger
               value="field-assistant"
-              className="flex-1"
+              className="text-xs px-1"
               data-ocid="diagnose.field_assistant.tab"
             >
-              Field Assistant
+              Field Assist
+            </TabsTrigger>
+            <TabsTrigger
+              value="photo"
+              className="text-xs px-1"
+              data-ocid="diagnose.photo.tab"
+            >
+              📷 Photo
             </TabsTrigger>
           </TabsList>
 
@@ -818,6 +1114,10 @@ export default function DiagnosePage() {
 
           <TabsContent value="field-assistant">
             <FieldAssistantTab />
+          </TabsContent>
+
+          <TabsContent value="photo">
+            <PhotoDiagnosticTab />
           </TabsContent>
         </Tabs>
 
