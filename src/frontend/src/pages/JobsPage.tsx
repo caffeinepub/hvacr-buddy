@@ -1,4 +1,6 @@
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -12,16 +14,32 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  FIELD_SCENARIOS,
+  type FieldAssistantScenario,
+  type MeasurementResult,
+  getMeasurementInsight,
+  matchesFieldQuery,
+  parseMeasurementsText,
+} from "@/utils/assistantLogic";
 import { useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft,
+  BookOpen,
+  Bot,
   Briefcase,
   Camera,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  LayoutDashboard,
   Loader2,
+  PlayCircle,
   Plus,
   Trash2,
   Wind,
   X,
+  Zap,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useRef, useState } from "react";
@@ -35,7 +53,493 @@ import {
   useUpdateJob,
 } from "../hooks/useQueries";
 
-// ---- Job Detail Sheet ----
+// ─── HVAC Component Data (inline for photo analysis) ─────────────────────────
+
+interface HvacComp {
+  id: string;
+  name: string;
+  whatItDoes: string;
+  commonIssues: string;
+  checkNext: string;
+  relatedVideos: string[];
+  relatedStudy: string[];
+  relatedDiagrams: string[];
+}
+
+const HVAC_COMPS: HvacComp[] = [
+  {
+    id: "capacitor",
+    name: "Capacitor",
+    whatItDoes: "Helps start and run the compressor and fan motors.",
+    commonIssues:
+      "Weak or failed capacitor — causes hard starts, motor humming, or unit not starting.",
+    checkNext:
+      "Test microfarad rating with a multimeter. Compare to rated value on label.",
+    relatedVideos: ["Electrical and Schematics"],
+    relatedStudy: ["Electrical Training — Contactors & Relays"],
+    relatedDiagrams: ["Capacitor Wiring"],
+  },
+  {
+    id: "contactor",
+    name: "Contactor",
+    whatItDoes: "Controls power flow to the compressor and condenser fan.",
+    commonIssues:
+      "Burnt or pitted contacts, no coil voltage, or contacts stuck open/closed.",
+    checkNext:
+      "Check voltage across the coil (24V). Inspect contacts for pitting or burning.",
+    relatedVideos: ["Electrical and Schematics"],
+    relatedStudy: ["Electrical Training — Contactors & Relays"],
+    relatedDiagrams: ["Contactor Wiring"],
+  },
+  {
+    id: "wiring",
+    name: "Wiring",
+    whatItDoes:
+      "Carries control voltage and line voltage throughout the system.",
+    commonIssues: "Loose connections, broken wires, or burnt insulation.",
+    checkNext:
+      "Check continuity with a multimeter. Inspect for loose terminals or heat damage.",
+    relatedVideos: ["Electrical and Schematics"],
+    relatedStudy: ["Electrical Training — Multimeter Usage"],
+    relatedDiagrams: ["24V Control Circuit"],
+  },
+  {
+    id: "gauges",
+    name: "Refrigerant Gauges",
+    whatItDoes: "Measure suction and head pressure in the refrigerant circuit.",
+    commonIssues:
+      "Inaccurate readings due to gauge error or Schrader valve leaks.",
+    checkNext:
+      "Zero gauges before use. Check Schrader cores. Compare to expected pressures.",
+    relatedVideos: ["Refrigerant Diagnostics"],
+    relatedStudy: ["HVAC Tools & Procedures — Gauges"],
+    relatedDiagrams: ["Refrigeration Cycle"],
+  },
+  {
+    id: "evaporator-coil",
+    name: "Evaporator Coil",
+    whatItDoes: "Absorbs heat from indoor air to cool the space.",
+    commonIssues:
+      "Iced coil from low airflow or low refrigerant. Dirty coil reducing efficiency.",
+    checkNext:
+      "Check for ice buildup. Inspect air filter. Measure suction pressure and superheat.",
+    relatedVideos: ["Refrigerant Diagnostics"],
+    relatedStudy: ["Refrigeration System — Superheat & Subcooling"],
+    relatedDiagrams: ["Refrigeration Cycle", "Airflow Diagram"],
+  },
+];
+
+const COMP_ACCENT: Record<string, string> = {
+  capacitor: "text-amber-500",
+  contactor: "text-blue-500",
+  wiring: "text-orange-500",
+  gauges: "text-teal-500",
+  "evaporator-coil": "text-cyan-500",
+};
+
+const COMP_BG: Record<string, string> = {
+  capacitor: "bg-amber-500/10 border-amber-500/30",
+  contactor: "bg-blue-500/10 border-blue-500/30",
+  wiring: "bg-orange-500/10 border-orange-500/30",
+  gauges: "bg-teal-500/10 border-teal-500/30",
+  "evaporator-coil": "bg-cyan-500/10 border-cyan-500/30",
+};
+
+// ─── Job Photo Analysis Component ────────────────────────────────────────────
+
+function JobPhotoAnalysis({
+  repairNotes,
+  setRepairNotes,
+}: {
+  repairNotes: string;
+  setRepairNotes: (v: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const uploadRef = useRef<HTMLInputElement>(null);
+
+  function handleFile(file: File | undefined) {
+    if (!file) return;
+    if (photoUrl) URL.revokeObjectURL(photoUrl);
+    setPhotoUrl(URL.createObjectURL(file));
+    setSelected(new Set());
+  }
+
+  function toggleComp(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function appendAnalysisToNotes() {
+    const comps = HVAC_COMPS.filter((c) => selected.has(c.id));
+    if (comps.length === 0) return;
+    const summary = comps
+      .map(
+        (c) => `[${c.name}] Issues: ${c.commonIssues} | Check: ${c.checkNext}`,
+      )
+      .join("\n");
+    setRepairNotes(repairNotes ? `${repairNotes}\n\n${summary}` : summary);
+    toast.success("Analysis added to repair notes.");
+  }
+
+  const selectedComps = HVAC_COMPS.filter((c) => selected.has(c.id));
+
+  return (
+    <div className="flex flex-col gap-2">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+        data-ocid="jobs.photo.toggle"
+      >
+        <Camera className="w-4 h-4" />
+        Analyze Photo
+        {expanded ? (
+          <ChevronUp className="w-4 h-4 ml-auto" />
+        ) : (
+          <ChevronDown className="w-4 h-4 ml-auto" />
+        )}
+      </button>
+
+      {expanded && (
+        <div className="rounded-lg border border-border bg-muted/20 p-4 space-y-3">
+          {!photoUrl ? (
+            <>
+              <p className="text-xs text-muted-foreground">
+                Add a photo to analyze HVAC components.
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => cameraRef.current?.click()}
+                  className="gap-1.5"
+                  data-ocid="jobs.photo.upload_button"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  Take Photo
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => uploadRef.current?.click()}
+                  className="gap-1.5"
+                  data-ocid="jobs.photo.upload_button"
+                >
+                  <Zap className="w-3.5 h-3.5" />
+                  Upload
+                </Button>
+              </div>
+              <input
+                ref={cameraRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => handleFile(e.target.files?.[0])}
+              />
+              <input
+                ref={uploadRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleFile(e.target.files?.[0])}
+              />
+            </>
+          ) : (
+            <div className="space-y-3">
+              <div className="relative rounded-md overflow-hidden border border-border">
+                <img
+                  src={photoUrl}
+                  alt="HVAC component for analysis"
+                  className="w-full max-h-36 object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (photoUrl) URL.revokeObjectURL(photoUrl);
+                    setPhotoUrl(null);
+                    setSelected(new Set());
+                  }}
+                  className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-background/90 border border-border flex items-center justify-center"
+                  aria-label="Remove"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Select the components visible in the photo:
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {HVAC_COMPS.map((comp) => {
+                  const isSel = selected.has(comp.id);
+                  return (
+                    <button
+                      key={comp.id}
+                      type="button"
+                      onClick={() => toggleComp(comp.id)}
+                      className={`px-2.5 py-1 rounded-full border text-xs font-medium transition-all ${isSel ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-border hover:border-primary/50"}`}
+                      data-ocid="jobs.photo.toggle"
+                    >
+                      {comp.name}
+                    </button>
+                  );
+                })}
+              </div>
+              {selectedComps.length > 0 && (
+                <div className="space-y-2">
+                  {selectedComps.map((comp, i) => (
+                    <Card
+                      key={comp.id}
+                      className={`border ${COMP_BG[comp.id]}`}
+                      data-ocid={`jobs.photo.item.${i + 1}`}
+                    >
+                      <CardContent className="pt-3 pb-3 space-y-1.5">
+                        <div className="flex items-center gap-1.5">
+                          <ChevronRight
+                            className={`h-3.5 w-3.5 ${COMP_ACCENT[comp.id]}`}
+                          />
+                          <p
+                            className={`text-sm font-semibold ${COMP_ACCENT[comp.id]}`}
+                          >
+                            {comp.name}
+                          </p>
+                        </div>
+                        <p className="text-xs text-muted-foreground pl-5">
+                          {comp.whatItDoes}
+                        </p>
+                        <p className="text-xs pl-5">
+                          <span className="font-medium">Issues: </span>
+                          {comp.commonIssues}
+                        </p>
+                        <p className="text-xs pl-5">
+                          <span className="font-medium">Check: </span>
+                          {comp.checkNext}
+                        </p>
+                        <div className="flex flex-wrap gap-1 pl-5 pt-1">
+                          {comp.relatedVideos.map((v) => (
+                            <span
+                              key={v}
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-[10px] font-medium"
+                            >
+                              <PlayCircle className="h-2.5 w-2.5" />
+                              {v}
+                            </span>
+                          ))}
+                          {comp.relatedStudy.map((s) => (
+                            <span
+                              key={s}
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 text-[10px] font-medium"
+                            >
+                              <BookOpen className="h-2.5 w-2.5" />
+                              {s}
+                            </span>
+                          ))}
+                          {comp.relatedDiagrams.map((d) => (
+                            <span
+                              key={d}
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 text-[10px] font-medium"
+                            >
+                              <LayoutDashboard className="h-2.5 w-2.5" />
+                              {d}
+                            </span>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={appendAnalysisToNotes}
+                    className="gap-1.5 w-full"
+                    data-ocid="jobs.photo.save_button"
+                  >
+                    Add Analysis to Repair Notes
+                  </Button>
+                </div>
+              )}
+              {selected.size === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Select a component above to see its analysis.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Job Assistant Panel ─────────────────────────────────────────────────────
+
+function buildJobQuery(notes: string, measurements: string): string {
+  const parts: string[] = [];
+  if (notes) parts.push(notes);
+  if (measurements) parts.push(measurements);
+  return parts.join(" ");
+}
+
+interface AssistantResult {
+  scenario: FieldAssistantScenario | null;
+  measurement: MeasurementResult | null;
+}
+
+function runAssistant(notes: string, measurements: string): AssistantResult {
+  const query = buildJobQuery(notes, measurements);
+  const scenario =
+    FIELD_SCENARIOS.find((s) => matchesFieldQuery(s, query)) ?? null;
+  const parsed = parseMeasurementsText(measurements || notes);
+  const measurement = getMeasurementInsight(
+    parsed.suction,
+    parsed.head,
+    parsed.superheat,
+    parsed.subcooling,
+  );
+  return { scenario, measurement };
+}
+
+function JobAssistantPanel({
+  notes,
+  measurements,
+  onClose,
+}: {
+  notes: string;
+  measurements: string;
+  onClose: () => void;
+}) {
+  const result = runAssistant(notes, measurements);
+  const hasResult = result.scenario !== null || result.measurement !== null;
+
+  return (
+    <div
+      data-ocid="jobs.assistant.panel"
+      className="rounded-lg border border-border bg-muted/40 p-4 flex flex-col gap-3"
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Bot className="w-4 h-4 text-primary" />
+          <span className="text-sm font-semibold text-foreground">
+            Assistant Analysis
+          </span>
+        </div>
+        <button
+          type="button"
+          data-ocid="jobs.assistant.close_button"
+          onClick={onClose}
+          className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
+          aria-label="Close assistant"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      {!hasResult && (
+        <p className="text-xs text-muted-foreground">
+          No specific match found. Check notes for common symptoms like
+          &ldquo;AC not cooling&rdquo; or &ldquo;not starting.&rdquo;
+        </p>
+      )}
+
+      {result.scenario && (
+        <div className="flex flex-col gap-2.5">
+          <p className="text-xs font-semibold text-primary">
+            {result.scenario.title}
+          </p>
+
+          <div>
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
+              Likely Causes
+            </p>
+            <ul className="space-y-0.5">
+              {result.scenario.causes.map((c) => (
+                <li key={c} className="text-xs text-foreground flex gap-1.5">
+                  <span className="mt-0.5 shrink-0 text-primary">•</span>
+                  {c}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
+              Diagnostic Steps
+            </p>
+            <ol className="space-y-0.5">
+              {result.scenario.steps.map((s, i) => (
+                <li key={s} className="text-xs text-foreground flex gap-1.5">
+                  <span className="shrink-0 text-primary font-medium">
+                    {i + 1}.
+                  </span>
+                  {s}
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <div className="flex flex-wrap gap-1.5">
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground w-full">
+              Tools
+            </p>
+            {result.scenario.tools.map((t) => (
+              <span
+                key={t}
+                className="text-[10px] bg-muted border border-border rounded px-1.5 py-0.5 text-foreground"
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap gap-1.5">
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground w-full">
+              Possible Parts
+            </p>
+            {result.scenario.possibleParts.map((p) => (
+              <span
+                key={p}
+                className="text-[10px] bg-muted border border-border rounded px-1.5 py-0.5 text-foreground"
+              >
+                {p}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {result.measurement && (
+        <div className="rounded-md border border-border bg-card p-3 flex flex-col gap-1.5">
+          <p className="text-xs font-semibold text-foreground">
+            {result.measurement.title}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {result.measurement.insight}
+          </p>
+          <ul className="space-y-0.5 mt-1">
+            {result.measurement.actions.map((a) => (
+              <li key={a} className="text-xs text-foreground flex gap-1.5">
+                <span className="shrink-0 text-primary">→</span>
+                {a}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Job Detail Sheet ─────────────────────────────────────────────────────────
 
 function JobDetailSheet({
   job,
@@ -54,6 +558,7 @@ function JobDetailSheet({
   const [repairNotes, setRepairNotes] = useState(job.repairNotes);
   const [photos, setPhotos] = useState<string[]>(job.photos);
   const [uploading, setUploading] = useState(false);
+  const [showAssistant, setShowAssistant] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSave = async () => {
@@ -167,6 +672,28 @@ function JobDetailSheet({
               />
             </div>
 
+            {/* Ask Assistant */}
+            <div className="flex flex-col gap-2">
+              <Button
+                type="button"
+                data-ocid="jobs.assistant.open_modal_button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAssistant((v) => !v)}
+                className="gap-2 self-start"
+              >
+                <Bot className="w-4 h-4" />
+                Ask Assistant
+              </Button>
+              {showAssistant && (
+                <JobAssistantPanel
+                  notes={notes}
+                  measurements={measurements}
+                  onClose={() => setShowAssistant(false)}
+                />
+              )}
+            </div>
+
             {/* Repair Notes */}
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="edit-repair-notes">Repair Notes</Label>
@@ -238,6 +765,12 @@ function JobDetailSheet({
                 {uploading ? "Uploading…" : "Add Photo / Camera"}
               </Button>
             </div>
+
+            {/* Analyze Photo Section */}
+            <JobPhotoAnalysis
+              repairNotes={repairNotes}
+              setRepairNotes={setRepairNotes}
+            />
           </div>
         </ScrollArea>
 

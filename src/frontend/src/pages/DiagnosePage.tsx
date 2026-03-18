@@ -1,16 +1,33 @@
+import VideoRecommendations from "@/components/VideoRecommendations";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  FIELD_SCENARIOS,
+  FieldAssistantScenario,
+  MeasurementResult,
+  getMeasurementInsight,
+  matchesFieldQuery,
+} from "@/utils/assistantLogic";
+import { extractKeywords } from "@/utils/videoRecommendations";
 import { Link } from "@tanstack/react-router";
 import {
   AlertCircle,
   ArrowLeft,
+  BookOpen,
   Camera,
   CheckCircle2,
+  ChevronDown,
   ChevronRight,
+  ChevronUp,
+  LayoutDashboard,
+  Package,
+  Paperclip,
+  PlayCircle,
   Search,
   Upload,
   Wrench,
@@ -18,6 +35,9 @@ import {
   Zap,
 } from "lucide-react";
 import { useRef, useState } from "react";
+import { toast } from "sonner";
+import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { useGetMyJobs, useUpdateJob } from "../hooks/useQueries";
 
 interface Scenario {
   id: string;
@@ -325,183 +345,254 @@ function MeasurementsTab() {
           </CardContent>
         </Card>
       )}
+      {result && (
+        <VideoRecommendations
+          keywords={
+            result.issue
+              ? extractKeywords(result.issue)
+              : ["refrigerant", "pressure", "airflow"]
+          }
+        />
+      )}
     </div>
   );
 }
 
 // ─── Field HVAC Assistant ───────────────────────────────────────────────────
 
-interface FieldAssistantScenario {
-  id: string;
-  title: string;
-  keywords: string[];
-  causes: string[];
-  steps: string[];
-  tools: string[];
-  relatedStudy: string[];
-  relatedVideos: string[];
-  relatedDiagrams: string[];
-}
-
-const FIELD_SCENARIOS: FieldAssistantScenario[] = [
-  {
-    id: "field-ac-not-cooling",
-    title: "AC Not Cooling",
-    keywords: [
-      "ac not cooling",
-      "not cooling",
-      "no cold air",
-      "ac warm",
-      "not cold",
-    ],
-    causes: [
-      "Low refrigerant charge or leak",
-      "Dirty condenser coils restricting heat transfer",
-      "Faulty or failing compressor",
-      "Thermostat malfunction or incorrect settings",
-    ],
-    steps: [
-      "Check thermostat is set to COOL and set below current room temp.",
-      "Inspect air filter — replace if dirty or clogged.",
-      "Check outdoor unit for blocked airflow or dirty condenser coil.",
-      "Listen for compressor operation — if silent, check breakers and capacitor.",
-    ],
-    tools: ["Manifold gauge set", "Thermometer", "Multimeter"],
-    relatedStudy: ["Refrigeration Concepts", "HVAC Basics"],
-    relatedVideos: ["Refrigerant Diagnostics", "HVAC Tools & Procedures"],
-    relatedDiagrams: ["Refrigeration Cycle", "Airflow Diagram"],
-  },
-  {
-    id: "field-compressor-not-starting",
-    title: "Compressor Not Starting",
-    keywords: [
-      "compressor not starting",
-      "compressor won't start",
-      "compressor not running",
-      "compressor dead",
-    ],
-    causes: [
-      "Tripped breaker or blown fuse",
-      "Failed run or start capacitor",
-      "Defective contactor",
-      "Low refrigerant pressure safety lockout",
-    ],
-    steps: [
-      "Reset any tripped breakers and check fuses at the disconnect.",
-      "Inspect the capacitor visually — bulging or leaking means replacement needed.",
-      "Test the contactor with a multimeter for voltage and contact condition.",
-      "Check refrigerant pressures — low pressure may trigger a lockout.",
-    ],
-    tools: ["Multimeter", "Manifold gauge set", "Capacitor tester"],
-    relatedStudy: ["Electrical Fundamentals", "Multimeter Usage"],
-    relatedVideos: ["Electrical & Schematics", "HVAC Tools & Procedures"],
-    relatedDiagrams: ["Contactor Wiring", "Capacitor Wiring"],
-  },
-  {
-    id: "field-fan-running-no-cooling",
-    title: "Fan Running But No Cooling",
-    keywords: [
-      "fan running no cooling",
-      "fan on no cool",
-      "air blowing not cold",
-      "fan works no cool",
-      "blowing warm air",
-    ],
-    causes: [
-      "Compressor not engaging or failed",
-      "Low refrigerant charge",
-      "Faulty run capacitor on compressor",
-      "Reversing valve stuck in heating mode (heat pumps)",
-    ],
-    steps: [
-      "Confirm both outdoor fan and compressor are running — if only fan runs, focus on compressor.",
-      "Check refrigerant pressures using manifold gauges.",
-      "Test compressor run capacitor for proper microfarad rating.",
-      "On heat pumps, check reversing valve operation and solenoid.",
-    ],
-    tools: ["Manifold gauge set", "Multimeter", "Capacitor tester"],
-    relatedStudy: ["Refrigeration Concepts", "Electrical Fundamentals"],
-    relatedVideos: ["Refrigerant Diagnostics", "Electrical & Schematics"],
-    relatedDiagrams: ["Refrigeration Cycle", "Contactor Wiring"],
-  },
-  {
-    id: "field-low-suction-pressure",
-    title: "Low Suction Pressure",
-    keywords: [
-      "low suction pressure",
-      "low suction",
-      "suction too low",
-      "suction pressure low",
-    ],
-    causes: [
-      "Low refrigerant charge or leak",
-      "Restricted metering device (TXV or orifice)",
-      "Dirty evaporator coil or iced coil",
-      "Low airflow across evaporator",
-    ],
-    steps: [
-      "Check suction pressure with manifold gauges and compare to manufacturer specs.",
-      "Inspect evaporator coil for ice buildup — if iced, shut down and allow to thaw.",
-      "Replace dirty air filter and confirm all return vents are open.",
-      "Inspect TXV or metering device for restriction or malfunction.",
-    ],
-    tools: ["Manifold gauge set", "Thermometer", "Leak detector"],
-    relatedStudy: ["Refrigeration Concepts", "HVAC Basics"],
-    relatedVideos: ["Refrigerant Diagnostics", "EPA 608 Prep"],
-    relatedDiagrams: ["Refrigeration Cycle", "Airflow Diagram"],
-  },
-  {
-    id: "field-high-head-pressure",
-    title: "High Head Pressure",
-    keywords: [
-      "high head pressure",
-      "high discharge pressure",
-      "head pressure too high",
-    ],
-    causes: [
-      "Dirty or blocked condenser coil",
-      "Condenser fan not running or slow",
-      "Non-condensables in the refrigerant circuit",
-      "Overcharge of refrigerant",
-    ],
-    steps: [
-      "Inspect and clean the condenser coil.",
-      "Verify condenser fan is spinning at full speed.",
-      "Check for non-condensables — connect gauges and observe pressure behavior.",
-      "Verify refrigerant charge is within manufacturer specs.",
-    ],
-    tools: ["Manifold gauge set", "Coil cleaner", "Multimeter"],
-    relatedStudy: ["Refrigeration Concepts", "HVAC Basics"],
-    relatedVideos: ["Refrigerant Diagnostics", "HVAC Tools & Procedures"],
-    relatedDiagrams: ["Refrigeration Cycle", "Airflow Diagram"],
-  },
-];
-
 const EXAMPLE_CHIPS = [
   "AC not cooling",
   "Compressor not starting",
   "Fan running but no cooling",
   "Low suction pressure",
+  "Frozen coil",
+  "Short cycling",
+  "Refrigerant leak",
 ];
 
-function matchesFieldQuery(
-  scenario: FieldAssistantScenario,
-  query: string,
-): boolean {
-  const q = query.toLowerCase().trim();
-  if (!q) return false;
-  if (scenario.title.toLowerCase().includes(q)) return true;
-  return scenario.keywords.some((kw) => kw.includes(q) || q.includes(kw));
+// ─── Photo Analysis Mini (reused in Field Assistant) ─────────────────────────
+
+function PhotoAnalysisMini() {
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [expanded, setExpanded] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
+
+  function handleFile(file: File | undefined) {
+    if (!file) return;
+    if (photoUrl) URL.revokeObjectURL(photoUrl);
+    setPhotoUrl(URL.createObjectURL(file));
+    setSelected(new Set());
+  }
+
+  function toggleComponent(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  const selectedComponents = HVAC_COMPONENTS.filter((c) => selected.has(c.id));
+
+  return (
+    <div className="border-t border-border/50 pt-4">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors w-full"
+        data-ocid="field_assistant.photo.toggle"
+      >
+        <Camera className="h-4 w-4" />
+        Photo Analysis
+        {expanded ? (
+          <ChevronUp className="h-4 w-4 ml-auto" />
+        ) : (
+          <ChevronDown className="h-4 w-4 ml-auto" />
+        )}
+      </button>
+
+      {expanded && (
+        <div className="mt-3 space-y-3">
+          {!photoUrl ? (
+            <div className="flex gap-2 flex-wrap">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => cameraInputRef.current?.click()}
+                className="gap-2"
+                data-ocid="field_assistant.photo.upload_button"
+              >
+                <Camera className="h-3.5 w-3.5" />
+                Take Photo
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => uploadInputRef.current?.click()}
+                className="gap-2"
+                data-ocid="field_assistant.photo.upload_button"
+              >
+                <Upload className="h-3.5 w-3.5" />
+                Upload Photo
+              </Button>
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => handleFile(e.target.files?.[0])}
+              />
+              <input
+                ref={uploadInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleFile(e.target.files?.[0])}
+              />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="relative rounded-lg overflow-hidden border border-border">
+                <img
+                  src={photoUrl}
+                  alt="HVAC component for analysis"
+                  className="w-full max-h-40 object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (photoUrl) URL.revokeObjectURL(photoUrl);
+                    setPhotoUrl(null);
+                    setSelected(new Set());
+                  }}
+                  className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-background/90 border border-border flex items-center justify-center"
+                  aria-label="Remove photo"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {HVAC_COMPONENTS.map((comp) => {
+                  const isSel = selected.has(comp.id);
+                  return (
+                    <button
+                      key={comp.id}
+                      type="button"
+                      onClick={() => toggleComponent(comp.id)}
+                      className={`px-2.5 py-1 rounded-full border text-xs font-medium transition-all ${isSel ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-border hover:border-primary/50"}`}
+                    >
+                      {comp.name}
+                    </button>
+                  );
+                })}
+              </div>
+              {selectedComponents.length > 0 && (
+                <div className="space-y-2">
+                  {selectedComponents.map((comp, i) => (
+                    <Card
+                      key={comp.id}
+                      className={`border ${COMPONENT_BG[comp.id]}`}
+                      data-ocid={`field_assistant.photo.item.${i + 1}`}
+                    >
+                      <CardContent className="pt-3 pb-3 space-y-2">
+                        <p
+                          className={`text-sm font-semibold ${COMPONENT_ACCENT[comp.id]}`}
+                        >
+                          {comp.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {comp.whatItDoes}
+                        </p>
+                        <p className="text-xs text-foreground">
+                          <span className="font-medium">Issues: </span>
+                          {comp.commonIssues}
+                        </p>
+                        <p className="text-xs text-foreground">
+                          <span className="font-medium">Check: </span>
+                          {comp.checkNext}
+                        </p>
+                        <div className="flex flex-wrap gap-1 pt-1">
+                          {comp.relatedVideos.map((v) => (
+                            <span
+                              key={v}
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-[10px] font-medium"
+                            >
+                              <PlayCircle className="h-2.5 w-2.5" />
+                              {v}
+                            </span>
+                          ))}
+                          {comp.relatedStudy.map((s) => (
+                            <span
+                              key={s}
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 text-[10px] font-medium"
+                            >
+                              <BookOpen className="h-2.5 w-2.5" />
+                              {s}
+                            </span>
+                          ))}
+                          {comp.relatedDiagrams.map((d) => (
+                            <span
+                              key={d}
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 text-[10px] font-medium"
+                            >
+                              <LayoutDashboard className="h-2.5 w-2.5" />
+                              {d}
+                            </span>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+              {selected.size === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Select a component above to see analysis.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function FieldAssistantTab() {
   const [query, setQuery] = useState("");
+  const [showMeasurements, setShowMeasurements] = useState(false);
+  const [suction, setSuction] = useState("");
+  const [head, setHead] = useState("");
+  const [superheat, setSuperheat] = useState("");
+  const [subcooling, setSubcooling] = useState("");
 
   const trimmed = query.trim();
   const match = trimmed
     ? (FIELD_SCENARIOS.find((s) => matchesFieldQuery(s, trimmed)) ?? null)
     : null;
   const noMatch = trimmed.length > 0 && match === null;
+
+  const sVal = suction !== "" ? Number.parseFloat(suction) : null;
+  const hVal = head !== "" ? Number.parseFloat(head) : null;
+  const shVal = superheat !== "" ? Number.parseFloat(superheat) : null;
+  const scVal = subcooling !== "" ? Number.parseFloat(subcooling) : null;
+
+  const hasMeasurementInput =
+    showMeasurements &&
+    (suction !== "" || head !== "" || superheat !== "" || subcooling !== "");
+
+  const measurementResult = hasMeasurementInput
+    ? getMeasurementInsight(
+        sVal !== null && !Number.isNaN(sVal) ? sVal : null,
+        hVal !== null && !Number.isNaN(hVal) ? hVal : null,
+        shVal !== null && !Number.isNaN(shVal) ? shVal : null,
+        scVal !== null && !Number.isNaN(scVal) ? scVal : null,
+      )
+    : null;
 
   return (
     <div className="space-y-5">
@@ -518,8 +609,92 @@ function FieldAssistantTab() {
         />
       </div>
 
+      {/* Optional measurements toggle */}
+      <div>
+        <button
+          type="button"
+          onClick={() => setShowMeasurements((v) => !v)}
+          className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          data-ocid="field_assistant.toggle"
+        >
+          {showMeasurements ? (
+            <ChevronUp className="h-4 w-4" />
+          ) : (
+            <ChevronDown className="h-4 w-4" />
+          )}
+          Add Measurements (Optional)
+        </button>
+
+        {showMeasurements && (
+          <div className="mt-3 p-4 rounded-lg border border-border bg-muted/30 space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="fa-suction" className="text-xs">
+                  Suction Pressure (psig)
+                </Label>
+                <Input
+                  id="fa-suction"
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="e.g. 70"
+                  value={suction}
+                  onChange={(e) => setSuction(e.target.value)}
+                  className="h-8 text-sm"
+                  data-ocid="field_assistant.suction.input"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="fa-head" className="text-xs">
+                  Head Pressure (psig)
+                </Label>
+                <Input
+                  id="fa-head"
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="e.g. 250"
+                  value={head}
+                  onChange={(e) => setHead(e.target.value)}
+                  className="h-8 text-sm"
+                  data-ocid="field_assistant.head.input"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="fa-superheat" className="text-xs">
+                  Superheat (°F)
+                </Label>
+                <Input
+                  id="fa-superheat"
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="e.g. 12"
+                  value={superheat}
+                  onChange={(e) => setSuperheat(e.target.value)}
+                  className="h-8 text-sm"
+                  data-ocid="field_assistant.superheat.input"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="fa-subcooling" className="text-xs">
+                  Subcooling (°F)
+                </Label>
+                <Input
+                  id="fa-subcooling"
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="e.g. 10"
+                  value={subcooling}
+                  onChange={(e) => setSubcooling(e.target.value)}
+                  className="h-8 text-sm"
+                  data-ocid="field_assistant.subcooling.input"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Empty prompt with example chips */}
-      {!trimmed && (
+      {!trimmed && !measurementResult && (
         <div className="pt-2" data-ocid="field_assistant.empty_state">
           <p className="text-sm text-muted-foreground mb-3">
             Enter a symptom above to get started. Try one of these:
@@ -531,13 +706,43 @@ function FieldAssistantTab() {
                 type="button"
                 onClick={() => setQuery(chip)}
                 className="px-3 py-1.5 rounded-full border border-border bg-secondary text-secondary-foreground text-xs font-medium hover:bg-secondary/70 transition-colors"
-                data-ocid="field_assistant.toggle"
               >
                 {chip}
               </button>
             ))}
           </div>
         </div>
+      )}
+
+      {/* Standalone measurement result card — shown even without a symptom match */}
+      {measurementResult && (
+        <Card
+          className="border-amber-500/40 bg-amber-500/5"
+          data-ocid="field_assistant.success_state"
+        >
+          <CardContent className="pt-4 pb-4 space-y-2">
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-amber-500 flex-shrink-0" />
+              <p className="text-sm font-semibold text-foreground">
+                {measurementResult.title}
+              </p>
+            </div>
+            <p className="text-sm text-muted-foreground pl-6">
+              {measurementResult.insight}
+            </p>
+            <ul className="pl-6 space-y-1">
+              {measurementResult.actions.map((action) => (
+                <li
+                  key={action}
+                  className="flex items-start gap-2 text-sm text-foreground"
+                >
+                  <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-amber-500 flex-shrink-0" />
+                  {action}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
       )}
 
       {/* No match */}
@@ -622,6 +827,24 @@ function FieldAssistantTab() {
               </ul>
             </div>
 
+            {/* Possible Parts */}
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                Possible Parts Needed
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {match.possibleParts.map((part) => (
+                  <span
+                    key={part}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-border bg-secondary text-secondary-foreground text-xs font-medium"
+                  >
+                    <Package className="h-3 w-3 flex-shrink-0" />
+                    {part}
+                  </span>
+                ))}
+              </div>
+            </div>
+
             {/* Related Content */}
             <div className="pt-1 border-t border-border">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
@@ -679,6 +902,17 @@ function FieldAssistantTab() {
           </CardContent>
         </Card>
       )}
+
+      {(match || measurementResult) && (
+        <VideoRecommendations
+          keywords={[
+            ...extractKeywords(query),
+            ...(match ? match.keywords.slice(0, 3) : []),
+          ]}
+        />
+      )}
+      {/* Photo Analysis — inline mini tool */}
+      <PhotoAnalysisMini />
     </div>
   );
 }
@@ -691,6 +925,9 @@ interface HvacComponent {
   whatItDoes: string;
   commonIssues: string;
   checkNext: string;
+  relatedVideos: string[];
+  relatedStudy: string[];
+  relatedDiagrams: string[];
 }
 
 const HVAC_COMPONENTS: HvacComponent[] = [
@@ -702,6 +939,9 @@ const HVAC_COMPONENTS: HvacComponent[] = [
       "Weak or failed capacitor — causes hard starts, motor humming, or unit not starting.",
     checkNext:
       "Test microfarad rating with a multimeter or capacitor tester. Compare to the rated value on the label.",
+    relatedVideos: ["Electrical and Schematics"],
+    relatedStudy: ["Electrical Training — Contactors & Relays"],
+    relatedDiagrams: ["Capacitor Wiring"],
   },
   {
     id: "contactor",
@@ -711,6 +951,9 @@ const HVAC_COMPONENTS: HvacComponent[] = [
       "Burnt or pitted contacts, no coil voltage, or contacts stuck open/closed.",
     checkNext:
       "Check voltage across the coil (24V). Inspect contacts for pitting or burning. Test continuity when engaged.",
+    relatedVideos: ["Electrical and Schematics"],
+    relatedStudy: ["Electrical Training — Contactors & Relays"],
+    relatedDiagrams: ["Contactor Wiring"],
   },
   {
     id: "wiring",
@@ -721,6 +964,9 @@ const HVAC_COMPONENTS: HvacComponent[] = [
       "Loose connections, broken wires, or burnt insulation causing intermittent faults.",
     checkNext:
       "Check continuity with a multimeter. Inspect for loose terminals, corrosion, or heat damage.",
+    relatedVideos: ["Electrical and Schematics"],
+    relatedStudy: ["Electrical Training — Multimeter Usage"],
+    relatedDiagrams: ["24V Control Circuit"],
   },
   {
     id: "gauges",
@@ -730,6 +976,9 @@ const HVAC_COMPONENTS: HvacComponent[] = [
       "Inaccurate readings due to gauge error, Schrader valve leaks, or contaminated hoses.",
     checkNext:
       "Zero the gauges before use. Check Schrader cores for leaks. Compare readings to expected pressures for the refrigerant type.",
+    relatedVideos: ["Refrigerant Diagnostics"],
+    relatedStudy: ["HVAC Tools & Procedures — Gauges"],
+    relatedDiagrams: ["Refrigeration Cycle"],
   },
   {
     id: "evaporator-coil",
@@ -739,6 +988,9 @@ const HVAC_COMPONENTS: HvacComponent[] = [
       "Iced coil from low airflow or low refrigerant. Dirty coil reducing efficiency.",
     checkNext:
       "Check for ice buildup. Inspect and replace the air filter. Measure suction pressure and superheat.",
+    relatedVideos: ["Refrigerant Diagnostics"],
+    relatedStudy: ["Refrigeration System — Superheat & Subcooling"],
+    relatedDiagrams: ["Refrigeration Cycle", "Airflow Diagram"],
   },
 ];
 
@@ -762,20 +1014,29 @@ const COMPONENT_BG: Record<string, string> = {
 function PhotoDiagnosticTab() {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [photoNotes, setPhotoNotes] = useState("");
+  const [showJobPanel, setShowJobPanel] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
+  const { identity } = useInternetIdentity();
+  const { data: jobs } = useGetMyJobs();
+  const updateJob = useUpdateJob();
 
   function handleFile(file: File | undefined) {
     if (!file) return;
     if (photoUrl) URL.revokeObjectURL(photoUrl);
     setPhotoUrl(URL.createObjectURL(file));
     setSelected(new Set());
+    setPhotoNotes("");
+    setShowJobPanel(false);
   }
 
   function handleClear() {
     if (photoUrl) URL.revokeObjectURL(photoUrl);
     setPhotoUrl(null);
     setSelected(new Set());
+    setPhotoNotes("");
+    setShowJobPanel(false);
   }
 
   function toggleComponent(id: string) {
@@ -788,6 +1049,38 @@ function PhotoDiagnosticTab() {
       }
       return next;
     });
+  }
+
+  async function attachToJob(job: {
+    id: bigint;
+    title: string;
+    notes: string;
+    measurements: string;
+    repairNotes: string;
+    photos: string[];
+    date: string;
+  }) {
+    if (!photoUrl) return;
+    const updatedNotes = photoNotes
+      ? job.notes
+        ? `${job.notes}\n${photoNotes}`
+        : photoNotes
+      : job.notes;
+    try {
+      await updateJob.mutateAsync({
+        jobId: job.id,
+        title: job.title,
+        notes: updatedNotes,
+        measurements: job.measurements,
+        repairNotes: job.repairNotes,
+        photos: [...job.photos, photoUrl],
+        date: job.date,
+      });
+      toast.success("Photo attached to job.");
+      setShowJobPanel(false);
+    } catch {
+      toast.error("Failed to attach photo.");
+    }
   }
 
   const selectedComponents = HVAC_COMPONENTS.filter((c) => selected.has(c.id));
@@ -851,7 +1144,7 @@ function PhotoDiagnosticTab() {
           <div className="relative rounded-xl overflow-hidden border border-border">
             <img
               src={photoUrl}
-              alt="Uploaded HVAC component"
+              alt="HVAC component uploaded for analysis"
               className="w-full max-h-72 object-cover"
             />
             <button
@@ -943,9 +1236,119 @@ function PhotoDiagnosticTab() {
                         {comp.checkNext}
                       </p>
                     </div>
+                    {/* Helpful Resources */}
+                    <div className="pt-1 border-t border-border/50">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                        Helpful Resources
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {comp.relatedVideos.map((v) => (
+                          <span
+                            key={v}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-600 dark:text-blue-400 text-xs font-medium"
+                          >
+                            <PlayCircle className="h-3 w-3 flex-shrink-0" />
+                            {v}
+                          </span>
+                        ))}
+                        {comp.relatedStudy.map((s) => (
+                          <span
+                            key={s}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/30 text-green-600 dark:text-green-400 text-xs font-medium"
+                          >
+                            <BookOpen className="h-3 w-3 flex-shrink-0" />
+                            {s}
+                          </span>
+                        ))}
+                        {comp.relatedDiagrams.map((d) => (
+                          <span
+                            key={d}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400 text-xs font-medium"
+                          >
+                            <LayoutDashboard className="h-3 w-3 flex-shrink-0" />
+                            {d}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
+
+              {/* Notes + Attach to Job */}
+              <div className="space-y-3 pt-1">
+                <div className="space-y-1.5">
+                  <Label htmlFor="photo-notes" className="text-sm font-medium">
+                    Notes
+                  </Label>
+                  <Textarea
+                    id="photo-notes"
+                    data-ocid="photo_diagnostic.textarea"
+                    placeholder="Add notes about what you observed…"
+                    value={photoNotes}
+                    onChange={(e) => setPhotoNotes(e.target.value)}
+                    rows={3}
+                  />
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  data-ocid="photo_diagnostic.open_modal_button"
+                  onClick={() => setShowJobPanel((v) => !v)}
+                >
+                  <Paperclip className="h-4 w-4" />
+                  Attach to Job
+                  {showJobPanel ? (
+                    <ChevronUp className="h-3.5 w-3.5 ml-1" />
+                  ) : (
+                    <ChevronDown className="h-3.5 w-3.5 ml-1" />
+                  )}
+                </Button>
+
+                {showJobPanel && (
+                  <div
+                    className="rounded-lg border border-border bg-muted/30 p-4 space-y-2"
+                    data-ocid="photo_diagnostic.panel"
+                  >
+                    {!identity ? (
+                      <p className="text-sm text-muted-foreground">
+                        Log in to attach this photo to a job.
+                      </p>
+                    ) : !jobs || jobs.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        No jobs found. Create a job first.
+                      </p>
+                    ) : (
+                      <>
+                        <p className="text-xs font-medium text-muted-foreground mb-2">
+                          Select a job to attach this photo:
+                        </p>
+                        <div className="space-y-1.5">
+                          {jobs.map((job, idx) => (
+                            <button
+                              key={job.id.toString()}
+                              type="button"
+                              data-ocid={`photo_diagnostic.item.${idx + 1}`}
+                              onClick={() => attachToJob(job)}
+                              disabled={updateJob.isPending}
+                              className="w-full text-left px-3 py-2.5 rounded-md border border-border bg-background hover:bg-secondary hover:border-primary/40 transition-colors flex items-center justify-between gap-2 disabled:opacity-50"
+                            >
+                              <span className="text-sm font-medium text-foreground truncate">
+                                {job.title}
+                              </span>
+                              <span className="text-xs text-muted-foreground shrink-0">
+                                {job.date}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -1107,6 +1510,9 @@ export default function DiagnosePage() {
               </div>
             )}
           </TabsContent>
+          {query && results.length > 0 && (
+            <VideoRecommendations keywords={extractKeywords(query)} />
+          )}
 
           <TabsContent value="measurements">
             <MeasurementsTab />

@@ -10,7 +10,7 @@ import JobsPage from "./pages/JobsPage";
 import LearnPage from "./pages/LearnPage";
 import LoginPage from "./pages/LoginPage";
 import ProfileSetup from "./pages/ProfileSetup";
-import SectionPage from "./pages/SectionPage";
+import ToolsPage from "./pages/ToolsPage";
 
 const queryClient = new QueryClient();
 
@@ -43,7 +43,7 @@ const learnRoute = createRoute({
 const toolsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/tools",
-  component: () => <SectionPage title="Tools" />,
+  component: ToolsPage,
 });
 
 const routeTree = rootRoute.addChildren([

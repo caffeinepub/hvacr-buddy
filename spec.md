@@ -1,29 +1,28 @@
 # HVACR Buddy
 
 ## Current State
-The Diagnose section has three tools: Symptom-based, Measurement-based, and Field HVAC Assistant. No photo-based diagnostic exists.
+Dashboard has a header, welcome hero with search bar, four feature cards (Diagnose, Jobs, Learn, Tools), and a footer. No inline diagnostic capability exists on the dashboard itself.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Photo Diagnostic tool inside the Diagnose section
-- User can take a photo (camera) or upload a photo from device
-- After photo is added, show a component selector with common HVAC parts
-- User selects which components are visible in the photo (pattern-based, manual selection)
-- For each selected component, display: name, what it does, common issues, what to check next
-- Component data for: capacitor, contactor, wiring, refrigerant gauges, evaporator coil
+- Quick Diagnose widget on the Dashboard, placed between the hero/search section and the feature cards.
+- Text input for entering a symptom or issue.
+- Instant results panel (shown inline, no page navigation) with:
+  - Likely causes (2-3 bullet points)
+  - Basic troubleshooting steps (2-3 steps)
+  - Suggested videos (1-2 relevant videos from the Video Library)
+- Results are generated from the same rule-based keyword logic already used in the Diagnose page.
 
 ### Modify
-- Diagnose section: add Photo Diagnostic as a fourth tool tab/option
+- Dashboard.tsx: insert the Quick Diagnose section between the hero and the feature cards grid.
 
 ### Remove
-- Nothing
+- Nothing removed.
 
 ## Implementation Plan
-1. Create `PhotoDiagnostic` React component
-2. Add camera capture (input type=camera) and file upload (input type=file, accept=image/*)
-3. Show photo preview after capture/upload
-4. Display selectable component chips/buttons for the 5 common HVAC components
-5. On selection, show expandable cards with: name, what it does, common issues, what to check next
-6. Wire into Diagnose section as a new tool option
-7. No backend changes needed -- all logic is frontend only
+1. Add a `QuickDiagnose` component (or inline section) in Dashboard.tsx.
+2. Implement keyword-matching logic (reuse patterns from DiagnosePage) to return causes, steps, and video suggestions based on the entered symptom.
+3. Show results immediately as the user types or on submit (a small "Check" button or Enter key).
+4. Keep the layout clean -- results appear below the input, collapsed when empty.
+5. Video suggestions link to the Video Library in Learn.

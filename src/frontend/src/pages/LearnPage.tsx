@@ -1,3 +1,4 @@
+import KnowledgeBase from "@/components/KnowledgeBase";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import {
   ArrowLeft,
   BookOpen,
   ChevronRight,
+  Database,
   ExternalLink,
   Lightbulb,
   Play,
@@ -18,7 +20,7 @@ import {
 import { useState } from "react";
 
 // ─── Types ─────────────────────────────────────────────────────
-type View = "home" | "category" | "topic";
+type View = "home" | "category" | "topic" | "knowledge-base";
 
 interface PracticeQ {
   q: string;
@@ -1006,9 +1008,47 @@ function CategoryView({
 // ─── Home View ─────────────────────────────────────────────────
 function HomeView({
   onSelectCategory,
-}: { onSelectCategory: (cat: Category) => void }) {
+  onSelectKnowledgeBase,
+}: {
+  onSelectCategory: (cat: Category) => void;
+  onSelectKnowledgeBase: () => void;
+}) {
   return (
     <div className="space-y-3">
+      {/* Knowledge Base Card */}
+      <button
+        type="button"
+        onClick={onSelectKnowledgeBase}
+        className="w-full text-left flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:bg-secondary/40 hover:border-primary/30 transition-all group shadow-xs"
+        data-ocid="learn.knowledge_base.button"
+      >
+        <span
+          className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center"
+          style={{
+            background: "oklch(var(--learn-bg))",
+            color: "oklch(var(--learn-icon))",
+          }}
+        >
+          <Database className="w-6 h-6" />
+        </span>
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-base text-foreground leading-tight">
+            Knowledge Base
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
+            Search HVAC topics with field-focused explanations and diagnostics
+          </p>
+          <div className="flex items-center gap-1.5 mt-1.5">
+            <Badge variant="secondary" className="text-xs px-2 py-0 h-5">
+              8 topics
+            </Badge>
+            <Badge variant="secondary" className="text-xs px-2 py-0 h-5">
+              Search
+            </Badge>
+          </div>
+        </div>
+        <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+      </button>
       {CATEGORIES.map((cat, ci) => (
         <button
           type="button"
@@ -1080,6 +1120,8 @@ export default function LearnPage() {
       setView("category");
     } else if (view === "category") {
       goHome();
+    } else if (view === "knowledge-base") {
+      goHome();
     }
   }
 
@@ -1127,6 +1169,11 @@ export default function LearnPage() {
                     </p>
                   </div>
                 )}
+                {view === "knowledge-base" && (
+                  <p className="text-sm font-semibold text-foreground truncate">
+                    Knowledge Base
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -1140,7 +1187,10 @@ export default function LearnPage() {
             <p className="text-sm text-muted-foreground mb-4">
               Select a category to begin studying.
             </p>
-            <HomeView onSelectCategory={goToCategory} />
+            <HomeView
+              onSelectCategory={goToCategory}
+              onSelectKnowledgeBase={() => setView("knowledge-base")}
+            />
           </div>
         )}
 
@@ -1151,6 +1201,8 @@ export default function LearnPage() {
         {view === "topic" && selectedTopic && selectedCategory && (
           <TopicView topic={selectedTopic} category={selectedCategory} />
         )}
+
+        {view === "knowledge-base" && <KnowledgeBase />}
       </main>
 
       {/* Footer */}
