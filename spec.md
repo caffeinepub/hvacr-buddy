@@ -1,28 +1,29 @@
 # HVACR Buddy
 
 ## Current State
-The HVAC Mentor chat (MentorChat.tsx + mentorLogic.ts) already runs a step-by-step troubleshooting flow with acknowledgment, follow-up questions, and a diagnosis card. The tone and language, however, are somewhat generic and don't fully embody the "Buddy" persona.
+The app has a Field HVAC Assistant (Buddy) that guides users step-by-step through troubleshooting with text-based responses. Photo Diagnostic exists for component recognition. No inline visual aids (component images, diagrams, videos) are shown during the troubleshooting flow.
 
 ## Requested Changes (Diff)
 
 ### Add
-- "Buddy" branding: avatar/name label in the mentor chat header shows "Buddy" with a field-tech persona description
-- Safety banners integrated inline in the conversation flow (not just at diagnosis) when electrical, capacitor, refrigerant, or high-pressure topics come up
-- Diagnosis message uses Buddy's DIAGNOSIS MODE format: "Based on what you've told me, the most likely issue is: [problem]. Next step: [action to confirm or fix]"
+- Multimedia support layer in the Field HVAC Assistant / Buddy responses
+- When Buddy references a physical component (capacitor, contactor, coil, gauges, etc.), automatically surface a visual aid below the step
+- Visual aid types: component image thumbnail, relevant diagram link, or suggested video
+- Natural language intro before each visual (e.g., "Here's what that looks like:")
+- A `componentVisuals` data map: component name → { image description, diagram reference, video reference }
+- Visuals shown inline within the assistant response card, not as a separate section
 
 ### Modify
-- All acknowledgment strings in `mentorLogic.ts` updated to Buddy's voice: calm, confident, practical (e.g., "Alright, let's check this real quick.", "Good — that helps narrow it down.")
-- Follow-up question text updated to match Buddy's one-at-a-time, field-tech tone
-- Quick answer buttons display as [ Yes ] [ No ] [ Not Sure ] where appropriate
-- Diagnosis card header changed from "Likely Causes" to Buddy's format: "Based on what you've told me, the most likely issue is:" with the top cause featured prominently, then "Next step:" for the check
-- The "Okay, I have enough to go on. Here's my read:" transition message updated to Buddy's voice
-- MentorChat placeholder text and reset button updated to Buddy's tone
-- Dashboard mentor card identifies the assistant as "Buddy" with the tagline "Your HVAC Field Mentor"
+- Buddy's response renderer to detect component keywords and inject visual aids contextually
+- Keep visual aids minimal: max 1 per response step, only when a physical part is mentioned
+- Ensure visuals don't break the step-by-step flow — guidance always appears first
 
 ### Remove
 - Nothing removed
 
 ## Implementation Plan
-1. Update `mentorLogic.ts`: rewrite all acknowledgment strings, follow-up question texts, and quick answer labels to match Buddy's voice and structure
-2. Update `MentorChat.tsx`: update transition messages, avatar label to show "Buddy", diagnosis card layout to use Buddy's format, and reset button text
-3. Update `Dashboard.tsx`: update the mentor card title/subtitle to show "Buddy — Your HVAC Field Mentor"
+1. Create a `componentVisuals.ts` data file mapping component keywords to visual metadata (image path or icon, diagram ref, video ref)
+2. Generate simple component illustration images for: capacitor, contactor, evaporator coil, condenser coil, refrigerant gauges, thermostat, air filter, TXV, compressor
+3. Build a `ComponentVisualAid` React component that renders the visual card with natural intro text
+4. Update the Field HVAC Assistant response rendering to detect physical component keywords and inject the visual aid below the relevant step
+5. Apply same logic to Quick Diagnose results on dashboard

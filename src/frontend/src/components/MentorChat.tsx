@@ -1,7 +1,9 @@
+import ComponentVisualAid from "@/components/ComponentVisualAid";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { detectComponentVisual } from "@/data/componentVisuals";
 import {
   type MentorDiagnosis,
   type MentorMessage,
@@ -116,41 +118,49 @@ function StageIndicator({
 }
 
 function MentorBubble({ text }: { text: string }) {
+  const visual = detectComponentVisual(text);
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.22 }}
-      className="flex items-start gap-2.5"
-    >
-      <div className="flex flex-col items-center gap-0.5 shrink-0 mt-0.5">
-        <div
-          className="w-7 h-7 rounded-full flex items-center justify-center"
-          style={{ background: "oklch(var(--primary) / 0.12)" }}
-        >
-          <HardHat
-            className="w-3.5 h-3.5"
-            style={{ color: "oklch(var(--primary) / 1)" }}
-          />
-        </div>
-        <span
-          className="text-[9px] font-semibold leading-none"
-          style={{ color: "oklch(var(--muted-foreground) / 0.7)" }}
-        >
-          Buddy
-        </span>
-      </div>
-      <div
-        className="rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm leading-relaxed whitespace-pre-line"
-        style={{
-          background: "oklch(var(--muted) / 1)",
-          color: "oklch(var(--foreground) / 1)",
-          maxWidth: "85%",
-        }}
+    <div className="flex flex-col gap-1">
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.22 }}
+        className="flex items-start gap-2.5"
       >
-        {text}
-      </div>
-    </motion.div>
+        <div className="flex flex-col items-center gap-0.5 shrink-0 mt-0.5">
+          <div
+            className="w-7 h-7 rounded-full flex items-center justify-center"
+            style={{ background: "oklch(var(--primary) / 0.12)" }}
+          >
+            <HardHat
+              className="w-3.5 h-3.5"
+              style={{ color: "oklch(var(--primary) / 1)" }}
+            />
+          </div>
+          <span
+            className="text-[9px] font-semibold leading-none"
+            style={{ color: "oklch(var(--muted-foreground) / 0.7)" }}
+          >
+            Buddy
+          </span>
+        </div>
+        <div
+          className="rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm leading-relaxed whitespace-pre-line"
+          style={{
+            background: "oklch(var(--muted) / 1)",
+            color: "oklch(var(--foreground) / 1)",
+            maxWidth: "85%",
+          }}
+        >
+          {text}
+        </div>
+      </motion.div>
+      {visual && (
+        <div className="ml-9">
+          <ComponentVisualAid visual={visual} />
+        </div>
+      )}
+    </div>
   );
 }
 

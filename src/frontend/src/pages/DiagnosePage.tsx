@@ -1,3 +1,4 @@
+import ComponentVisualAid from "@/components/ComponentVisualAid";
 import MentorChat from "@/components/MentorChat";
 import VideoRecommendations from "@/components/VideoRecommendations";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { detectComponentVisual } from "@/data/componentVisuals";
 
 import { extractKeywords } from "@/utils/videoRecommendations";
 import { Link } from "@tanstack/react-router";
@@ -1169,6 +1171,19 @@ export default function DiagnosePage() {
                     </CardContent>
                   </Card>
                 ))}
+                {/* Visual aid for the top result */}
+                {results.length > 0 &&
+                  (() => {
+                    const allText = [
+                      ...results[0].causes,
+                      ...results[0].steps,
+                      results[0].title,
+                    ].join(" ");
+                    const visual = detectComponentVisual(allText);
+                    return visual ? (
+                      <ComponentVisualAid visual={visual} />
+                    ) : null;
+                  })()}
               </div>
             )}
           </TabsContent>
