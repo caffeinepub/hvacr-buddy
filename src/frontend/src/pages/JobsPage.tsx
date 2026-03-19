@@ -1,3 +1,4 @@
+import BuddySuggestionCard from "@/components/BuddySuggestionCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,7 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { selectBestPart, selectBestTool } from "@/data/toolsPartsDatabase";
 import {
   FIELD_SCENARIOS,
   type FieldAssistantScenario,
@@ -487,33 +489,31 @@ function JobAssistantPanel({
             </ol>
           </div>
 
-          <div className="flex flex-wrap gap-1.5">
-            <p className="text-[10px] uppercase tracking-wide text-muted-foreground w-full">
-              Tools
-            </p>
-            {result.scenario.tools.map((t) => (
-              <span
-                key={t}
-                className="text-[10px] bg-muted border border-border rounded px-1.5 py-0.5 text-foreground"
-              >
-                {t}
-              </span>
-            ))}
-          </div>
+          {/* Tool Needed — select ONE most relevant from the database */}
+          {(() => {
+            const bestTool = selectBestTool(result.scenario!.tools);
+            if (!bestTool) return null;
+            return (
+              <BuddySuggestionCard
+                type="tool"
+                data={bestTool}
+                situation={`identified during ${result.scenario!.title.toLowerCase()}`}
+              />
+            );
+          })()}
 
-          <div className="flex flex-wrap gap-1.5">
-            <p className="text-[10px] uppercase tracking-wide text-muted-foreground w-full">
-              Possible Parts
-            </p>
-            {result.scenario.possibleParts.map((p) => (
-              <span
-                key={p}
-                className="text-[10px] bg-muted border border-border rounded px-1.5 py-0.5 text-foreground"
-              >
-                {p}
-              </span>
-            ))}
-          </div>
+          {/* Likely Part — select ONE most relevant from the database */}
+          {(() => {
+            const bestPart = selectBestPart(result.scenario!.possibleParts);
+            if (!bestPart) return null;
+            return (
+              <BuddySuggestionCard
+                type="part"
+                data={bestPart}
+                situation={`identified during ${result.scenario!.title.toLowerCase()}`}
+              />
+            );
+          })()}
         </div>
       )}
 

@@ -19,6 +19,19 @@ export const _CaffeineStorageRefillResult = IDL.Record({
   'success' : IDL.Opt(IDL.Bool),
   'topped_up_amount' : IDL.Opt(IDL.Nat),
 });
+export const Part = IDL.Record({
+  'id' : IDL.Nat,
+  'name' : IDL.Text,
+  'description' : IDL.Text,
+  'typicalUse' : IDL.Text,
+  'category' : IDL.Text,
+});
+export const Tool = IDL.Record({
+  'id' : IDL.Nat,
+  'name' : IDL.Text,
+  'description' : IDL.Text,
+  'category' : IDL.Text,
+});
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
@@ -64,6 +77,8 @@ export const idlService = IDL.Service({
     ),
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'addPart' : IDL.Func([IDL.Text, IDL.Text, IDL.Text, IDL.Text], [Part], []),
+  'addTool' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [Tool], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'createJob' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Vec(IDL.Text), IDL.Text],
@@ -71,9 +86,13 @@ export const idlService = IDL.Service({
       [],
     ),
   'deleteJob' : IDL.Func([IDL.Nat], [], []),
+  'deletePart' : IDL.Func([IDL.Nat], [], []),
+  'deleteTool' : IDL.Func([IDL.Nat], [], []),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getMyJobs' : IDL.Func([], [IDL.Vec(Job)], ['query']),
+  'getParts' : IDL.Func([], [IDL.Vec(Part)], ['query']),
+  'getTools' : IDL.Func([], [IDL.Vec(Tool)], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -94,6 +113,12 @@ export const idlService = IDL.Service({
       [Job],
       [],
     ),
+  'updatePart' : IDL.Func(
+      [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [Part],
+      [],
+    ),
+  'updateTool' : IDL.Func([IDL.Nat, IDL.Text, IDL.Text, IDL.Text], [Tool], []),
 });
 
 export const idlInitArgs = [];
@@ -109,6 +134,19 @@ export const idlFactory = ({ IDL }) => {
   const _CaffeineStorageRefillResult = IDL.Record({
     'success' : IDL.Opt(IDL.Bool),
     'topped_up_amount' : IDL.Opt(IDL.Nat),
+  });
+  const Part = IDL.Record({
+    'id' : IDL.Nat,
+    'name' : IDL.Text,
+    'description' : IDL.Text,
+    'typicalUse' : IDL.Text,
+    'category' : IDL.Text,
+  });
+  const Tool = IDL.Record({
+    'id' : IDL.Nat,
+    'name' : IDL.Text,
+    'description' : IDL.Text,
+    'category' : IDL.Text,
   });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
@@ -155,6 +193,8 @@ export const idlFactory = ({ IDL }) => {
       ),
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'addPart' : IDL.Func([IDL.Text, IDL.Text, IDL.Text, IDL.Text], [Part], []),
+    'addTool' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [Tool], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'createJob' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Vec(IDL.Text), IDL.Text],
@@ -162,9 +202,13 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'deleteJob' : IDL.Func([IDL.Nat], [], []),
+    'deletePart' : IDL.Func([IDL.Nat], [], []),
+    'deleteTool' : IDL.Func([IDL.Nat], [], []),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getMyJobs' : IDL.Func([], [IDL.Vec(Job)], ['query']),
+    'getParts' : IDL.Func([], [IDL.Vec(Part)], ['query']),
+    'getTools' : IDL.Func([], [IDL.Vec(Tool)], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
@@ -183,6 +227,16 @@ export const idlFactory = ({ IDL }) => {
           IDL.Text,
         ],
         [Job],
+        [],
+      ),
+    'updatePart' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [Part],
+        [],
+      ),
+    'updateTool' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Text, IDL.Text],
+        [Tool],
         [],
       ),
   });

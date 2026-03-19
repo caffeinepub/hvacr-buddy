@@ -5,6 +5,7 @@ import "@/utils/flows/acFreezingUp";
 import "@/utils/flows/noHeat";
 import "@/utils/flows/breakerTripping";
 
+import BuddySuggestionCard from "@/components/BuddySuggestionCard";
 import ComponentVisualAid from "@/components/ComponentVisualAid";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,9 +13,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { componentVisuals } from "@/data/componentVisuals";
 import { detectComponentVisual } from "@/data/componentVisuals";
+import { lookupTool } from "@/data/toolsPartsDatabase";
 import {
   type FlowDef,
   type FlowState,
+  type ToolGuidance,
   activateFlow,
   advanceFlow,
   initFlowState,
@@ -442,6 +445,7 @@ interface EnrichedMessage extends MentorMessage {
   id: number;
   safetyNote?: string;
   visualComponent?: string;
+  toolGuidance?: ToolGuidance;
 }
 
 export default function MentorChat({
@@ -495,6 +499,7 @@ export default function MentorChat({
             text: firstStep.message,
             safetyNote: firstStep.safetyNote,
             visualComponent: firstStep.visualComponent,
+            toolGuidance: firstStep.toolGuidance,
           });
         }
 
@@ -562,6 +567,7 @@ export default function MentorChat({
           text: result.step.message,
           safetyNote: result.step.safetyNote,
           visualComponent: result.step.visualComponent,
+          toolGuidance: result.step.toolGuidance,
         });
         setState((prev) => ({
           ...prev,
@@ -666,6 +672,20 @@ export default function MentorChat({
                         visualComponent={msg.visualComponent}
                       />
                       {msg.safetyNote && <SafetyBanner text={msg.safetyNote} />}
+                      {msg.toolGuidance &&
+                        (() => {
+                          const toolData = lookupTool(msg.toolGuidance!.name);
+                          if (toolData) {
+                            return (
+                              <BuddySuggestionCard
+                                type="tool"
+                                data={toolData}
+                                situation={msg.toolGuidance!.situation}
+                              />
+                            );
+                          }
+                          return null;
+                        })()}
                     </div>
                   ) : (
                     <UserBubble key={msg.id} text={msg.text} />

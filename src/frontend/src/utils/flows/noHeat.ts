@@ -86,7 +86,6 @@ const noHeatFlow: FlowDef = {
       next: () => "diagnosis",
     },
 
-    // --- FURNACE BRANCH ---
     furnace_ignition: {
       id: "furnace_ignition",
       message:
@@ -96,6 +95,18 @@ const noHeatFlow: FlowDef = {
         "Fan runs but no heat",
         "Nothing at all",
       ],
+      toolGuidance: {
+        name: "multimeter",
+        situation: "checking ignitor and flame sensor circuit on gas furnace",
+        purpose:
+          "verify the ignitor has continuity and the flame sensor is conducting",
+        steps: [
+          "Turn the furnace power OFF at the disconnect before touching any components.",
+          "Set the multimeter to resistance mode (Ω).",
+          "For the ignitor: place probes on the ignitor terminals — a good ignitor reads 40–100Ω (exact range varies by model).",
+          "For the flame sensor: check for continuity — an open circuit means the sensor is bad or the wiring is broken.",
+        ],
+      },
       next: (answer) => {
         const a = answer.toLowerCase();
         if (a.includes("fan") || a.includes("trying") || a.includes("hear"))
@@ -114,7 +125,6 @@ const noHeatFlow: FlowDef = {
       next: () => "diagnosis",
     },
 
-    // --- HEAT PUMP BRANCH ---
     hp_reversing_valve: {
       id: "hp_reversing_valve",
       message:
@@ -124,6 +134,18 @@ const noHeatFlow: FlowDef = {
         "Doesn't run at all",
         "Not sure",
       ],
+      toolGuidance: {
+        name: "multimeter",
+        situation: "testing reversing valve solenoid voltage on heat pump",
+        purpose:
+          "confirm whether 24V is reaching the reversing valve solenoid in heat mode",
+        steps: [
+          "Set the multimeter to AC voltage mode (VAC).",
+          "With the thermostat calling for HEAT, locate the reversing valve solenoid wires.",
+          "Place probes across the solenoid coil terminals.",
+          "You should read 24VAC. If present but valve doesn't switch, the valve is mechanically stuck — it needs replacement.",
+        ],
+      },
       next: () => "hp_outdoor_check",
     },
 
@@ -142,7 +164,6 @@ const noHeatFlow: FlowDef = {
       systemAnswer.includes("gas") || systemAnswer.includes("furnace");
     const isHeatPump = systemAnswer.includes("heat pump");
 
-    // Thermostat fixed it
     if (
       (state.answers.thermostat_fix ?? "").toLowerCase().includes("came on")
     ) {
@@ -158,7 +179,6 @@ const noHeatFlow: FlowDef = {
       };
     }
 
-    // Breaker
     const breakerAnswer = (state.answers.power_check ?? "").toLowerCase();
     if (breakerAnswer.includes("yes") || breakerAnswer.includes("found")) {
       const breakerResult = (state.answers.breaker_found ?? "").toLowerCase();
@@ -191,7 +211,6 @@ const noHeatFlow: FlowDef = {
       };
     }
 
-    // FURNACE: Flame sensor
     if (state.answers.furnace_flame_sensor !== undefined) {
       const cleaned = (state.answers.furnace_flame_sensor ?? "")
         .toLowerCase()
@@ -212,7 +231,6 @@ const noHeatFlow: FlowDef = {
       };
     }
 
-    // FURNACE: Ignition silent
     if (state.answers.furnace_ignition !== undefined) {
       const ignitionAnswer = (
         state.answers.furnace_ignition ?? ""
@@ -236,7 +254,6 @@ const noHeatFlow: FlowDef = {
       }
     }
 
-    // HEAT PUMP: Outdoor check
     if (state.answers.hp_outdoor_check !== undefined) {
       const outdoorAnswer = (
         state.answers.hp_outdoor_check ?? ""
@@ -297,7 +314,6 @@ const noHeatFlow: FlowDef = {
       };
     }
 
-    // Generic fallback
     if (isGas) {
       return {
         safetyNote:

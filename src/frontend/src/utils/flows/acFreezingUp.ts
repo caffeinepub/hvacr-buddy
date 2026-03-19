@@ -1,14 +1,6 @@
 import { type FlowDef, type FlowState, registerFlow } from "../flowEngine";
 import type { MentorDiagnosis } from "../mentorLogic";
 
-// ac_freezing_up — strict 6-step flow
-// Step 1: Confirm ice
-// Step 2: Turn system OFF (safety — must confirm before advancing)
-// Step 3: Check airflow (filter, then vents)
-// Step 4: Check blower operation
-// Step 5: Evaluate refrigerant possibility (only after airflow cleared)
-// Step 6: Diagnose (airflow issue vs refrigerant issue)
-
 const acFreezingUpFlow: FlowDef = {
   id: "ac_freezing_up",
   triggers: [
@@ -37,7 +29,6 @@ const acFreezingUpFlow: FlowDef = {
     "diagnosis",
   ],
   steps: {
-    // ── Step 1: Confirm ice presence ──────────────────────────────────────
     confirm_ice: {
       id: "confirm_ice",
       message:
@@ -46,7 +37,6 @@ const acFreezingUpFlow: FlowDef = {
       next: () => "turn_off",
     },
 
-    // ── Step 2: Turn system OFF — SAFETY STEP ────────────────────────────
     turn_off: {
       id: "turn_off",
       message:
@@ -56,13 +46,11 @@ const acFreezingUpFlow: FlowDef = {
         "SAFETY: Turn the system OFF at the thermostat before proceeding. Running a frozen coil can cause compressor damage.",
       next: (answer) => {
         const a = answer.toLowerCase();
-        // If not yet, keep them on this step (re-prompt)
         if (a.includes("not yet")) return "turn_off_remind";
         return "check_filter";
       },
     },
 
-    // Re-prompt if user hasn't turned it off yet
     turn_off_remind: {
       id: "turn_off_remind",
       message:
@@ -73,7 +61,6 @@ const acFreezingUpFlow: FlowDef = {
       next: () => "check_filter",
     },
 
-    // ── Step 3a: Check air filter ─────────────────────────────────────────
     check_filter: {
       id: "check_filter",
       message:
@@ -82,7 +69,6 @@ const acFreezingUpFlow: FlowDef = {
       next: () => "check_vents",
     },
 
-    // ── Step 3b: Check vents ──────────────────────────────────────────────
     check_vents: {
       id: "check_vents",
       message:
@@ -91,7 +77,6 @@ const acFreezingUpFlow: FlowDef = {
       next: () => "check_blower",
     },
 
-    // ── Step 4: Check blower operation ───────────────────────────────────
     check_blower: {
       id: "check_blower",
       message:
@@ -104,7 +89,6 @@ const acFreezingUpFlow: FlowDef = {
       next: () => "refrigerant_eval",
     },
 
-    // ── Step 5: Evaluate refrigerant possibility (only after airflow) ─────
     refrigerant_eval: {
       id: "refrigerant_eval",
       message:
@@ -112,6 +96,19 @@ const acFreezingUpFlow: FlowDef = {
       quickAnswers: ["Yes, I have gauges", "No gauges", "Not sure"],
       safetyNote:
         "EPA 608 certification is required to handle refrigerants. Wear safety glasses before connecting gauges.",
+      toolGuidance: {
+        name: "manifold gauge set",
+        situation:
+          "evaluating refrigerant charge after ruling out airflow issues",
+        purpose:
+          "check suction pressure and superheat to confirm if the system is low on refrigerant",
+        steps: [
+          "Connect the blue (low side) hose to the suction service valve on the outdoor unit.",
+          "Connect the red (high side) hose to the discharge service valve.",
+          "With the system running, read the suction pressure on the blue gauge.",
+          "Low suction pressure (below 60 PSI for R-22 or below 100 PSI for R-410A) combined with high superheat confirms low refrigerant charge.",
+        ],
+      },
       next: () => "diagnosis",
     },
   },
@@ -131,7 +128,6 @@ const acFreezingUpFlow: FlowDef = {
       blowerAnswer.includes("not running") || blowerAnswer.includes("no,");
     const hasGauges = refrigerantAnswer.includes("yes");
 
-    // Airflow issue: dirty filter OR blocked vents OR blower not running
     if (filterDirty || ventsBlocked || blowerNotRunning) {
       const causes: string[] = [];
       if (filterDirty)
@@ -146,9 +142,14 @@ const acFreezingUpFlow: FlowDef = {
         );
       causes.push("Coil ices over when airflow is too low to absorb heat");
 
+      const partName = blowerNotRunning
+        ? "Blower motor or capacitor"
+        : filterDirty
+          ? "Air filter"
+          : "Blocked vents";
+
       return {
-        buddySummary:
-          "Based on what you've told me, the most likely issue is: Airflow restriction causing the evaporator coil to freeze.\n\nNext step:\nFix the airflow issue first (replace filter, open all vents, confirm blower runs). Let the coil fully thaw — fan-only mode for 1–2 hours. Then restart cooling and monitor.",
+        buddySummary: `Based on what you've told me, the most likely issue is:\n→ ${partName}\n\nThis part controls airflow across the evaporator coil. Without enough air moving over it, the coil drops below freezing and ices over.\n\nNext step:\nFix the airflow issue first. Let the coil fully thaw — fan-only mode for 1–2 hours. Then restart cooling and monitor.`,
         causes,
         nextCheck:
           "Replace dirty filter. Open all vents. Confirm blower runs. Allow full thaw before restarting cooling mode.",
@@ -159,13 +160,12 @@ const acFreezingUpFlow: FlowDef = {
       };
     }
 
-    // Refrigerant issue path
     if (hasGauges) {
       return {
         safetyNote:
           "EPA 608 certification is required to handle refrigerants. Always use proper PPE.",
         buddySummary:
-          "Based on what you've told me, the most likely issue is: Low refrigerant charge — the suction pressure is dropping below the freezing point and icing the coil.\n\nNext step:\nConnect your gauges and check suction pressure and superheat. Low suction + high superheat = low charge. Locate the leak before adding any refrigerant.",
+          "Based on what you've told me, the most likely issue is:\n→ Low refrigerant charge\n\nThis means the system doesn't have enough refrigerant — the suction pressure drops below the freezing point and ices the coil.\n\nNext step:\nConnect your gauges and check suction pressure and superheat. Low suction + high superheat = low charge. Locate the leak before adding any refrigerant.",
         causes: [
           "Low refrigerant charge from a slow leak",
           "Metering device (TXV or piston) stuck closed, over-restricting flow",
@@ -180,12 +180,11 @@ const acFreezingUpFlow: FlowDef = {
       };
     }
 
-    // No gauges / uncertain
     return {
       safetyNote:
         "Always allow the coil to fully thaw before restarting the system in cooling mode.",
       buddySummary:
-        "Based on what you've told me, airflow looks okay — the next step is to check refrigerant pressures.\n\nNext step:\nYou'll need manifold gauges to check suction pressure and superheat. Low suction pressure with high superheat points to a low refrigerant charge. If you don't have gauges, this is the point to call in a certified tech.",
+        "Based on what you've told me, airflow looks okay — the next step is to check refrigerant pressures.\n\nBased on what you've told me, the most likely issue is:\n→ Low refrigerant charge\n\nThis is the most common cause when airflow is clear. You'll need manifold gauges to confirm.\n\nNext step:\nConnect manifold gauges and check suction pressure and superheat. If you don't have gauges, this is the point to call in a certified tech.",
       causes: [
         "Low refrigerant charge (most likely if airflow is clear)",
         "Faulty metering device restricting refrigerant flow",

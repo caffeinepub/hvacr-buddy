@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { Job, UserProfile } from "../backend.d";
+import type { Job, Part, Tool, UserProfile } from "../backend.d";
 import { useActor } from "./useActor";
 
 export function useGetCallerUserProfile() {
@@ -136,6 +136,93 @@ export function useDeleteJob() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["myJobs"] });
+    },
+  });
+}
+
+export function useGetTools() {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<Tool[]>({
+    queryKey: ["tools"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getTools();
+    },
+    enabled: !!actor && !actorFetching,
+  });
+}
+
+export function useGetParts() {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<Part[]>({
+    queryKey: ["parts"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getParts();
+    },
+    enabled: !!actor && !actorFetching,
+  });
+}
+
+export function useIsCallerAdmin() {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<boolean>({
+    queryKey: ["isCallerAdmin"],
+    queryFn: async () => {
+      if (!actor) return false;
+      return actor.isCallerAdmin();
+    },
+    enabled: !!actor && !actorFetching,
+  });
+}
+
+export function useAddTool() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      name,
+      description,
+      category,
+    }: {
+      name: string;
+      description: string;
+      category: string;
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      return actor.addTool(name, description, category);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tools"] });
+    },
+  });
+}
+
+export function useAddPart() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      name,
+      description,
+      category,
+      typicalUse,
+    }: {
+      name: string;
+      description: string;
+      category: string;
+      typicalUse: string;
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      return actor.addPart(name, description, category, typicalUse);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["parts"] });
     },
   });
 }

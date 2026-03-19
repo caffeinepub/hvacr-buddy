@@ -1,5 +1,16 @@
 import type { MentorDiagnosis } from "./mentorLogic";
 
+export interface ToolGuidance {
+  name: string;
+  /** One sentence: why this tool is needed right now */
+  purpose: string;
+  /** Step-by-step usage instructions (from the tools database) */
+  steps: string[];
+  visualComponent?: string;
+  /** Optional context describing the current situation (Step 1 of 5) */
+  situation?: string;
+}
+
 export interface FlowState {
   flowId: string;
   step: string;
@@ -20,6 +31,7 @@ export interface FlowStep {
   quickAnswers: string[];
   safetyNote?: string;
   visualComponent?: string;
+  toolGuidance?: ToolGuidance;
   next: (answer: string, state: FlowState) => string;
 }
 

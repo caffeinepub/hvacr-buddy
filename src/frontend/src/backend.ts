@@ -89,8 +89,12 @@ export class ExternalBlob {
         return this;
     }
 }
-export interface UserProfile {
+export interface Part {
+    id: bigint;
     name: string;
+    description: string;
+    typicalUse: string;
+    category: string;
 }
 export interface Job {
     id: bigint;
@@ -102,16 +106,25 @@ export interface Job {
     notes: string;
     photos: Array<string>;
 }
+export interface _CaffeineStorageRefillInformation {
+    proposed_top_up_amount?: bigint;
+}
 export interface _CaffeineStorageCreateCertificateResult {
     method: string;
     blob_hash: string;
 }
+export interface Tool {
+    id: bigint;
+    name: string;
+    description: string;
+    category: string;
+}
+export interface UserProfile {
+    name: string;
+}
 export interface _CaffeineStorageRefillResult {
     success?: boolean;
     topped_up_amount?: bigint;
-}
-export interface _CaffeineStorageRefillInformation {
-    proposed_top_up_amount?: bigint;
 }
 export enum UserRole {
     admin = "admin",
@@ -126,16 +139,24 @@ export interface backendInterface {
     _caffeineStorageRefillCashier(refillInformation: _CaffeineStorageRefillInformation | null): Promise<_CaffeineStorageRefillResult>;
     _caffeineStorageUpdateGatewayPrincipals(): Promise<void>;
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
+    addPart(name: string, description: string, category: string, typicalUse: string): Promise<Part>;
+    addTool(name: string, description: string, category: string): Promise<Tool>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     createJob(title: string, notes: string, measurements: string, repairNotes: string, photos: Array<string>, date: string): Promise<Job>;
     deleteJob(jobId: bigint): Promise<void>;
+    deletePart(partId: bigint): Promise<void>;
+    deleteTool(toolId: bigint): Promise<void>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getMyJobs(): Promise<Array<Job>>;
+    getParts(): Promise<Array<Part>>;
+    getTools(): Promise<Array<Tool>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     updateJob(jobId: bigint, title: string, notes: string, measurements: string, repairNotes: string, photos: Array<string>, date: string): Promise<Job>;
+    updatePart(partId: bigint, name: string, description: string, category: string, typicalUse: string): Promise<Part>;
+    updateTool(toolId: bigint, name: string, description: string, category: string): Promise<Tool>;
 }
 import type { UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -238,6 +259,34 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async addPart(arg0: string, arg1: string, arg2: string, arg3: string): Promise<Part> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.addPart(arg0, arg1, arg2, arg3);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.addPart(arg0, arg1, arg2, arg3);
+            return result;
+        }
+    }
+    async addTool(arg0: string, arg1: string, arg2: string): Promise<Tool> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.addTool(arg0, arg1, arg2);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.addTool(arg0, arg1, arg2);
+            return result;
+        }
+    }
     async assignCallerUserRole(arg0: Principal, arg1: UserRole): Promise<void> {
         if (this.processError) {
             try {
@@ -280,6 +329,34 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async deletePart(arg0: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deletePart(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deletePart(arg0);
+            return result;
+        }
+    }
+    async deleteTool(arg0: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteTool(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteTool(arg0);
+            return result;
+        }
+    }
     async getCallerUserProfile(): Promise<UserProfile | null> {
         if (this.processError) {
             try {
@@ -319,6 +396,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.getMyJobs();
+            return result;
+        }
+    }
+    async getParts(): Promise<Array<Part>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getParts();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getParts();
+            return result;
+        }
+    }
+    async getTools(): Promise<Array<Tool>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getTools();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getTools();
             return result;
         }
     }
@@ -375,6 +480,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.updateJob(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+            return result;
+        }
+    }
+    async updatePart(arg0: bigint, arg1: string, arg2: string, arg3: string, arg4: string): Promise<Part> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updatePart(arg0, arg1, arg2, arg3, arg4);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updatePart(arg0, arg1, arg2, arg3, arg4);
+            return result;
+        }
+    }
+    async updateTool(arg0: bigint, arg1: string, arg2: string, arg3: string): Promise<Tool> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateTool(arg0, arg1, arg2, arg3);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateTool(arg0, arg1, arg2, arg3);
             return result;
         }
     }

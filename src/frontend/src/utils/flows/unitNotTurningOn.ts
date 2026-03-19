@@ -30,7 +30,6 @@ const unitNotTurningOnFlow: FlowDef = {
     "diagnosis",
   ],
   steps: {
-    // Step 1: Thermostat check
     thermostat_check: {
       id: "thermostat_check",
       message:
@@ -42,19 +41,13 @@ const unitNotTurningOnFlow: FlowDef = {
         return "breaker_check";
       },
     },
-    // Thermostat dead branch → short step before breaker
     thermostat_dead: {
       id: "thermostat_dead",
       message:
         "A blank or unresponsive thermostat can kill the whole system.\n\nQuick check: if it's battery-powered, swap the batteries first. If it's wired, we'll check the 24V fuse on the air handler board next.\n\nDid swapping batteries (or checking power) bring the screen back?",
       quickAnswers: ["Yes", "No", "Not sure"],
-      next: (answer) => {
-        const a = answer.toLowerCase();
-        if (a.includes("yes")) return "breaker_check";
-        return "breaker_check"; // Continue the flow regardless
-      },
+      next: () => "breaker_check",
     },
-    // Step 2: Breaker check
     breaker_check: {
       id: "breaker_check",
       message:
@@ -64,7 +57,6 @@ const unitNotTurningOnFlow: FlowDef = {
         "⚠️ If you reset a tripped breaker, do it ONCE only. If it trips again immediately, stop — there's a fault that needs to be diagnosed before resetting.",
       next: () => "air_handler_power",
     },
-    // Step 3: Air handler power
     air_handler_power: {
       id: "air_handler_power",
       message:
@@ -74,7 +66,6 @@ const unitNotTurningOnFlow: FlowDef = {
         "⚠️ Do not open the air handler panel or touch any wiring — we're just checking for visible signs of power right now.",
       next: () => "outdoor_unit_power",
     },
-    // Step 4: Outdoor unit power
     outdoor_unit_power: {
       id: "outdoor_unit_power",
       message:
@@ -84,7 +75,6 @@ const unitNotTurningOnFlow: FlowDef = {
         "⚠️ Do not open the outdoor unit panel yet. Just check the disconnect box and look for any LED indicators.",
       next: () => "contactor_check",
     },
-    // Step 5: Contactor check (with visual)
     contactor_check: {
       id: "contactor_check",
       message:
@@ -93,9 +83,21 @@ const unitNotTurningOnFlow: FlowDef = {
       safetyNote:
         "⚠️ Turn the disconnect off before opening the outdoor unit panel. High voltage is present inside — do not touch any terminals.",
       visualComponent: "contactor",
+      toolGuidance: {
+        name: "multimeter",
+        situation: "verifying 24V control signal at the contactor coil",
+        purpose:
+          "check if 24V is reaching the contactor coil when the system calls",
+        steps: [
+          "Set it to AC voltage mode (VAC).",
+          "With the thermostat calling for cooling, place probes on the two small contactor coil terminals.",
+          "You should read 24–28VAC. If no voltage, the control circuit is the problem.",
+          "If 24V is present but no click, the contactor itself needs replacement.",
+        ],
+        visualComponent: "multimeter",
+      },
       next: () => "capacitor_check",
     },
-    // Step 6: Capacitor check (with visual)
     capacitor_check: {
       id: "capacitor_check",
       message:
@@ -104,6 +106,19 @@ const unitNotTurningOnFlow: FlowDef = {
       safetyNote:
         "⚠️ Even with the disconnect OFF, a capacitor can hold a dangerous charge. Do not touch the terminals — use an insulated tool to discharge it before testing with a meter.",
       visualComponent: "capacitor",
+      toolGuidance: {
+        name: "multimeter",
+        situation: "measuring capacitor microfarad rating with disconnect OFF",
+        purpose:
+          "measure the capacitor's actual microfarad (µF) rating to confirm if it has failed",
+        steps: [
+          "Set it to capacitance mode (µF symbol).",
+          "Discharge the capacitor first by shorting the terminals with an insulated screwdriver.",
+          "Place the probes on the terminals and read the µF value.",
+          "If the reading is more than 10% below the label rating, the capacitor is bad — replace it.",
+        ],
+        visualComponent: "multimeter",
+      },
       next: () => "diagnosis",
     },
   },
@@ -117,14 +132,13 @@ const unitNotTurningOnFlow: FlowDef = {
     const contactor = (state.answers.contactor_check ?? "").toLowerCase();
     const capacitor = (state.answers.capacitor_check ?? "").toLowerCase();
 
-    // Thermostat dead and batteries didn't fix it
     if (
       (thermostat.includes("no") || thermostat.includes("not sure")) &&
       (thermostatDead.includes("no") || thermostatDead.includes("not sure"))
     ) {
       return {
         buddySummary:
-          "Based on what you've told me, the most likely issue is: Thermostat has no power — likely a blown 24V fuse on the air handler control board or a failed 24V transformer.\n\nNext step:\nLocate the 24V fuse on the air handler or furnace control board and test it with a multimeter. A blown fuse typically means a short somewhere in the low-voltage wiring.",
+          "Based on what you've told me, the most likely issue is:\n→ 24V control fuse or transformer\n\nThis part supplies low-voltage power to the thermostat and control board. When it fails, the thermostat goes blank and the system won't run.\n\nNext step:\nLocate the 24V fuse on the air handler or furnace control board and test it with a multimeter. A blown fuse typically means a short somewhere in the low-voltage wiring.",
         causes: [
           "Blown 24V control fuse on the air handler board",
           "Failed 24V transformer not supplying low-voltage power",
@@ -141,13 +155,12 @@ const unitNotTurningOnFlow: FlowDef = {
       };
     }
 
-    // Tripped breaker found
     if (breaker.includes("tripped")) {
       return {
         safetyNote:
           "Reset the breaker ONE time only. If it trips again immediately, stop — the circuit has a fault. Do not force it.",
         buddySummary:
-          "Based on what you've told me, the most likely issue is: A tripped breaker is cutting power to the system.\n\nNext step:\nReset it once and monitor the system. If it holds, check the capacitor and compressor amp draw. If it trips again, stop and test the capacitor first — a failed cap causes high startup amperage that trips breakers.",
+          "Based on what you've told me, the most likely issue is:\n→ Tripped breaker\n\nThis part cuts power to protect the circuit when too many amps are drawn — usually caused by a failing run capacitor or compressor hard-start.\n\nNext step:\nReset it once and monitor the system. If it holds, test capacitor microfarads. If it trips again immediately, clamp-meter the compressor at startup.",
         causes: [
           "Tripped breaker from a failing or failed run capacitor",
           "Compressor drawing locked rotor amperage at startup",
@@ -162,13 +175,12 @@ const unitNotTurningOnFlow: FlowDef = {
       };
     }
 
-    // No power to air handler
     if (airHandler.includes("no")) {
       return {
         safetyNote:
           "Do not open the air handler panel without turning the breaker off first.",
         buddySummary:
-          "Based on what you've told me, the most likely issue is: The air handler has no power — check the breaker, the disconnect switch on the unit, and the 24V fuse on the control board.\n\nNext step:\nConfirm the breaker is on and hasn't tripped silently. Check if there's a door safety switch that's not making contact on the air handler cabinet.",
+          "Based on what you've told me, the most likely issue is:\n→ Air handler power supply\n\nThe unit has no power — check the breaker, the disconnect switch on the unit, and the door safety switch.\n\nNext step:\nConfirm the breaker is on and hasn't tripped silently. Check if there's a door safety switch that's not making contact on the air handler cabinet.",
         causes: [
           "Tripped or weak breaker not providing full voltage",
           "Disconnected or open service disconnect at the unit",
@@ -183,13 +195,12 @@ const unitNotTurningOnFlow: FlowDef = {
       };
     }
 
-    // Outdoor disconnect pulled or no outdoor power
     if (outdoor.includes("no") || outdoor.includes("disconnect")) {
       return {
         safetyNote:
           "Ensure the disconnect is properly seated before restoring power to the outdoor unit.",
         buddySummary:
-          "Based on what you've told me, the most likely issue is: No power reaching the outdoor unit — the disconnect may be pulled, blown, or there may be a fuse inside the disconnect block.\n\nNext step:\nInspect the disconnect block for pulled fuses or blown cartridge fuses. Test with a multimeter across the fuse — if you read voltage in but not out, the fuse is blown.",
+          "Based on what you've told me, the most likely issue is:\n→ Blown disconnect fuse\n\nThis part protects the condenser circuit. If the fuse inside the disconnect block is blown, no power reaches the outdoor unit.\n\nNext step:\nInspect the disconnect block for pulled fuses or blown cartridge fuses. Test with a multimeter across the fuse — if you read voltage in but not out, the fuse is blown.",
         causes: [
           "Blown fuse inside the outdoor disconnect block",
           "Disconnect not fully seated or pulled by previous tech",
@@ -204,13 +215,12 @@ const unitNotTurningOnFlow: FlowDef = {
       };
     }
 
-    // No contactor click
     if (contactor.includes("no")) {
       return {
         safetyNote:
           "Keep the disconnect OFF while checking inside the outdoor unit panel.",
         buddySummary:
-          "Based on what you've told me, the most likely issue is: The contactor is not pulling in — no 24V signal is reaching the contactor coil.\n\nNext step:\nWith the thermostat calling, use a multimeter to test for 24VAC at the contactor coil terminals. If there's no voltage, trace back to the air handler board. If 24V is present but no click, the contactor itself is bad.",
+          "Based on what you've told me, the most likely issue is:\n→ Contactor\n\nThis part is the electrical switch that energizes the compressor and fan. If it's not clicking, no 24V signal is reaching the coil — or the contactor itself has failed.\n\nNext step:\nWith the thermostat calling, use a multimeter to test for 24VAC at the contactor coil terminals. Voltage present but no click → replace the contactor.",
         causes: [
           "No 24V control signal reaching the contactor coil",
           "Blown 24V fuse or failed control board",
@@ -225,13 +235,12 @@ const unitNotTurningOnFlow: FlowDef = {
       };
     }
 
-    // Bad capacitor (visual inspection)
     if (capacitor.includes("yes") || capacitor.includes("bad")) {
       return {
         safetyNote:
           "Discharge the capacitor with an insulated resistor before removing it. Even with power off, capacitors hold a dangerous charge.",
         buddySummary:
-          "Based on what you've told me, the most likely issue is: A failed run capacitor. A swollen or leaking capacitor cannot provide the starting torque the compressor and fan need.\n\nNext step:\nReplace the capacitor with one matching the exact microfarad (µF) and voltage rating on the label. This is one of the most common AC repairs and usually fixes a no-start immediately.",
+          "Based on what you've told me, the most likely issue is:\n→ Run capacitor\n\nThis part provides the electrical boost the compressor and fan motor need to start. A swollen or leaking capacitor can't do that job.\n\nNext step:\nReplace the capacitor with one matching the exact microfarad (µF) and voltage rating on the label.",
         causes: [
           "Failed run capacitor — swollen, leaking, or out of spec",
           "Compressor or condenser fan motor unable to start without good cap",
@@ -246,7 +255,6 @@ const unitNotTurningOnFlow: FlowDef = {
       };
     }
 
-    // Contactor clicks, capacitor looks normal — contactor contacts or compressor
     return {
       safetyNote:
         "Always turn the disconnect off before working inside the outdoor unit. Test capacitor with an insulated discharge tool before touching terminals.",

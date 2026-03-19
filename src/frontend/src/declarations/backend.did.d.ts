@@ -20,6 +20,19 @@ export interface Job {
   'notes' : string,
   'photos' : Array<string>,
 }
+export interface Part {
+  'id' : bigint,
+  'name' : string,
+  'description' : string,
+  'typicalUse' : string,
+  'category' : string,
+}
+export interface Tool {
+  'id' : bigint,
+  'name' : string,
+  'description' : string,
+  'category' : string,
+}
 export interface UserProfile { 'name' : string }
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
@@ -52,15 +65,21 @@ export interface _SERVICE {
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'addPart' : ActorMethod<[string, string, string, string], Part>,
+  'addTool' : ActorMethod<[string, string, string], Tool>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'createJob' : ActorMethod<
     [string, string, string, string, Array<string>, string],
     Job
   >,
   'deleteJob' : ActorMethod<[bigint], undefined>,
+  'deletePart' : ActorMethod<[bigint], undefined>,
+  'deleteTool' : ActorMethod<[bigint], undefined>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getMyJobs' : ActorMethod<[], Array<Job>>,
+  'getParts' : ActorMethod<[], Array<Part>>,
+  'getTools' : ActorMethod<[], Array<Tool>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
@@ -68,6 +87,8 @@ export interface _SERVICE {
     [bigint, string, string, string, string, Array<string>, string],
     Job
   >,
+  'updatePart' : ActorMethod<[bigint, string, string, string, string], Part>,
+  'updateTool' : ActorMethod<[bigint, string, string, string], Tool>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];
