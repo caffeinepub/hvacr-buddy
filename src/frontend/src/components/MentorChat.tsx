@@ -373,7 +373,8 @@ function MentorBubble({
         <div
           className="rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm leading-relaxed whitespace-pre-line"
           style={{
-            background: "oklch(var(--muted) / 1)",
+            background: "oklch(0.20 0.035 235)",
+            border: "1px solid oklch(0.28 0.04 235)",
             color: "oklch(var(--foreground) / 1)",
             maxWidth: "85%",
           }}
@@ -387,6 +388,62 @@ function MentorBubble({
         </div>
       )}
     </div>
+  );
+}
+
+function ThinkingBubble() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 4 }}
+      transition={{ duration: 0.2 }}
+      className="flex items-start gap-2.5"
+      data-ocid="mentor.thinking_state"
+    >
+      <div className="flex flex-col items-center gap-0.5 shrink-0 mt-0.5">
+        <div
+          className="w-7 h-7 rounded-full flex items-center justify-center"
+          style={{ background: "oklch(var(--primary) / 0.12)" }}
+        >
+          <HardHat
+            className="w-3.5 h-3.5"
+            style={{ color: "oklch(var(--primary) / 1)" }}
+          />
+        </div>
+        <span
+          className="text-[9px] font-semibold leading-none"
+          style={{ color: "oklch(var(--muted-foreground) / 0.7)" }}
+        >
+          Buddy
+        </span>
+      </div>
+      <div
+        className="rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1.5"
+        style={{
+          background: "oklch(0.20 0.035 235)",
+          border: "1px solid oklch(0.28 0.04 235)",
+        }}
+      >
+        <span
+          className="text-xs mr-1"
+          style={{ color: "oklch(var(--muted-foreground) / 0.6)" }}
+        >
+          Buddy is thinking
+        </span>
+        {[0, 150, 300].map((delay) => (
+          <span
+            key={delay}
+            className="inline-block w-1.5 h-1.5 rounded-full animate-bounce"
+            style={{
+              background: "oklch(var(--muted-foreground) / 0.45)",
+              animationDelay: `${delay}ms`,
+              animationDuration: "900ms",
+            }}
+          />
+        ))}
+      </div>
+    </motion.div>
   );
 }
 
@@ -530,19 +587,21 @@ export default function MentorChat({
   const [state, setState] = useState<ChatState>(INITIAL_STATE);
   const [messages, setMessages] = useState<EnrichedMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
+  const [isThinking, setIsThinking] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const msgIdRef = useRef(0);
 
   const msgCount = messages.length + (state.diagnosis ? 1 : 0);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: scroll on message count change
+  // biome-ignore lint/correctness/useExhaustiveDependencies: scroll on message count or thinking state change
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [msgCount]);
+  }, [msgCount, isThinking]);
 
   function handleReset() {
     setState(INITIAL_STATE);
     setMessages([]);
     setInputValue("");
+    setIsThinking(false);
   }
 
   function addMessage(msg: Omit<EnrichedMessage, "id">) {
@@ -561,9 +620,20 @@ export default function MentorChat({
 
   function submitInput(value: string) {
     const trimmed = value.trim();
-    if (!trimmed) return;
+    if (!trimmed || isThinking) return;
     setInputValue("");
 
+    // Add user message immediately, then show thinking state before Buddy replies
+    addMessage({ role: "user", text: trimmed });
+    setIsThinking(true);
+
+    setTimeout(() => {
+      setIsThinking(false);
+      processInput(trimmed);
+    }, 500);
+  }
+
+  function processInput(trimmed: string) {
     // ── Stage: initial ────────────────────────────────────────────────────────
     if (state.stage === "initial") {
       // Check for a registered flow first
@@ -573,7 +643,6 @@ export default function MentorChat({
         const flowState = initFlowState(flow);
         const firstStep = flow.steps[flowState.step];
 
-        addMessage({ role: "user", text: trimmed });
         addMessage({
           role: "mentor",
           text: "Alright — let me walk you through this step by step. I'll ask you one question at a time.",
@@ -602,7 +671,6 @@ export default function MentorChat({
       const ack = getInitialAcknowledgment(trimmed);
       const firstQ = getFollowUpQuestion(trimmed, 0);
 
-      addMessage({ role: "user", text: trimmed });
       addMessage({ role: "mentor", text: ack });
 
       if (firstQ) {
@@ -645,7 +713,6 @@ export default function MentorChat({
         const newFlowState = initFlowState(differentFlow);
         const firstStep = differentFlow.steps[newFlowState.step];
 
-        addMessage({ role: "user", text: trimmed });
         addMessage({
           role: "mentor",
           text: "Got it — sounds like a different issue. Let me start a fresh flow for that.",
@@ -671,8 +738,6 @@ export default function MentorChat({
       }
 
       // ── Rules 1, 2, 4: advance the CURRENT flow by exactly one step ───────
-      addMessage({ role: "user", text: trimmed });
-
       const result = advanceFlow(state.activeFlow, state.flowState, trimmed);
 
       if (result.isDiagnosis) {
@@ -708,8 +773,6 @@ export default function MentorChat({
     if (state.stage === "followup") {
       const newAnswers = [...state.answers, trimmed];
       const nextQ = getFollowUpQuestion(state.symptom, newAnswers.length);
-
-      addMessage({ role: "user", text: trimmed });
 
       if (nextQ) {
         addMessage({ role: "mentor", text: nextQ.text });
@@ -824,6 +887,9 @@ export default function MentorChat({
                 {state.diagnosis && (
                   <DiagnosisCard diagnosis={state.diagnosis} />
                 )}
+                <AnimatePresence>
+                  {isThinking && <ThinkingBubble />}
+                </AnimatePresence>
                 <div ref={bottomRef} />
               </div>
             </ScrollArea>
@@ -833,6 +899,7 @@ export default function MentorChat({
 
       <AnimatePresence>
         {currentQuickAnswers.length > 0 &&
+          !isThinking &&
           (state.stage === "flow" || state.stage === "followup") && (
             <motion.div
               key="quick-answers"
@@ -849,7 +916,8 @@ export default function MentorChat({
                   type="button"
                   data-ocid="mentor.quick_answer.button"
                   onClick={() => submitInput(answer)}
-                  className="px-3 py-1.5 rounded-full border text-sm font-medium transition-all hover:border-primary/50 hover:bg-primary/5 active:scale-95"
+                  disabled={isThinking}
+                  className="px-3 py-1.5 rounded-full border text-sm font-medium transition-all hover:border-primary/50 hover:bg-primary/5 active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
                   style={{
                     borderColor: "oklch(var(--border) / 1)",
                     color: "oklch(var(--foreground) / 1)",
@@ -870,17 +938,20 @@ export default function MentorChat({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
+            disabled={isThinking}
             placeholder={
-              state.stage === "initial"
-                ? placeholder
-                : "Type your answer or tap a button above…"
+              isThinking
+                ? "Buddy is thinking…"
+                : state.stage === "initial"
+                  ? placeholder
+                  : "Type your answer or tap a button above…"
             }
             className="flex-1 rounded-xl border-border bg-background text-sm h-11"
           />
           <Button
             data-ocid="mentor.submit.button"
             onClick={() => submitInput(inputValue)}
-            disabled={!inputValue.trim()}
+            disabled={isThinking || !inputValue.trim()}
             className="h-11 w-11 p-0 rounded-xl shrink-0"
           >
             <Send className="w-4 h-4" />

@@ -5,22 +5,22 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import {
   BookOpen,
-  Bot,
   Briefcase,
   ChevronRight,
   GraduationCap,
-  HardHat,
   LogOut,
   MapPin,
   QrCode,
   Settings,
   Stethoscope,
-  Wind,
   Wrench,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useGetCallerUserProfile } from "../hooks/useQueries";
+
+const BUDDY_AVATAR =
+  "/assets/generated/buddy-avatar-transparent.dim_200x200.png";
 
 const FEATURE_CARDS = [
   {
@@ -119,12 +119,12 @@ export default function Dashboard() {
       <header className="sticky top-0 z-10 bg-card border-b border-border shadow-xs">
         <div className="max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2 shrink-0">
-            <div
-              className="flex items-center justify-center w-8 h-8 rounded-lg"
-              style={{ background: "oklch(var(--primary) / 1)" }}
-            >
-              <Wind className="w-4 h-4 text-white" />
-            </div>
+            <img
+              src={BUDDY_AVATAR}
+              alt="Buddy"
+              className="w-8 h-8 rounded-lg object-cover"
+              style={{ boxShadow: "0 0 8px rgba(56,189,248,0.4)" }}
+            />
             <div className="leading-tight">
               <span className="text-base font-bold text-foreground tracking-tight">
                 HVAC Mentor AI
@@ -151,7 +151,11 @@ export default function Dashboard() {
                 color: "#38BDF8",
               }}
             >
-              <Bot className="w-3.5 h-3.5" />
+              <img
+                src={BUDDY_AVATAR}
+                className="w-4 h-4 rounded object-cover"
+                alt="Buddy"
+              />
               <span className="hidden sm:inline">Buddy Assets</span>
             </button>
             <button
@@ -192,19 +196,27 @@ export default function Dashboard() {
               {/* Greeting */}
               <div className="mb-5">
                 <div className="flex items-center gap-2 mb-1">
-                  <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ background: "oklch(var(--primary) / 0.12)" }}
-                  >
-                    <HardHat
-                      className="w-5 h-5"
-                      style={{ color: "oklch(var(--primary) / 1)" }}
-                    />
-                  </div>
+                  <img
+                    src={BUDDY_AVATAR}
+                    alt="Buddy"
+                    className="w-10 h-10 rounded-xl object-cover shrink-0"
+                    style={{ boxShadow: "0 0 10px rgba(56,189,248,0.35)" }}
+                  />
                   <div className="leading-tight">
-                    <span className="text-lg font-bold text-foreground tracking-tight">
-                      Buddy
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-lg font-bold text-foreground tracking-tight">
+                        Buddy
+                      </span>
+                      <span className="inline-flex items-center gap-1 ml-0.5">
+                        <span className="relative flex h-1.5 w-1.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-60" />
+                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500" />
+                        </span>
+                        <span className="text-[10px] font-medium text-green-500/70 leading-none">
+                          Online
+                        </span>
+                      </span>
+                    </div>
                     <p
                       className="text-[11px] font-medium"
                       style={{ color: "oklch(var(--muted-foreground) / 1)" }}
@@ -214,8 +226,8 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground ml-11">
-                  What are you working on today? Tell me the symptom and I'll
-                  walk you through it.
+                  What&apos;s going on with the system? I&apos;ll walk you
+                  through it step-by-step.
                 </p>
               </div>
 
@@ -353,15 +365,23 @@ export default function Dashboard() {
         <div className="max-w-[1200px] mx-auto px-6 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div
-                className="flex items-center justify-center w-6 h-6 rounded-md"
-                style={{ background: "oklch(var(--primary) / 1)" }}
-              >
-                <Wind className="w-3 h-3 text-white" />
+              <img
+                src={BUDDY_AVATAR}
+                alt="Buddy"
+                className="w-6 h-6 rounded-md object-cover"
+                style={{ boxShadow: "0 0 6px rgba(56,189,248,0.35)" }}
+              />
+              <div className="leading-tight">
+                <span className="text-sm font-bold text-foreground">
+                  HVAC Mentor AI
+                </span>
+                <span
+                  className="block text-[10px] font-medium uppercase tracking-widest"
+                  style={{ color: "oklch(var(--primary) / 1)" }}
+                >
+                  HVACR Buddy
+                </span>
               </div>
-              <span className="text-sm font-bold text-foreground">
-                HVAC Mentor AI
-              </span>
             </div>
             <p className="text-xs text-muted-foreground text-center">
               © {new Date().getFullYear()}. Built with ❤️ using{" "}
