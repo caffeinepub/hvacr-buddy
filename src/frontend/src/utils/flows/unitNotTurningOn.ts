@@ -14,158 +14,253 @@ const unitNotTurningOnFlow: FlowDef = {
     "unit won't come on",
     "system not turning on",
     "ac not turning on",
+    "unit dead",
+    "unit is dead",
+    "no power",
+    "unit not turning on",
   ],
-  firstStep: "power_check",
+  firstStep: "thermostat_check",
   progressSteps: [
-    "power_check",
     "thermostat_check",
     "breaker_check",
+    "air_handler_power",
+    "outdoor_unit_power",
     "contactor_check",
+    "capacitor_check",
     "diagnosis",
   ],
   steps: {
-    power_check: {
-      id: "power_check",
-      message:
-        "Alright, let's figure out why it won't come on. Start at the basics.\n\nIs there power to the indoor unit? Check if the air handler or furnace has any lights or display on.",
-      quickAnswers: [
-        "Yes, lights are on",
-        "No power / completely off",
-        "Not sure",
-      ],
-      next: (answer) => {
-        const a = answer.toLowerCase();
-        if (a.includes("no") || a.includes("completely"))
-          return "breaker_check";
-        return "thermostat_check";
-      },
-    },
+    // Step 1: Thermostat check
     thermostat_check: {
       id: "thermostat_check",
       message:
-        "Good — power is on. Let's check the thermostat.\n\nIs the thermostat powered up and calling for the system? Check that it's in the right mode (COOL or HEAT) and the setpoint is set to trigger the system.",
-      quickAnswers: ["Yes, it's calling", "No / blank screen", "Not sure"],
+        "Alright — let's start at the thermostat. That's always step one.\n\nIs the thermostat screen on, and is it set to COOL (or HEAT) with the setpoint calling for the system to run?",
+      quickAnswers: ["Yes", "No", "Not sure"],
       next: (answer) => {
         const a = answer.toLowerCase();
-        if (a.includes("no") || a.includes("blank")) return "thermostat_fix";
-        return "contactor_check";
+        if (a.includes("no") || a.includes("blank")) return "thermostat_dead";
+        return "breaker_check";
       },
     },
-    thermostat_fix: {
-      id: "thermostat_fix",
+    // Thermostat dead branch → short step before breaker
+    thermostat_dead: {
+      id: "thermostat_dead",
       message:
-        "A blank or unresponsive thermostat is often the reason nothing runs.\n\nCheck the thermostat batteries if it's battery-powered, or check the 24V fuse on the control board. A blown fuse kills the whole low-voltage circuit.",
-      quickAnswers: [],
-      next: () => "diagnosis",
+        "A blank or unresponsive thermostat can kill the whole system.\n\nQuick check: if it's battery-powered, swap the batteries first. If it's wired, we'll check the 24V fuse on the air handler board next.\n\nDid swapping batteries (or checking power) bring the screen back?",
+      quickAnswers: ["Yes", "No", "Not sure"],
+      next: (answer) => {
+        const a = answer.toLowerCase();
+        if (a.includes("yes")) return "breaker_check";
+        return "breaker_check"; // Continue the flow regardless
+      },
     },
+    // Step 2: Breaker check
     breaker_check: {
       id: "breaker_check",
       message:
-        "No power at all is a red flag. Let's go to the source.\n\n⚠️ Safety first — do not touch any electrical components yet.\n\nCheck the main breaker panel. Are there any tripped breakers for the AC, condenser, or air handler?",
-      quickAnswers: [
-        "Yes, found a tripped breaker",
-        "No, all looks good",
-        "Not sure",
-      ],
+        "Good. Next — let's check the breaker panel.\n\nLook for the breaker labeled AC, Condenser, or Air Handler. Is anything tripped or sitting in the middle position?",
+      quickAnswers: ["Yes, found a tripped breaker", "No", "Not sure"],
       safetyNote:
-        "Never reset a tripped breaker more than once without diagnosing the cause.",
+        "⚠️ If you reset a tripped breaker, do it ONCE only. If it trips again immediately, stop — there's a fault that needs to be diagnosed before resetting.",
+      next: () => "air_handler_power",
+    },
+    // Step 3: Air handler power
+    air_handler_power: {
+      id: "air_handler_power",
+      message:
+        "Now let's check the indoor unit.\n\nGo to the air handler or furnace. Does it have any lights, a display, or any sign of power at all?",
+      quickAnswers: ["Yes, it has power", "No", "Not sure"],
+      safetyNote:
+        "⚠️ Do not open the air handler panel or touch any wiring — we're just checking for visible signs of power right now.",
+      next: () => "outdoor_unit_power",
+    },
+    // Step 4: Outdoor unit power
+    outdoor_unit_power: {
+      id: "outdoor_unit_power",
+      message:
+        "Good. Now head outside to the condenser unit.\n\nIs there a disconnect box near the unit? Is it pulled out, switched off, or does the outdoor unit show any sign of power?",
+      quickAnswers: ["Yes, has power", "No / disconnect pulled", "Not sure"],
+      safetyNote:
+        "⚠️ Do not open the outdoor unit panel yet. Just check the disconnect box and look for any LED indicators.",
       next: () => "contactor_check",
     },
+    // Step 5: Contactor check (with visual)
     contactor_check: {
       id: "contactor_check",
       message:
-        "Let's check the outdoor unit.\n\nWith the system calling for cooling (or heating), head to the outdoor unit. Do you hear a click — the contactor pulling in — when the thermostat calls?",
+        "Alright — now we're checking the contactor inside the outdoor unit.\n\nThe contactor is the electrical switch that powers up the compressor and fan. With the system calling, you should hear a distinct click when it pulls in.\n\nHere's what a contactor looks like — make sure the disconnect is OFF before opening the panel.\n\nDo you hear a click from the outdoor unit when the thermostat calls for the system?",
       quickAnswers: ["Yes, I hear a click", "No click at all", "Not sure"],
       safetyNote:
-        "Do not open the outdoor panel without turning off the disconnect first.",
+        "⚠️ Turn the disconnect off before opening the outdoor unit panel. High voltage is present inside — do not touch any terminals.",
+      visualComponent: "contactor",
+      next: () => "capacitor_check",
+    },
+    // Step 6: Capacitor check (with visual)
+    capacitor_check: {
+      id: "capacitor_check",
+      message:
+        "Last check — the run capacitor.\n\nA bad capacitor is one of the most common reasons a unit won't start. Here's what it looks like.\n\nWith the disconnect OFF, visually inspect the capacitor. Is it bulging on top, leaking oil, or does it look swollen?",
+      quickAnswers: ["Yes, looks bad", "No, looks normal", "Not sure"],
+      safetyNote:
+        "⚠️ Even with the disconnect OFF, a capacitor can hold a dangerous charge. Do not touch the terminals — use an insulated tool to discharge it before testing with a meter.",
+      visualComponent: "capacitor",
       next: () => "diagnosis",
     },
   },
 
   buildDiagnosis(state: FlowState): MentorDiagnosis {
-    const thermostatAnswer = state.answers.thermostat_check ?? "";
-    const thermostatBad =
-      thermostatAnswer.toLowerCase().includes("no") ||
-      thermostatAnswer.toLowerCase().includes("blank");
+    const thermostat = (state.answers.thermostat_check ?? "").toLowerCase();
+    const thermostatDead = (state.answers.thermostat_dead ?? "").toLowerCase();
+    const breaker = (state.answers.breaker_check ?? "").toLowerCase();
+    const airHandler = (state.answers.air_handler_power ?? "").toLowerCase();
+    const outdoor = (state.answers.outdoor_unit_power ?? "").toLowerCase();
+    const contactor = (state.answers.contactor_check ?? "").toLowerCase();
+    const capacitor = (state.answers.capacitor_check ?? "").toLowerCase();
 
-    if (thermostatBad || state.answers.thermostat_fix !== undefined) {
+    // Thermostat dead and batteries didn't fix it
+    if (
+      (thermostat.includes("no") || thermostat.includes("not sure")) &&
+      (thermostatDead.includes("no") || thermostatDead.includes("not sure"))
+    ) {
       return {
         buddySummary:
-          "Based on what you've told me, the most likely issue is: Thermostat not powered or not calling — possibly a dead battery or blown 24V fuse.\n\nNext step:\nReplace batteries or locate the 24V fuse on the control board and test it. A blown fuse usually means a wiring short somewhere in the low-voltage circuit.",
+          "Based on what you've told me, the most likely issue is: Thermostat has no power — likely a blown 24V fuse on the air handler control board or a failed 24V transformer.\n\nNext step:\nLocate the 24V fuse on the air handler or furnace control board and test it with a multimeter. A blown fuse typically means a short somewhere in the low-voltage wiring.",
         causes: [
-          "Dead thermostat batteries",
-          "Blown 24V control fuse on the furnace or air handler board",
-          "Faulty thermostat or low-voltage wiring issue",
+          "Blown 24V control fuse on the air handler board",
+          "Failed 24V transformer not supplying low-voltage power",
+          "Short circuit in the thermostat wiring",
         ],
         nextCheck:
-          "Replace batteries or test 24V fuse. If fuse blows again immediately, trace the low-voltage wiring for a short.",
+          "Find and test the 24V fuse on the control board. Replace if blown. If it blows again immediately, trace the thermostat wiring for a short.",
+        safetyNote:
+          "Turn power off at the breaker before inspecting the control board.",
         resource: {
-          title: "How Power Moves Through an AC Schematic",
+          title: "How Power Moves Through an AC System Schematic",
           url: "https://www.youtube.com/watch?v=VtC25cV1mU0",
         },
       };
     }
 
-    const breakerAnswer = state.answers.breaker_check ?? "";
-    const breakerTripped = breakerAnswer.toLowerCase().includes("tripped");
-
-    if (breakerTripped) {
+    // Tripped breaker found
+    if (breaker.includes("tripped")) {
       return {
         safetyNote:
-          "Reset the breaker ONCE. If it trips immediately again, stop — the circuit has a fault. Do not force it.",
+          "Reset the breaker ONE time only. If it trips again immediately, stop — the circuit has a fault. Do not force it.",
         buddySummary:
-          "Based on what you've told me, the most likely issue is: Tripped breaker cutting power to the system.\n\nNext step:\nReset the breaker once and monitor. If it holds, check the capacitor and contactor. If it trips again, test compressor amperage draw.",
+          "Based on what you've told me, the most likely issue is: A tripped breaker is cutting power to the system.\n\nNext step:\nReset it once and monitor the system. If it holds, check the capacitor and compressor amp draw. If it trips again, stop and test the capacitor first — a failed cap causes high startup amperage that trips breakers.",
         causes: [
-          "Tripped breaker from overcurrent — likely a failing capacitor or compressor",
-          "Dead short in the wiring or a failed component",
-          "Ground fault in the compressor motor",
+          "Tripped breaker from a failing or failed run capacitor",
+          "Compressor drawing locked rotor amperage at startup",
+          "Ground fault or short circuit in the wiring",
         ],
         nextCheck:
-          "Reset breaker once. If it holds, inspect capacitor and contactor. If it trips again, clamp-meter the compressor on startup.",
+          "Reset breaker once. If it holds, test capacitor microfarads. If it trips again immediately, clamp-meter the compressor at startup.",
         resource: {
-          title: "How Power Moves Through an AC Schematic",
+          title: "How Power Moves Through an AC System Schematic",
           url: "https://www.youtube.com/watch?v=VtC25cV1mU0",
         },
       };
     }
 
-    const contactorAnswer = state.answers.contactor_check ?? "";
-    const noClick = contactorAnswer.toLowerCase().includes("no");
-
-    if (noClick) {
+    // No power to air handler
+    if (airHandler.includes("no")) {
       return {
         safetyNote:
-          "Turn the disconnect off before opening the outdoor unit panel to inspect components.",
+          "Do not open the air handler panel without turning the breaker off first.",
         buddySummary:
-          "Based on what you've told me, the most likely issue is: No 24V signal reaching the contactor — possible control board, thermostat wiring, or low-voltage fuse issue.\n\nNext step:\nWith the thermostat calling, test voltage at the contactor coil terminals. Should read 24VAC. No voltage means trace the low-voltage wiring back to the control board.",
+          "Based on what you've told me, the most likely issue is: The air handler has no power — check the breaker, the disconnect switch on the unit, and the 24V fuse on the control board.\n\nNext step:\nConfirm the breaker is on and hasn't tripped silently. Check if there's a door safety switch that's not making contact on the air handler cabinet.",
         causes: [
-          "No 24V signal reaching the contactor coil",
-          "Blown low-voltage fuse",
-          "Bad thermostat, disconnected wire, or control board failure",
+          "Tripped or weak breaker not providing full voltage",
+          "Disconnected or open service disconnect at the unit",
+          "Door safety switch open on air handler cabinet",
         ],
         nextCheck:
-          "Test for 24V at contactor coil while thermostat calls. No voltage → trace wiring. 24V present but no click → replace contactor.",
+          "Verify breaker voltage with a meter (should be 240V). Check the door interlock switch — if the panel isn't seated fully, it cuts power.",
         resource: {
-          title: "How Power Moves Through an AC Schematic",
+          title: "How Power Moves Through an AC System Schematic",
           url: "https://www.youtube.com/watch?v=VtC25cV1mU0",
         },
       };
     }
 
+    // Outdoor disconnect pulled or no outdoor power
+    if (outdoor.includes("no") || outdoor.includes("disconnect")) {
+      return {
+        safetyNote:
+          "Ensure the disconnect is properly seated before restoring power to the outdoor unit.",
+        buddySummary:
+          "Based on what you've told me, the most likely issue is: No power reaching the outdoor unit — the disconnect may be pulled, blown, or there may be a fuse inside the disconnect block.\n\nNext step:\nInspect the disconnect block for pulled fuses or blown cartridge fuses. Test with a multimeter across the fuse — if you read voltage in but not out, the fuse is blown.",
+        causes: [
+          "Blown fuse inside the outdoor disconnect block",
+          "Disconnect not fully seated or pulled by previous tech",
+          "Open breaker specific to the condenser circuit",
+        ],
+        nextCheck:
+          "Test the fuses inside the outdoor disconnect block with a multimeter. A blown fuse is a common and easy fix.",
+        resource: {
+          title: "How Power Moves Through an AC System Schematic",
+          url: "https://www.youtube.com/watch?v=VtC25cV1mU0",
+        },
+      };
+    }
+
+    // No contactor click
+    if (contactor.includes("no")) {
+      return {
+        safetyNote:
+          "Keep the disconnect OFF while checking inside the outdoor unit panel.",
+        buddySummary:
+          "Based on what you've told me, the most likely issue is: The contactor is not pulling in — no 24V signal is reaching the contactor coil.\n\nNext step:\nWith the thermostat calling, use a multimeter to test for 24VAC at the contactor coil terminals. If there's no voltage, trace back to the air handler board. If 24V is present but no click, the contactor itself is bad.",
+        causes: [
+          "No 24V control signal reaching the contactor coil",
+          "Blown 24V fuse or failed control board",
+          "Failed contactor — coil burned out or contacts stuck open",
+        ],
+        nextCheck:
+          "Test for 24VAC at contactor coil terminals while system calls. No voltage → trace low-voltage wiring. Voltage present but no click → replace the contactor.",
+        resource: {
+          title: "How Power Moves Through an AC System Schematic",
+          url: "https://www.youtube.com/watch?v=VtC25cV1mU0",
+        },
+      };
+    }
+
+    // Bad capacitor (visual inspection)
+    if (capacitor.includes("yes") || capacitor.includes("bad")) {
+      return {
+        safetyNote:
+          "Discharge the capacitor with an insulated resistor before removing it. Even with power off, capacitors hold a dangerous charge.",
+        buddySummary:
+          "Based on what you've told me, the most likely issue is: A failed run capacitor. A swollen or leaking capacitor cannot provide the starting torque the compressor and fan need.\n\nNext step:\nReplace the capacitor with one matching the exact microfarad (µF) and voltage rating on the label. This is one of the most common AC repairs and usually fixes a no-start immediately.",
+        causes: [
+          "Failed run capacitor — swollen, leaking, or out of spec",
+          "Compressor or condenser fan motor unable to start without good cap",
+          "Possible additional motor damage if run on weak capacitor too long",
+        ],
+        nextCheck:
+          "Replace the capacitor. Match µF and voltage rating exactly. After replacement, confirm system starts and check compressor amperage.",
+        resource: {
+          title: "How Power Moves Through an AC System Schematic",
+          url: "https://www.youtube.com/watch?v=VtC25cV1mU0",
+        },
+      };
+    }
+
+    // Contactor clicks, capacitor looks normal — contactor contacts or compressor
     return {
       safetyNote:
-        "Always turn the disconnect off before working inside the outdoor unit.",
+        "Always turn the disconnect off before working inside the outdoor unit. Test capacitor with an insulated discharge tool before touching terminals.",
       buddySummary:
-        "Based on what you've told me, the most likely issue is: Contactor is pulling in but the unit still isn't running — likely a failed capacitor or compressor.\n\nNext step:\nWith power off, inspect the run capacitor for swelling or oil. Test it with a multimeter for microfarad reading.",
+        "Based on what you've told me: the contactor pulls in and the capacitor looks okay, but the unit still isn't starting.\n\nNext step:\nWith the disconnect OFF, test the capacitor with a multimeter (µF mode) — visual inspection alone can miss a weak cap. If capacitor tests good, test compressor motor windings with an ohmmeter for shorts or opens.",
       causes: [
-        "Failed run capacitor preventing compressor or fan from starting",
-        "Compressor motor failure",
-        "Contactor contacts burned through",
+        "Capacitor within normal visual appearance but measuring out of spec",
+        "Compressor motor winding failure (open, short, or grounded)",
+        "Contactor contacts burned — pulling in but not passing current",
       ],
       nextCheck:
-        "Inspect and test the run capacitor. Replace if out of spec. If capacitor is good, test compressor windings with an ohmmeter.",
+        "Test capacitor µF with a meter. If within 10% of rated value, test compressor windings. Open or shorted windings mean compressor replacement.",
       resource: {
-        title: "How Power Moves Through an AC Schematic",
+        title: "How Power Moves Through an AC System Schematic",
         url: "https://www.youtube.com/watch?v=VtC25cV1mU0",
       },
     };

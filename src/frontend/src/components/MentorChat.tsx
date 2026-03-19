@@ -75,7 +75,9 @@ const FLOW_STEP_LABELS: Record<string, string> = {
   ice_check: "Coil",
   diagnosis: "Diagnosis",
   // unit not turning on
-  power_check: "Power",
+  thermostat_dead: "Thermostat",
+  air_handler_power: "Air Handler",
+  outdoor_unit_power: "Outdoor Unit",
   contactor_check: "Contactor",
   // ac freezing up
   confirm_ice: "Ice Check",

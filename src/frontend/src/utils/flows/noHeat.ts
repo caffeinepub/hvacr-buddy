@@ -9,215 +9,334 @@ const noHeatFlow: FlowDef = {
     "won't heat",
     "wont heat",
     "heat not working",
+    "heater not working",
     "furnace not working",
     "furnace won't come on",
     "heat pump not heating",
     "no warm air",
+    "heater not working",
   ],
   firstStep: "system_type",
   progressSteps: [
     "system_type",
     "thermostat_check",
     "power_check",
-    "ignition_check",
+    "furnace_ignition",
+    "furnace_flame_sensor",
+    "hp_reversing_valve",
+    "hp_outdoor_check",
     "diagnosis",
   ],
   steps: {
     system_type: {
       id: "system_type",
       message:
-        "Alright, no heat — let's track this down. First, what type of system are we working with?",
-      quickAnswers: [
-        "Gas furnace",
-        "Heat pump",
-        "Electric heat strips",
-        "Not sure",
-      ],
+        "Alright, let's figure out why there's no heat. First things first — what type of system are we working with?",
+      quickAnswers: ["Gas furnace", "Heat pump", "Not sure"],
       next: () => "thermostat_check",
     },
+
     thermostat_check: {
       id: "thermostat_check",
       message:
-        "Good. Let's start with the basics.\n\nIs the thermostat set to HEAT mode with the setpoint above the current room temperature?",
+        "Got it. Let's start simple.\n\nIs the thermostat set to HEAT mode with the setpoint above the current room temperature?",
       quickAnswers: ["Yes, set correctly", "No / not sure"],
       next: (answer) => {
-        const a = answer.toLowerCase();
-        if (a.includes("no") || a.includes("not sure")) return "thermostat_fix";
+        if (
+          answer.toLowerCase().includes("no") ||
+          answer.toLowerCase().includes("not sure")
+        )
+          return "thermostat_fix";
         return "power_check";
       },
     },
+
     thermostat_fix: {
       id: "thermostat_fix",
       message:
-        "That's often the culprit.\n\nSet the thermostat to HEAT mode with the setpoint 2–3 degrees above room temperature. Wait 3–5 minutes and see if the system responds.",
-      quickAnswers: [],
-      next: () => "diagnosis",
+        "That's often the culprit.\n\nSet the thermostat to HEAT mode with the setpoint 2–3 degrees above room temperature. Wait 3–5 minutes and see if the system kicks on.",
+      quickAnswers: ["It came on", "Still nothing"],
+      next: (answer) => {
+        if (answer.toLowerCase().includes("came on")) return "diagnosis";
+        return "power_check";
+      },
     },
+
     power_check: {
       id: "power_check",
       message:
-        "Thermostat is set correctly. Let's check power.\n\n⚠️ Safety — keep the panel closed for now.\n\nIs there a tripped breaker or blown fuse for the furnace or air handler in the panel?",
+        "Thermostat looks good. Let's check power.\n\n⚠️ Keep the panel closed for now — just visually check.\n\nIs there a tripped breaker or blown fuse for the furnace or air handler?",
       quickAnswers: ["Yes, found one", "No, all looks fine", "Not sure"],
       safetyNote:
-        "Do not reset a tripped breaker more than once without understanding why it tripped.",
-      next: (answer) => {
+        "Do not reset a tripped breaker more than once without knowing why it tripped.",
+      next: (answer, state) => {
         const a = answer.toLowerCase();
         if (a.includes("yes") || a.includes("found")) return "breaker_found";
-        return "ignition_check";
+        const systemAnswer = (state.answers.system_type ?? "").toLowerCase();
+        if (systemAnswer.includes("heat pump")) return "hp_reversing_valve";
+        return "furnace_ignition";
       },
     },
+
     breaker_found: {
       id: "breaker_found",
       message:
-        "A tripped breaker or blown fuse is stopping the system cold.\n\nReset the breaker once and wait to see if the system starts up. If it trips again immediately, don't force it — there's a fault in the circuit.",
-      quickAnswers: [],
+        "That'll do it.\n\nReset the breaker once and wait to see if the system starts. If it trips again immediately — stop. There's a fault in the circuit that needs to be diagnosed first.",
+      quickAnswers: ["It held, system started", "Tripped again"],
       next: () => "diagnosis",
     },
-    ignition_check: {
-      id: "ignition_check",
+
+    // --- FURNACE BRANCH ---
+    furnace_ignition: {
+      id: "furnace_ignition",
       message:
-        "Power looks good. For gas furnaces, the ignition system is usually next.\n\nDo you hear the furnace attempt to ignite — clicking, a whoosh, or any sound from the unit?",
+        "Power looks good. For a gas furnace, the ignition sequence is next.\n\nDo you hear the furnace attempt to ignite — any clicking, a whoosh, or the sound of gas trying to light?",
       quickAnswers: [
         "Yes, I hear it trying",
-        "Nothing at all",
         "Fan runs but no heat",
+        "Nothing at all",
       ],
+      next: (answer) => {
+        const a = answer.toLowerCase();
+        if (a.includes("fan") || a.includes("trying") || a.includes("hear"))
+          return "furnace_flame_sensor";
+        return "diagnosis";
+      },
+    },
+
+    furnace_flame_sensor: {
+      id: "furnace_flame_sensor",
+      message:
+        "Good — if it's trying to ignite but shutting off quickly, the flame sensor is the usual suspect.\n\nA dirty flame sensor can't prove the flame is lit, so the furnace goes into lockout.\n\n⚠️ Power off the furnace before touching any components.\n\nHas the flame sensor been cleaned or replaced recently?",
+      quickAnswers: ["Yes, recently cleaned", "No / not sure"],
+      safetyNote:
+        "Always power off the furnace at the disconnect before inspecting or cleaning the flame sensor.",
+      next: () => "diagnosis",
+    },
+
+    // --- HEAT PUMP BRANCH ---
+    hp_reversing_valve: {
+      id: "hp_reversing_valve",
+      message:
+        "For heat pumps, the reversing valve is what switches the system into heating mode.\n\nDoes the system run in cooling mode but fail in heating mode?",
+      quickAnswers: [
+        "Yes, cools fine but no heat",
+        "Doesn't run at all",
+        "Not sure",
+      ],
+      next: () => "hp_outdoor_check",
+    },
+
+    hp_outdoor_check: {
+      id: "hp_outdoor_check",
+      message:
+        "Understood. Let's check the outdoor unit.\n\nIs the outdoor unit running when the thermostat calls for heat? Do you see or hear the fan and compressor operating?",
+      quickAnswers: ["Yes, it's running", "No, it's not running", "Not sure"],
       next: () => "diagnosis",
     },
   },
 
   buildDiagnosis(state: FlowState): MentorDiagnosis {
-    const systemAnswer = state.answers.system_type ?? "";
+    const systemAnswer = (state.answers.system_type ?? "").toLowerCase();
     const isGas =
-      systemAnswer.toLowerCase().includes("gas") ||
-      systemAnswer.toLowerCase().includes("furnace");
-    const isHeatPump = systemAnswer.toLowerCase().includes("heat pump");
+      systemAnswer.includes("gas") || systemAnswer.includes("furnace");
+    const isHeatPump = systemAnswer.includes("heat pump");
 
-    if (state.answers.thermostat_fix !== undefined) {
-      return {
-        buddySummary:
-          "Based on what you've told me, the most likely issue is: Thermostat not set correctly — not in HEAT mode or setpoint too low.\n\nNext step:\nConfirm thermostat is in HEAT mode with setpoint above room temperature. Wait 5 minutes for the system to respond.",
-        causes: [
-          "Thermostat in COOL or OFF mode",
-          "Setpoint below current room temperature",
-          "Programmable schedule override",
-        ],
-        nextCheck:
-          "Set to HEAT mode, setpoint above room temp. If still no heat after 5 minutes, check the breaker and then the unit.",
-      };
-    }
-
-    const breakerAnswer = state.answers.power_check ?? "";
+    // Thermostat fixed it
     if (
-      breakerAnswer.toLowerCase().includes("yes") ||
-      state.answers.breaker_found !== undefined
+      (state.answers.thermostat_fix ?? "").toLowerCase().includes("came on")
     ) {
       return {
-        safetyNote:
-          "Reset breaker once. If it trips again immediately, do not force it — call for electrical diagnosis.",
         buddySummary:
-          "Based on what you've told me, the most likely issue is: Tripped breaker or blown fuse killing power to the furnace.\n\nNext step:\nReset the breaker once and listen for the system to start. If it trips again, test for a short in the wiring or a failed component drawing too many amps.",
+          "Based on what you've told me, the most likely issue is: Thermostat not set correctly.\n\nNext step:\nMonitor the system for a full heating cycle to confirm it holds temperature.",
         causes: [
-          "Tripped breaker due to overcurrent from a failing component",
-          "Blown fuse in the furnace control board",
-          "Wiring short in the low-voltage or line-voltage circuit",
+          "Thermostat in COOL or OFF mode",
+          "Setpoint below room temperature",
         ],
         nextCheck:
-          "Reset breaker. If it holds, let the system run and monitor. If it trips again, check for shorts and test motor/compressor amp draw.",
-        resource: {
-          title: "How Power Moves Through an AC Schematic",
-          url: "https://www.youtube.com/watch?v=VtC25cV1mU0",
-        },
+          "Confirm thermostat holds at set temperature for a full cycle.",
       };
     }
 
-    const ignitionAnswer = state.answers.ignition_check ?? "";
-    const fanOnlyNoHeat = ignitionAnswer.toLowerCase().includes("fan");
-    const trying =
-      ignitionAnswer.toLowerCase().includes("yes") ||
-      ignitionAnswer.toLowerCase().includes("hear");
-    const silent = ignitionAnswer.toLowerCase().includes("nothing");
-
-    if (isGas && trying) {
+    // Breaker
+    const breakerAnswer = (state.answers.power_check ?? "").toLowerCase();
+    if (breakerAnswer.includes("yes") || breakerAnswer.includes("found")) {
+      const breakerResult = (state.answers.breaker_found ?? "").toLowerCase();
+      if (breakerResult.includes("tripped again")) {
+        return {
+          safetyNote:
+            "Do not force-reset a breaker that keeps tripping — there is a fault in the circuit.",
+          buddySummary:
+            "Based on what you've told me, the most likely issue is: Repeated breaker trip — a component is drawing too many amps or there is a wiring short.\n\nNext step:\nDisconnect the load and test amp draw on the motor or compressor before resetting again.",
+          causes: [
+            "Failed motor drawing locked-rotor amps",
+            "Wiring short",
+            "Failed capacitor causing overcurrent",
+          ],
+          nextCheck: "Test amp draw. Check capacitor. Look for wiring damage.",
+          resource: {
+            title: "How Power Moves Through an AC Schematic",
+            url: "https://www.youtube.com/watch?v=VtC25cV1mU0",
+          },
+        };
+      }
       return {
         safetyNote:
-          "If you smell gas at any point, leave immediately and call your gas utility. Do not attempt to ignite or reset.",
+          "Monitor after reset. If it trips again, do not reset — diagnose the root cause.",
         buddySummary:
-          "Based on what you've told me, the most likely issue is: Ignition failure — the furnace is trying to fire but not lighting.\n\nNext step:\nCheck the ignitor (hot surface ignitor or spark ignitor) for cracks or failure. Also check the gas valve is open and the flame sensor is clean.",
-        causes: [
-          "Failed hot surface ignitor (cracked or burned out)",
-          "Dirty or failed flame sensor not proving the flame",
-          "Gas valve not opening",
-        ],
+          "Based on what you've told me, the most likely issue is: Tripped breaker cutting power to the system.\n\nNext step:\nMonitor the system after reset. If it trips again, test for overcurrent draw.",
+        causes: ["Tripped breaker", "Blown low-voltage fuse on control board"],
         nextCheck:
-          "Inspect the ignitor visually. Test flame sensor — it usually reads 1–5 microamps when proving flame. Clean or replace if out of spec.",
+          "Watch for repeat trip. Also check the low-voltage fuse on the control board.",
       };
     }
 
-    if (isGas && fanOnlyNoHeat) {
+    // FURNACE: Flame sensor
+    if (state.answers.furnace_flame_sensor !== undefined) {
+      const cleaned = (state.answers.furnace_flame_sensor ?? "")
+        .toLowerCase()
+        .includes("recently");
       return {
         safetyNote:
-          "If you smell gas, leave and call your gas utility immediately.",
-        buddySummary:
-          "Based on what you've told me, the most likely issue is: Fan is running but no heat — likely a failed ignitor, dirty flame sensor, or gas valve issue.\n\nNext step:\nCheck for fault codes on the furnace control board (usually a blinking LED sequence). The code will point to the exact failure.",
+          "If you smell gas at any point, leave immediately and call your gas utility.",
+        buddySummary: cleaned
+          ? "Based on what you've told me, the most likely issue is: Flame sensor recently cleaned but still failing — sensor may need replacement, or the ignitor itself is failing.\n\nNext step:\nTest the ignitor for continuity. Check the gas valve is opening and pressure is adequate."
+          : "Based on what you've told me, the most likely issue is: Dirty flame sensor causing lockout after ignition attempt.\n\nNext step:\nClean the flame sensor rod with steel wool or fine emery cloth. Reinstall and test. If it still locks out, replace the sensor.",
         causes: [
-          "Failed ignitor not reaching ignition temperature",
-          "Dirty flame sensor causing lockout",
-          "Gas valve or pressure switch issue",
+          "Dirty flame sensor not proving flame",
+          "Failed hot surface ignitor",
+          "Gas valve not opening or low gas pressure",
         ],
         nextCheck:
-          "Check furnace fault code LED. Count blink sequences and cross-reference with the label inside the furnace door.",
+          "Clean flame sensor. Test ignitor continuity. Verify gas valve opens on call for heat.",
+      };
+    }
+
+    // FURNACE: Ignition silent
+    if (state.answers.furnace_ignition !== undefined) {
+      const ignitionAnswer = (
+        state.answers.furnace_ignition ?? ""
+      ).toLowerCase();
+      if (ignitionAnswer.includes("nothing")) {
+        return {
+          buddySummary:
+            "Based on what you've told me, the most likely issue is: Furnace completely silent — control board or low-voltage circuit fault preventing startup.\n\nNext step:\nCheck the 24V fuse on the control board. Look for a fault code blink sequence on the board LED.",
+          causes: [
+            "Blown 24V fuse on control board",
+            "Failed control board",
+            "Low-voltage wiring break",
+          ],
+          nextCheck:
+            "Check 24V fuse and fault code LED on control board. Test R/W/G terminals for voltage.",
+          resource: {
+            title: "How Power Moves Through an AC Schematic",
+            url: "https://www.youtube.com/watch?v=VtC25cV1mU0",
+          },
+        };
+      }
+    }
+
+    // HEAT PUMP: Outdoor check
+    if (state.answers.hp_outdoor_check !== undefined) {
+      const outdoorAnswer = (
+        state.answers.hp_outdoor_check ?? ""
+      ).toLowerCase();
+      const rvAnswer = (state.answers.hp_reversing_valve ?? "").toLowerCase();
+      const coolsButNoHeat = rvAnswer.includes("cools fine");
+
+      if (coolsButNoHeat) {
+        return {
+          buddySummary:
+            "Based on what you've told me, the most likely issue is: Reversing valve not switching to heating mode.\n\nNext step:\nTest for 24V at the reversing valve solenoid when the thermostat calls for heat. If you have voltage but no switch, the valve is stuck or failed.",
+          causes: [
+            "Failed reversing valve solenoid",
+            "Stuck reversing valve",
+            "No 24V signal to solenoid",
+          ],
+          nextCheck:
+            "Test 24V to reversing valve solenoid in heat mode. If energized but not switching, valve needs replacement.",
+          resource: {
+            title: "How Power Moves Through an AC Schematic",
+            url: "https://www.youtube.com/watch?v=VtC25cV1mU0",
+          },
+        };
+      }
+
+      if (
+        outdoorAnswer.includes("no") ||
+        outdoorAnswer.includes("not running")
+      ) {
+        return {
+          safetyNote:
+            "Heat pumps below ~35°F may rely on backup electric heat strips. Verify emergency heat is not locked out.",
+          buddySummary:
+            "Based on what you've told me, the most likely issue is: Outdoor unit not operating — possible contactor, capacitor, or low-voltage control issue.\n\nNext step:\nCheck for 24V to the contactor coil when thermostat calls for heat. If no voltage, trace the control circuit. If voltage is present but unit doesn't start, test the contactor and capacitor.",
+          causes: [
+            "Failed contactor",
+            "Bad capacitor",
+            "No 24V control signal",
+            "Outdoor ambient lockout",
+          ],
+          nextCheck:
+            "Test 24V to contactor coil. Test capacitor with a capacitor meter. Check contactor contacts for pitting.",
+        };
+      }
+
+      return {
+        safetyNote:
+          "Low refrigerant in a heat pump significantly reduces heating capacity at lower outdoor temps.",
+        buddySummary:
+          "Based on what you've told me, the most likely issue is: Outdoor unit running but not producing heat — possible low refrigerant or defrost issue.\n\nNext step:\nConnect manifold gauges and check system pressures. Low suction pressure in heat mode often indicates low charge or a refrigerant leak.",
+        causes: [
+          "Low refrigerant charge",
+          "Defrost control issue",
+          "Reversing valve partially stuck",
+        ],
+        nextCheck:
+          "Connect gauges. Check suction and discharge pressures in heat mode. Compare to manufacturer chart for ambient temperature.",
+      };
+    }
+
+    // Generic fallback
+    if (isGas) {
+      return {
+        safetyNote:
+          "If you smell gas at any point, leave immediately and call your gas utility.",
+        buddySummary:
+          "Based on what you've told me, the most likely issue is: Gas furnace not igniting — likely ignitor, flame sensor, or gas supply issue.\n\nNext step:\nCheck fault code LED on the control board. Count blink sequences and match to the label inside the furnace door.",
+        causes: [
+          "Failed ignitor",
+          "Dirty flame sensor",
+          "Gas valve or pressure issue",
+        ],
+        nextCheck: "Check fault code LED. Inspect ignitor. Clean flame sensor.",
       };
     }
 
     if (isHeatPump) {
       return {
-        safetyNote:
-          "Heat pumps below 35°F outdoor temperature may rely on backup electric heat strips. Make sure emergency heat is not locked out.",
         buddySummary:
-          "Based on what you've told me, the most likely issue is: Heat pump not going into heating mode — possibly a reversing valve issue or low refrigerant.\n\nNext step:\nCheck if the reversing valve is energizing when in heat mode (should have 24V to the solenoid). Also connect gauges to check pressures.",
+          "Based on what you've told me, the most likely issue is: Heat pump not entering heating mode — reversing valve or refrigerant issue likely.\n\nNext step:\nTest reversing valve solenoid voltage. Connect gauges and check pressures.",
         causes: [
-          "Failed reversing valve solenoid not switching to heating mode",
-          "Low refrigerant charge reducing heating capacity",
-          "Outdoor ambient lockout engaging too early",
+          "Reversing valve fault",
+          "Low refrigerant",
+          "Outdoor unit not operating",
         ],
         nextCheck:
-          "Test 24V to reversing valve solenoid in heat mode. If energized but not switching, valve is stuck. If no voltage, trace control wiring.",
-        resource: {
-          title: "How Power Moves Through an AC Schematic",
-          url: "https://www.youtube.com/watch?v=VtC25cV1mU0",
-        },
-      };
-    }
-
-    if (silent) {
-      return {
-        buddySummary:
-          "Based on what you've told me, the most likely issue is: System is completely silent — likely a control board, low-voltage fuse, or wiring issue preventing startup.\n\nNext step:\nCheck for 24V at the control board output terminals. Also look for a fault code LED on the board.",
-        causes: [
-          "Blown 24V fuse on the control board",
-          "Failed control board not initiating the heating sequence",
-          "Low-voltage wiring break between thermostat and furnace",
-        ],
-        nextCheck:
-          "Check 24V fuse on the control board. Test for voltage at Y/W/G/R terminals. Check fault code LED if present.",
-        resource: {
-          title: "How Power Moves Through an AC Schematic",
-          url: "https://www.youtube.com/watch?v=VtC25cV1mU0",
-        },
+          "Test reversing valve. Check pressures with gauges. Verify outdoor unit operation.",
       };
     }
 
     return {
       buddySummary:
-        "Based on what you've told me, the most likely issue is: No heat — likely an ignition, control, or refrigerant issue depending on system type.\n\nNext step:\nCheck for fault codes on the control board, verify gas supply is on, and test 24V signals from the thermostat.",
+        "Based on what you've told me, the most likely issue is: No heat — likely a control, ignition, or refrigerant issue depending on system type.\n\nNext step:\nConfirm system type, check fault codes, and verify power and thermostat signals.",
       causes: [
-        "Ignition failure (gas furnace)",
-        "Reversing valve or low charge (heat pump)",
-        "Control board or low-voltage wiring fault",
+        "Ignition failure (furnace)",
+        "Reversing valve fault (heat pump)",
+        "Control board or wiring fault",
       ],
       nextCheck:
-        "Check fault code LED on the control board. Test thermostat signals. Verify gas valve is open if gas furnace.",
+        "Check fault code LED. Verify 24V signals. Confirm system type for targeted diagnosis.",
     };
   },
 };
