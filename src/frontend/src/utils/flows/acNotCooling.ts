@@ -12,6 +12,14 @@ const acNotCoolingFlow: FlowDef = {
     "ac not cooling",
   ],
   firstStep: "system_type",
+  progressSteps: [
+    "system_type",
+    "thermostat_check",
+    "outdoor_check",
+    "airflow_check",
+    "cooling_performance",
+    "diagnosis",
+  ],
   steps: {
     system_type: {
       id: "system_type",

@@ -1,5 +1,9 @@
 // Side-effect import: registers AC Not Cooling flow into the registry
 import "@/utils/flows/acNotCooling";
+import "@/utils/flows/unitNotTurningOn";
+import "@/utils/flows/acFreezingUp";
+import "@/utils/flows/noHeat";
+import "@/utils/flows/breakerTripping";
 
 import ComponentVisualAid from "@/components/ComponentVisualAid";
 import { Button } from "@/components/ui/button";
@@ -70,25 +74,33 @@ const FLOW_STEP_LABELS: Record<string, string> = {
   cooling_performance: "Cooling",
   ice_check: "Coil",
   diagnosis: "Diagnosis",
+  // unit not turning on
+  power_check: "Power",
+  contactor_check: "Contactor",
+  // ac freezing up
+  confirm_ice: "Ice Check",
+  runtime_check: "Runtime",
+  refrigerant_check: "Refrigerant",
+  // no heat
+  ignition_check: "Ignition",
+  // breaker tripping
+  timing_check: "Timing",
+  system_check: "Coil/System",
+  compressor_check: "Compressor",
 };
 
-// Ordered step ids for the AC not cooling flow progress bar
-const AC_FLOW_STEPS = [
-  "system_type",
-  "thermostat_check",
-  "outdoor_check",
-  "cooling_performance",
-  "diagnosis",
-];
+const DEFAULT_FLOW_STEPS = ["diagnosis"];
 
 function FlowProgressBar({
   flowState,
+  activeFlow,
   isDone,
 }: {
   flowState: FlowState;
+  activeFlow: FlowDef | null;
   isDone: boolean;
 }) {
-  const steps = AC_FLOW_STEPS;
+  const steps = activeFlow?.progressSteps ?? DEFAULT_FLOW_STEPS;
   const currentIdx = isDone
     ? steps.length - 1
     : Math.max(0, steps.indexOf(flowState.step));
@@ -619,6 +631,7 @@ export default function MentorChat({
             {isInFlow && state.flowState ? (
               <FlowProgressBar
                 flowState={state.flowState}
+                activeFlow={state.activeFlow}
                 isDone={state.stage === "diagnosis"}
               />
             ) : (

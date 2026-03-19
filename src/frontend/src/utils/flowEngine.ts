@@ -28,6 +28,7 @@ export interface FlowDef {
   triggers: string[];
   steps: Record<string, FlowStep>;
   firstStep: string;
+  progressSteps?: string[];
   buildDiagnosis: (state: FlowState) => MentorDiagnosis;
 }
 
