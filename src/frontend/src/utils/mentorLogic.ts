@@ -1,6 +1,6 @@
 // ─── HVAC Mentor Conversation Logic (Buddy Persona) ──────────────────────────
 
-export type MentorStage = "initial" | "followup" | "diagnosis";
+export type MentorStage = "initial" | "followup" | "flow" | "diagnosis";
 
 export interface MentorMessage {
   role: "mentor" | "user";
