@@ -1,3 +1,4 @@
+import MentorChat from "@/components/MentorChat";
 import VideoRecommendations from "@/components/VideoRecommendations";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,13 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  FIELD_SCENARIOS,
-  FieldAssistantScenario,
-  MeasurementResult,
-  getMeasurementInsight,
-  matchesFieldQuery,
-} from "@/utils/assistantLogic";
+
 import { extractKeywords } from "@/utils/videoRecommendations";
 import { Link } from "@tanstack/react-router";
 import {
@@ -360,16 +355,6 @@ function MeasurementsTab() {
 
 // ─── Field HVAC Assistant ───────────────────────────────────────────────────
 
-const EXAMPLE_CHIPS = [
-  "AC not cooling",
-  "Compressor not starting",
-  "Fan running but no cooling",
-  "Low suction pressure",
-  "Frozen coil",
-  "Short cycling",
-  "Refrigerant leak",
-];
-
 // ─── Photo Analysis Mini (reused in Field Assistant) ─────────────────────────
 
 function PhotoAnalysisMini() {
@@ -563,360 +548,38 @@ function PhotoAnalysisMini() {
 }
 
 function FieldAssistantTab() {
-  const [query, setQuery] = useState("");
-  const [showMeasurements, setShowMeasurements] = useState(false);
-  const [suction, setSuction] = useState("");
-  const [head, setHead] = useState("");
-  const [superheat, setSuperheat] = useState("");
-  const [subcooling, setSubcooling] = useState("");
-
-  const trimmed = query.trim();
-  const match = trimmed
-    ? (FIELD_SCENARIOS.find((s) => matchesFieldQuery(s, trimmed)) ?? null)
-    : null;
-  const noMatch = trimmed.length > 0 && match === null;
-
-  const sVal = suction !== "" ? Number.parseFloat(suction) : null;
-  const hVal = head !== "" ? Number.parseFloat(head) : null;
-  const shVal = superheat !== "" ? Number.parseFloat(superheat) : null;
-  const scVal = subcooling !== "" ? Number.parseFloat(subcooling) : null;
-
-  const hasMeasurementInput =
-    showMeasurements &&
-    (suction !== "" || head !== "" || superheat !== "" || subcooling !== "");
-
-  const measurementResult = hasMeasurementInput
-    ? getMeasurementInsight(
-        sVal !== null && !Number.isNaN(sVal) ? sVal : null,
-        hVal !== null && !Number.isNaN(hVal) ? hVal : null,
-        shVal !== null && !Number.isNaN(shVal) ? shVal : null,
-        scVal !== null && !Number.isNaN(scVal) ? scVal : null,
-      )
-    : null;
-
   return (
-    <div className="space-y-5">
-      {/* Search input */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          type="text"
-          placeholder="e.g. AC not cooling, compressor not starting…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="pl-9"
-          data-ocid="field_assistant.search_input"
-        />
-      </div>
-
-      {/* Optional measurements toggle */}
-      <div>
-        <button
-          type="button"
-          onClick={() => setShowMeasurements((v) => !v)}
-          className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          data-ocid="field_assistant.toggle"
-        >
-          {showMeasurements ? (
-            <ChevronUp className="h-4 w-4" />
-          ) : (
-            <ChevronDown className="h-4 w-4" />
-          )}
-          Add Measurements (Optional)
-        </button>
-
-        {showMeasurements && (
-          <div className="mt-3 p-4 rounded-lg border border-border bg-muted/30 space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="fa-suction" className="text-xs">
-                  Suction Pressure (psig)
-                </Label>
-                <Input
-                  id="fa-suction"
-                  type="number"
-                  inputMode="decimal"
-                  placeholder="e.g. 70"
-                  value={suction}
-                  onChange={(e) => setSuction(e.target.value)}
-                  className="h-8 text-sm"
-                  data-ocid="field_assistant.suction.input"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="fa-head" className="text-xs">
-                  Head Pressure (psig)
-                </Label>
-                <Input
-                  id="fa-head"
-                  type="number"
-                  inputMode="decimal"
-                  placeholder="e.g. 250"
-                  value={head}
-                  onChange={(e) => setHead(e.target.value)}
-                  className="h-8 text-sm"
-                  data-ocid="field_assistant.head.input"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="fa-superheat" className="text-xs">
-                  Superheat (°F)
-                </Label>
-                <Input
-                  id="fa-superheat"
-                  type="number"
-                  inputMode="decimal"
-                  placeholder="e.g. 12"
-                  value={superheat}
-                  onChange={(e) => setSuperheat(e.target.value)}
-                  className="h-8 text-sm"
-                  data-ocid="field_assistant.superheat.input"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="fa-subcooling" className="text-xs">
-                  Subcooling (°F)
-                </Label>
-                <Input
-                  id="fa-subcooling"
-                  type="number"
-                  inputMode="decimal"
-                  placeholder="e.g. 10"
-                  value={subcooling}
-                  onChange={(e) => setSubcooling(e.target.value)}
-                  className="h-8 text-sm"
-                  data-ocid="field_assistant.subcooling.input"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Empty prompt with example chips */}
-      {!trimmed && !measurementResult && (
-        <div className="pt-2" data-ocid="field_assistant.empty_state">
-          <p className="text-sm text-muted-foreground mb-3">
-            Enter a symptom above to get started. Try one of these:
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {EXAMPLE_CHIPS.map((chip) => (
-              <button
-                key={chip}
-                type="button"
-                onClick={() => setQuery(chip)}
-                className="px-3 py-1.5 rounded-full border border-border bg-secondary text-secondary-foreground text-xs font-medium hover:bg-secondary/70 transition-colors"
-              >
-                {chip}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Standalone measurement result card — shown even without a symptom match */}
-      {measurementResult && (
-        <Card
-          className="border-amber-500/40 bg-amber-500/5"
-          data-ocid="field_assistant.success_state"
-        >
-          <CardContent className="pt-4 pb-4 space-y-2">
-            <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4 text-amber-500 flex-shrink-0" />
-              <p className="text-sm font-semibold text-foreground">
-                {measurementResult.title}
-              </p>
-            </div>
-            <p className="text-sm text-muted-foreground pl-6">
-              {measurementResult.insight}
-            </p>
-            <ul className="pl-6 space-y-1">
-              {measurementResult.actions.map((action) => (
-                <li
-                  key={action}
-                  className="flex items-start gap-2 text-sm text-foreground"
-                >
-                  <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-amber-500 flex-shrink-0" />
-                  {action}
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* No match */}
-      {noMatch && (
+    <div className="space-y-6">
+      {/* Mentor heading */}
+      <div className="flex items-start gap-3 pb-1">
         <div
-          className="text-center py-12"
-          data-ocid="field_assistant.error_state"
+          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
+          style={{ background: "oklch(var(--primary) / 0.12)" }}
         >
-          <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground font-medium">No match found</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Try rephrasing — e.g. "AC not cooling" or "low suction pressure".
+          <Wrench
+            className="h-4 w-4"
+            style={{ color: "oklch(var(--primary) / 1)" }}
+          />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-foreground">HVAC Mentor</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Tell me the symptom and I'll guide you through it — step by step, no
+            guessing.
           </p>
         </div>
-      )}
+      </div>
 
-      {/* Result card */}
-      {match && (
-        <Card data-ocid="field_assistant.result.card">
-          <CardHeader className="pb-3">
-            <div className="flex items-start gap-2">
-              <Wrench className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-              <CardTitle className="text-base font-semibold leading-snug">
-                {match.title}
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            {/* Likely Causes */}
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-                Likely Causes
-              </p>
-              <ul className="space-y-1.5">
-                {match.causes.map((cause) => (
-                  <li
-                    key={cause}
-                    className="flex items-start gap-2 text-sm text-foreground"
-                  >
-                    <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
-                    {cause}
-                  </li>
-                ))}
-              </ul>
-            </div>
+      {/* Mentor Chat */}
+      <MentorChat placeholder="e.g. AC not cooling, compressor not starting, short cycling…" />
 
-            {/* Diagnostic Steps */}
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-                Diagnostic Steps
-              </p>
-              <ol className="space-y-2">
-                {match.steps.map((step, i) => (
-                  <li
-                    key={step}
-                    className="flex items-start gap-2.5 text-sm text-foreground"
-                  >
-                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-secondary text-secondary-foreground text-xs font-semibold flex items-center justify-center">
-                      {i + 1}
-                    </span>
-                    {step}
-                  </li>
-                ))}
-              </ol>
-            </div>
-
-            {/* Recommended Tools */}
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-                Recommended Tools
-              </p>
-              <ul className="space-y-1.5">
-                {match.tools.map((tool) => (
-                  <li
-                    key={tool}
-                    className="flex items-start gap-2 text-sm text-foreground"
-                  >
-                    <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-muted-foreground flex-shrink-0" />
-                    {tool}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Possible Parts */}
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-                Possible Parts Needed
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {match.possibleParts.map((part) => (
-                  <span
-                    key={part}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-border bg-secondary text-secondary-foreground text-xs font-medium"
-                  >
-                    <Package className="h-3 w-3 flex-shrink-0" />
-                    {part}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Related Content */}
-            <div className="pt-1 border-t border-border">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
-                Related Content
-              </p>
-              <div className="space-y-2.5">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1.5">
-                    Study Topics
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {match.relatedStudy.map((topic) => (
-                      <Badge
-                        key={topic}
-                        variant="secondary"
-                        className="text-xs font-normal"
-                      >
-                        {topic}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1.5">Videos</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {match.relatedVideos.map((video) => (
-                      <Badge
-                        key={video}
-                        variant="secondary"
-                        className="text-xs font-normal"
-                      >
-                        {video}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1.5">
-                    Diagrams
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {match.relatedDiagrams.map((diagram) => (
-                      <Badge
-                        key={diagram}
-                        variant="secondary"
-                        className="text-xs font-normal"
-                      >
-                        {diagram}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {(match || measurementResult) && (
-        <VideoRecommendations
-          keywords={[
-            ...extractKeywords(query),
-            ...(match ? match.keywords.slice(0, 3) : []),
-          ]}
-        />
-      )}
-      {/* Photo Analysis — inline mini tool */}
-      <PhotoAnalysisMini />
+      {/* Photo Analysis */}
+      <div className="pt-2">
+        <PhotoAnalysisMini />
+      </div>
     </div>
   );
 }
-
 // ─── Photo Diagnostic ────────────────────────────────────────────────────────
 
 interface HvacComponent {
@@ -994,21 +657,20 @@ const HVAC_COMPONENTS: HvacComponent[] = [
   },
 ];
 
-// accent color per component for visual distinction
 const COMPONENT_ACCENT: Record<string, string> = {
   capacitor: "text-amber-500",
   contactor: "text-blue-500",
-  wiring: "text-orange-500",
-  gauges: "text-teal-500",
+  wiring: "text-purple-500",
+  gauges: "text-green-500",
   "evaporator-coil": "text-cyan-500",
 };
 
 const COMPONENT_BG: Record<string, string> = {
-  capacitor: "bg-amber-500/10 border-amber-500/30",
-  contactor: "bg-blue-500/10 border-blue-500/30",
-  wiring: "bg-orange-500/10 border-orange-500/30",
-  gauges: "bg-teal-500/10 border-teal-500/30",
-  "evaporator-coil": "bg-cyan-500/10 border-cyan-500/30",
+  capacitor: "border-amber-500/30 bg-amber-500/5",
+  contactor: "border-blue-500/30 bg-blue-500/5",
+  wiring: "border-purple-500/30 bg-purple-500/5",
+  gauges: "border-green-500/30 bg-green-500/5",
+  "evaporator-coil": "border-cyan-500/30 bg-cyan-500/5",
 };
 
 function PhotoDiagnosticTab() {

@@ -1,28 +1,28 @@
 # HVACR Buddy
 
 ## Current State
-Dashboard has a header, welcome hero with search bar, four feature cards (Diagnose, Jobs, Learn, Tools), and a footer. No inline diagnostic capability exists on the dashboard itself.
+The HVAC Mentor chat (MentorChat.tsx + mentorLogic.ts) already runs a step-by-step troubleshooting flow with acknowledgment, follow-up questions, and a diagnosis card. The tone and language, however, are somewhat generic and don't fully embody the "Buddy" persona.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Quick Diagnose widget on the Dashboard, placed between the hero/search section and the feature cards.
-- Text input for entering a symptom or issue.
-- Instant results panel (shown inline, no page navigation) with:
-  - Likely causes (2-3 bullet points)
-  - Basic troubleshooting steps (2-3 steps)
-  - Suggested videos (1-2 relevant videos from the Video Library)
-- Results are generated from the same rule-based keyword logic already used in the Diagnose page.
+- "Buddy" branding: avatar/name label in the mentor chat header shows "Buddy" with a field-tech persona description
+- Safety banners integrated inline in the conversation flow (not just at diagnosis) when electrical, capacitor, refrigerant, or high-pressure topics come up
+- Diagnosis message uses Buddy's DIAGNOSIS MODE format: "Based on what you've told me, the most likely issue is: [problem]. Next step: [action to confirm or fix]"
 
 ### Modify
-- Dashboard.tsx: insert the Quick Diagnose section between the hero and the feature cards grid.
+- All acknowledgment strings in `mentorLogic.ts` updated to Buddy's voice: calm, confident, practical (e.g., "Alright, let's check this real quick.", "Good — that helps narrow it down.")
+- Follow-up question text updated to match Buddy's one-at-a-time, field-tech tone
+- Quick answer buttons display as [ Yes ] [ No ] [ Not Sure ] where appropriate
+- Diagnosis card header changed from "Likely Causes" to Buddy's format: "Based on what you've told me, the most likely issue is:" with the top cause featured prominently, then "Next step:" for the check
+- The "Okay, I have enough to go on. Here's my read:" transition message updated to Buddy's voice
+- MentorChat placeholder text and reset button updated to Buddy's tone
+- Dashboard mentor card identifies the assistant as "Buddy" with the tagline "Your HVAC Field Mentor"
 
 ### Remove
-- Nothing removed.
+- Nothing removed
 
 ## Implementation Plan
-1. Add a `QuickDiagnose` component (or inline section) in Dashboard.tsx.
-2. Implement keyword-matching logic (reuse patterns from DiagnosePage) to return causes, steps, and video suggestions based on the entered symptom.
-3. Show results immediately as the user types or on submit (a small "Check" button or Enter key).
-4. Keep the layout clean -- results appear below the input, collapsed when empty.
-5. Video suggestions link to the Video Library in Learn.
+1. Update `mentorLogic.ts`: rewrite all acknowledgment strings, follow-up question texts, and quick answer labels to match Buddy's voice and structure
+2. Update `MentorChat.tsx`: update transition messages, avatar label to show "Buddy", diagnosis card layout to use Buddy's format, and reset button text
+3. Update `Dashboard.tsx`: update the mentor card title/subtitle to show "Buddy — Your HVAC Field Mentor"
