@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import {
   BookOpen,
+  Bot,
   Briefcase,
   ChevronRight,
   GraduationCap,
@@ -136,7 +137,23 @@ export default function Dashboard() {
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {/* Buddy Mascot Assets link */}
+            <button
+              type="button"
+              data-ocid="header.buddy_mascot.button"
+              onClick={() => navigate({ to: "/buddy-mascot" })}
+              title="Buddy Mascot Assets"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all hover:scale-105"
+              style={{
+                background: "rgba(56,189,248,0.08)",
+                border: "1px solid rgba(56,189,248,0.2)",
+                color: "#38BDF8",
+              }}
+            >
+              <Bot className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Buddy Assets</span>
+            </button>
             <button
               type="button"
               data-ocid="header.settings.button"

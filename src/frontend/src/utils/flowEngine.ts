@@ -14,6 +14,8 @@ export interface ToolGuidance {
 export interface FlowState {
   flowId: string;
   step: string;
+  /** How many question-steps the user has answered (never decrements) */
+  stepIndex: number;
   system_type: "split" | "package" | "unknown" | null;
   outdoor_running: boolean | null;
   thermostat_ok: boolean | null;
@@ -55,10 +57,26 @@ export function activateFlow(symptom: string): FlowDef | null {
   return REGISTRY.find((f) => f.triggers.some((t) => s.includes(t))) ?? null;
 }
 
+/**
+ * Returns the flow whose triggers match `symptom` ONLY IF it is a different
+ * flow than `currentFlowId`. Returns null if no match or same flow.
+ */
+export function activateDifferentFlow(
+  symptom: string,
+  currentFlowId: string,
+): FlowDef | null {
+  const s = symptom.toLowerCase();
+  const match =
+    REGISTRY.find((f) => f.triggers.some((t) => s.includes(t))) ?? null;
+  if (!match || match.id === currentFlowId) return null;
+  return match;
+}
+
 export function initFlowState(flow: FlowDef): FlowState {
   return {
     flowId: flow.id,
     step: flow.firstStep,
+    stepIndex: 0,
     system_type: null,
     outdoor_running: null,
     thermostat_ok: null,
@@ -85,6 +103,7 @@ export function advanceFlow(
 ): AdvanceResult {
   const currentStep = flow.steps[state.step];
   if (!currentStep) {
+    // No more steps defined — build diagnosis
     return {
       nextState: state,
       step: null,
@@ -93,9 +112,13 @@ export function advanceFlow(
     };
   }
 
-  // Record answer
+  // Record answer and increment step counter
   const updatedAnswers = { ...state.answers, [currentStep.id]: answer };
-  let updatedState: FlowState = { ...state, answers: updatedAnswers };
+  let updatedState: FlowState = {
+    ...state,
+    answers: updatedAnswers,
+    stepIndex: state.stepIndex + 1,
+  };
 
   // Apply state mutations based on step id
   const a = answer.toLowerCase();
@@ -126,7 +149,40 @@ export function advanceFlow(
 
   const nextStepId = currentStep.next(answer, updatedState);
 
+  // ── Flow control guard ────────────────────────────────────────────────────
+  // Prevent jumping to diagnosis before the flow has reached its final
+  // progress step. A `next()` returning "diagnosis" is only honoured when
+  // we are already at or past the second-to-last progress step, OR when
+  // there are no further defined steps in the flow.
+  const progressSteps = flow.progressSteps ?? [];
+  const currentProgressIdx = progressSteps.indexOf(currentStep.id);
+  const isLastDefinedProgress =
+    progressSteps.length === 0 ||
+    currentProgressIdx >= progressSteps.length - 2; // -2: last non-diagnosis step
+
   if (nextStepId === "diagnosis") {
+    if (isLastDefinedProgress || !flow.steps[nextStepId]) {
+      // Legitimate end of flow — proceed to diagnosis
+      return {
+        nextState: { ...updatedState, step: "diagnosis" },
+        step: null,
+        isDiagnosis: true,
+        diagnosis: flow.buildDiagnosis(updatedState),
+      };
+    }
+    // Not yet at the end: find the next defined progress step and go there
+    // instead of jumping straight to diagnosis.
+    const fallbackId = progressSteps[currentProgressIdx + 1];
+    const fallbackStep = fallbackId ? flow.steps[fallbackId] : null;
+    if (fallbackStep) {
+      return {
+        nextState: { ...updatedState, step: fallbackStep.id },
+        step: fallbackStep,
+        isDiagnosis: false,
+        diagnosis: null,
+      };
+    }
+    // No fallback found — allow diagnosis
     return {
       nextState: { ...updatedState, step: "diagnosis" },
       step: null,
@@ -135,9 +191,10 @@ export function advanceFlow(
     };
   }
 
-  // Check if nextStep is a special immediate-diagnosis step
+  // Normal advancement: look up the next step
   const nextStep = flow.steps[nextStepId];
   if (!nextStep) {
+    // Step id exists but isn't a registered step — fall through to diagnosis
     return {
       nextState: { ...updatedState, step: nextStepId },
       step: null,

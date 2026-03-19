@@ -4,6 +4,7 @@ import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { createRootRoute, createRoute } from "@tanstack/react-router";
 import { useInternetIdentity } from "./hooks/useInternetIdentity";
 import { useGetCallerUserProfile } from "./hooks/useQueries";
+import BuddyMascotPage from "./pages/BuddyMascotPage";
 import Dashboard from "./pages/Dashboard";
 import DiagnosePage from "./pages/DiagnosePage";
 import JobsPage from "./pages/JobsPage";
@@ -46,12 +47,19 @@ const toolsRoute = createRoute({
   component: ToolsPage,
 });
 
+const buddyMascotRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/buddy-mascot",
+  component: BuddyMascotPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   diagnoseRoute,
   jobsRoute,
   learnRoute,
   toolsRoute,
+  buddyMascotRoute,
 ]);
 
 const router = createRouter({ routeTree });

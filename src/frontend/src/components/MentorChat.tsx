@@ -18,6 +18,7 @@ import {
   type FlowDef,
   type FlowState,
   type ToolGuidance,
+  activateDifferentFlow,
   activateFlow,
   advanceFlow,
   initFlowState,
@@ -30,6 +31,10 @@ import {
   getFollowUpQuestion,
   getInitialAcknowledgment,
 } from "@/utils/mentorLogic";
+import {
+  validateBuddyResponse,
+  validateDiagnosisSummary,
+} from "@/utils/responseValidator";
 import {
   AlertTriangle,
   ExternalLink,
@@ -96,6 +101,21 @@ const FLOW_STEP_LABELS: Record<string, string> = {
 
 const DEFAULT_FLOW_STEPS = ["diagnosis"];
 
+// ─── Validation wrapper ───────────────────────────────────────────────────────
+// Pass every outgoing Buddy message through the validator before rendering.
+// Returns the corrected text (unchanged if it already passes all checks).
+function validated(text: string, opts: { isDiagnosis?: boolean } = {}): string {
+  const result = validateBuddyResponse(text, opts.isDiagnosis);
+  return result.correctedText;
+}
+
+function validatedDiagnosis(diagnosis: MentorDiagnosis): MentorDiagnosis {
+  return {
+    ...diagnosis,
+    buddySummary: validateDiagnosisSummary(diagnosis.buddySummary),
+  };
+}
+
 function FlowProgressBar({
   flowState,
   activeFlow,
@@ -110,54 +130,109 @@ function FlowProgressBar({
     ? steps.length - 1
     : Math.max(0, steps.indexOf(flowState.step));
 
+  // Human-readable "Step X / Y" — exclude the final "diagnosis" step from the
+  // count so it reads "Step 3 / 5" rather than "Step 5 / 6" at the last Q.
+  const nonDiagnosisSteps = steps.filter((s) => s !== "diagnosis");
+  const humanStep = Math.min(
+    nonDiagnosisSteps.indexOf(flowState.step) + 1,
+    nonDiagnosisSteps.length,
+  );
+  const humanTotal = nonDiagnosisSteps.length;
+
   return (
-    <div
-      className="flex items-center gap-1 mb-4"
-      data-ocid="mentor.flow_progress"
-    >
-      {steps.map((id, i) => (
-        <div key={id} className="flex items-center gap-1 flex-1 last:flex-none">
-          <div className="flex items-center gap-1.5 shrink-0">
-            <div
-              className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-300"
-              style={{
-                background:
-                  i <= currentIdx
-                    ? "oklch(var(--primary) / 1)"
-                    : "oklch(var(--muted) / 1)",
-                color:
-                  i <= currentIdx
-                    ? "white"
-                    : "oklch(var(--muted-foreground) / 1)",
-              }}
-            >
-              {i + 1}
-            </div>
-            <span
-              className="text-xs font-medium hidden sm:inline transition-colors duration-300"
-              style={{
-                color:
-                  i <= currentIdx
-                    ? "oklch(var(--foreground) / 1)"
-                    : "oklch(var(--muted-foreground) / 0.5)",
-              }}
-            >
-              {FLOW_STEP_LABELS[id] ?? id}
-            </span>
-          </div>
-          {i < steps.length - 1 && (
-            <div
-              className="h-px flex-1 mx-1 transition-all duration-300"
-              style={{
-                background:
-                  i < currentIdx
-                    ? "oklch(var(--primary) / 0.5)"
-                    : "oklch(var(--border) / 1)",
-              }}
-            />
-          )}
+    <div className="space-y-1.5 mb-4" data-ocid="mentor.flow_progress">
+      {/* Compact text counter */}
+      {!isDone && humanStep > 0 && humanTotal > 0 && (
+        <div className="flex items-center justify-between">
+          <span
+            className="text-[11px] font-semibold uppercase tracking-widest"
+            style={{ color: "oklch(var(--primary) / 0.7)" }}
+          >
+            {activeFlow?.id
+              ? activeFlow.id
+                  .replace(/_/g, " ")
+                  .replace(/\b\w/g, (c) => c.toUpperCase())
+              : "Troubleshooting"}
+          </span>
+          <span
+            className="text-[11px] font-medium tabular-nums"
+            style={{ color: "oklch(var(--muted-foreground) / 0.8)" }}
+            data-ocid="mentor.flow_step_counter"
+          >
+            Step {humanStep} / {humanTotal}
+          </span>
         </div>
-      ))}
+      )}
+      {isDone && (
+        <div className="flex items-center justify-between">
+          <span
+            className="text-[11px] font-semibold uppercase tracking-widest"
+            style={{ color: "oklch(var(--primary) / 0.7)" }}
+          >
+            {activeFlow?.id
+              ? activeFlow.id
+                  .replace(/_/g, " ")
+                  .replace(/\b\w/g, (c) => c.toUpperCase())
+              : "Troubleshooting"}
+          </span>
+          <span
+            className="text-[11px] font-medium"
+            style={{ color: "oklch(var(--primary) / 0.8)" }}
+            data-ocid="mentor.flow_step_counter"
+          >
+            ✓ Diagnosis ready
+          </span>
+        </div>
+      )}
+      {/* Step dots */}
+      <div className="flex items-center gap-1">
+        {steps.map((id, i) => (
+          <div
+            key={id}
+            className="flex items-center gap-1 flex-1 last:flex-none"
+          >
+            <div className="flex items-center gap-1.5 shrink-0">
+              <div
+                className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-300"
+                style={{
+                  background:
+                    i <= currentIdx
+                      ? "oklch(var(--primary) / 1)"
+                      : "oklch(var(--muted) / 1)",
+                  color:
+                    i <= currentIdx
+                      ? "white"
+                      : "oklch(var(--muted-foreground) / 1)",
+                }}
+              >
+                {i + 1}
+              </div>
+              <span
+                className="text-xs font-medium hidden sm:inline transition-colors duration-300"
+                style={{
+                  color:
+                    i <= currentIdx
+                      ? "oklch(var(--foreground) / 1)"
+                      : "oklch(var(--muted-foreground) / 0.5)",
+                }}
+              >
+                {FLOW_STEP_LABELS[id] ?? id}
+              </span>
+            </div>
+            {i < steps.length - 1 && (
+              <div
+                className="h-px flex-1 mx-1 transition-all duration-300"
+                style={{
+                  background:
+                    i < currentIdx
+                      ? "oklch(var(--primary) / 0.5)"
+                      : "oklch(var(--border) / 1)",
+                }}
+              />
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -472,7 +547,16 @@ export default function MentorChat({
 
   function addMessage(msg: Omit<EnrichedMessage, "id">) {
     const id = ++msgIdRef.current;
-    setMessages((prev) => [...prev, { ...msg, id }]);
+    // Run validation on every outgoing Buddy message before storing it
+    const validated_msg: EnrichedMessage =
+      msg.role === "mentor"
+        ? {
+            ...msg,
+            id,
+            text: validated(msg.text),
+          }
+        : { ...msg, id };
+    setMessages((prev) => [...prev, validated_msg]);
   }
 
   function submitInput(value: string) {
@@ -480,6 +564,7 @@ export default function MentorChat({
     if (!trimmed) return;
     setInputValue("");
 
+    // ── Stage: initial ────────────────────────────────────────────────────────
     if (state.stage === "initial") {
       // Check for a registered flow first
       const flow = activateFlow(trimmed);
@@ -529,7 +614,7 @@ export default function MentorChat({
           answers: [],
         }));
       } else {
-        const diag = buildDiagnosis(trimmed, []);
+        const diag = validatedDiagnosis(buildDiagnosis(trimmed, []));
         addMessage({
           role: "mentor",
           text: "Alright — here's what I'm seeing based on that:",
@@ -545,7 +630,47 @@ export default function MentorChat({
       return;
     }
 
+    // ── Stage: flow ──────────────────────────────────────────────────────────
+    // FLOW CONTROL RULES:
+    //  1. Once a flow is running, NEVER restart it or skip steps.
+    //  2. Each reply ALWAYS advances to the next logical step.
+    //  3. Only switch flows if the user's input triggers a DIFFERENT flow.
+    //  4. Do NOT jump to diagnosis early unless the flow's own step logic
+    //     determines we are at the final step.
     if (state.stage === "flow" && state.activeFlow && state.flowState) {
+      // ── Rule 3: detect a DIFFERENT flow trigger ──────────────────────────
+      const differentFlow = activateDifferentFlow(trimmed, state.activeFlow.id);
+      if (differentFlow) {
+        // User has switched to a completely different issue — start the new flow
+        const newFlowState = initFlowState(differentFlow);
+        const firstStep = differentFlow.steps[newFlowState.step];
+
+        addMessage({ role: "user", text: trimmed });
+        addMessage({
+          role: "mentor",
+          text: "Got it — sounds like a different issue. Let me start a fresh flow for that.",
+        });
+        if (firstStep) {
+          addMessage({
+            role: "mentor",
+            text: firstStep.message,
+            safetyNote: firstStep.safetyNote,
+            visualComponent: firstStep.visualComponent,
+            toolGuidance: firstStep.toolGuidance,
+          });
+        }
+        setState((prev) => ({
+          ...prev,
+          stage: "flow",
+          symptom: trimmed,
+          activeFlow: differentFlow,
+          flowState: newFlowState,
+          diagnosis: null,
+        }));
+        return;
+      }
+
+      // ── Rules 1, 2, 4: advance the CURRENT flow by exactly one step ───────
       addMessage({ role: "user", text: trimmed });
 
       const result = advanceFlow(state.activeFlow, state.flowState, trimmed);
@@ -559,7 +684,9 @@ export default function MentorChat({
           ...prev,
           stage: "diagnosis",
           flowState: result.nextState,
-          diagnosis: result.diagnosis,
+          diagnosis: result.diagnosis
+            ? validatedDiagnosis(result.diagnosis)
+            : null,
         }));
       } else if (result.step) {
         addMessage({
@@ -577,6 +704,7 @@ export default function MentorChat({
       return;
     }
 
+    // ── Stage: followup ───────────────────────────────────────────────────────
     if (state.stage === "followup") {
       const newAnswers = [...state.answers, trimmed];
       const nextQ = getFollowUpQuestion(state.symptom, newAnswers.length);
@@ -590,7 +718,9 @@ export default function MentorChat({
           answers: newAnswers,
         }));
       } else {
-        const diag = buildDiagnosis(state.symptom, newAnswers);
+        const diag = validatedDiagnosis(
+          buildDiagnosis(state.symptom, newAnswers),
+        );
         addMessage({
           role: "mentor",
           text: "Okay — I have enough to go on. Here's my read:",
