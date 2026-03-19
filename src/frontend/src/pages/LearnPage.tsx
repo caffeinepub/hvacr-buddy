@@ -1,12 +1,26 @@
+import EPA608Exam from "@/components/EPA608Exam";
 import KnowledgeBase from "@/components/KnowledgeBase";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  EXAM_CORE,
+  EXAM_TYPE1,
+  EXAM_TYPE2,
+  EXAM_TYPE3,
+  type ExamQuestion,
+} from "@/data/epa608ExamQuestions";
+import {
+  EPA608_CORE,
+  EPA608_TYPE1,
+  EPA608_TYPE2,
+  EPA608_TYPE3,
+} from "@/data/epa608Questions";
 import {
   AlertTriangle,
   ArrowLeft,
   BookOpen,
   ChevronRight,
+  ClipboardList,
   Database,
   ExternalLink,
   Lightbulb,
@@ -20,7 +34,7 @@ import {
 import { useState } from "react";
 
 // ─── Types ─────────────────────────────────────────────────────
-type View = "home" | "category" | "topic" | "knowledge-base";
+type View = "home" | "category" | "topic" | "knowledge-base" | "exam";
 
 interface PracticeQ {
   q: string;
@@ -43,6 +57,7 @@ interface Topic {
   sections: TopicSection[];
   practiceQs?: PracticeQ[];
   videos?: VideoLink[];
+  examQuestions?: ExamQuestion[];
 }
 
 interface Category {
@@ -55,7 +70,7 @@ interface Category {
   topics: Topic[];
 }
 
-// ─── Content Data ──────────────────────────────────────────────
+// ─── Content Data ────────────────────────────────────────────
 const CATEGORIES: Category[] = [
   {
     id: "epa608",
@@ -69,6 +84,7 @@ const CATEGORIES: Category[] = [
       {
         id: "core",
         title: "Core",
+        examQuestions: EXAM_CORE,
         sections: [
           {
             heading: "Key Concepts",
@@ -88,25 +104,7 @@ const CATEGORIES: Category[] = [
             ],
           },
         ],
-        practiceQs: [
-          {
-            q: "What law prohibits the venting of refrigerants?",
-            a: "The Clean Air Act (Section 608).",
-          },
-          { q: "What does ODP stand for?", a: "Ozone Depletion Potential." },
-          {
-            q: "What color are refrigerant recovery cylinders?",
-            a: "Yellow with gray collar.",
-          },
-          {
-            q: "Which refrigerant type has the highest ozone depletion?",
-            a: "CFCs (e.g., R-12).",
-          },
-          {
-            q: "What is the penalty for knowingly venting refrigerants?",
-            a: "Up to $44,539 per day per violation.",
-          },
-        ],
+        practiceQs: EPA608_CORE,
         videos: [
           {
             title: "EPA 608 Core Prep Part 1",
@@ -121,6 +119,7 @@ const CATEGORIES: Category[] = [
       {
         id: "type1",
         title: "Type I",
+        examQuestions: EXAM_TYPE1,
         sections: [
           {
             heading: "Key Concepts",
@@ -138,28 +137,7 @@ const CATEGORIES: Category[] = [
             ],
           },
         ],
-        practiceQs: [
-          {
-            q: "What qualifies as a Type I appliance?",
-            a: "Systems with 5 lbs or less of refrigerant.",
-          },
-          {
-            q: "What recovery method is used for Type I systems?",
-            a: "Passive or self-contained recovery.",
-          },
-          {
-            q: "Do you need a recovery machine for small appliances under 5 lbs?",
-            a: "No, self-contained recovery devices are acceptable.",
-          },
-          {
-            q: "What refrigerant is commonly found in household refrigerators?",
-            a: "R-134a or R-600a.",
-          },
-          {
-            q: "What must you do before disposing of a small appliance?",
-            a: "Recover the refrigerant.",
-          },
-        ],
+        practiceQs: EPA608_TYPE1,
         videos: [
           {
             title: "EPA 608 Type 1 Prep",
@@ -170,6 +148,7 @@ const CATEGORIES: Category[] = [
       {
         id: "type2",
         title: "Type II",
+        examQuestions: EXAM_TYPE2,
         sections: [
           {
             heading: "Key Concepts",
@@ -188,28 +167,7 @@ const CATEGORIES: Category[] = [
             ],
           },
         ],
-        practiceQs: [
-          {
-            q: "What refrigerant is most commonly used in residential AC?",
-            a: "R-410A (newer systems) or R-22 (older systems).",
-          },
-          {
-            q: "What is required before opening a high-pressure system?",
-            a: "Recover the refrigerant.",
-          },
-          {
-            q: "What are low-loss fittings used for?",
-            a: "To minimize refrigerant release when connecting/disconnecting hoses.",
-          },
-          {
-            q: "At what leak rate must you repair a commercial refrigeration system?",
-            a: "20% annual leak rate triggers repair requirements.",
-          },
-          {
-            q: "What equipment must be certified for refrigerant recovery?",
-            a: "EPA-approved recovery equipment.",
-          },
-        ],
+        practiceQs: EPA608_TYPE2,
         videos: [
           {
             title: "EPA 608 Type 2 Prep",
@@ -220,6 +178,7 @@ const CATEGORIES: Category[] = [
       {
         id: "type3",
         title: "Type III",
+        examQuestions: EXAM_TYPE3,
         sections: [
           {
             heading: "Key Concepts",
@@ -237,28 +196,7 @@ const CATEGORIES: Category[] = [
             ],
           },
         ],
-        practiceQs: [
-          {
-            q: "What pressure do low-pressure systems operate at?",
-            a: "Below atmospheric pressure (in a vacuum).",
-          },
-          {
-            q: "What refrigerant is commonly used in Type III systems?",
-            a: "R-11 or R-113.",
-          },
-          {
-            q: "Why is moisture entry a concern in low-pressure systems?",
-            a: "Moisture causes acid formation and system damage.",
-          },
-          {
-            q: "What test is performed to check for leaks in low-pressure systems?",
-            a: "A standing pressure test.",
-          },
-          {
-            q: "What must be done if a low-pressure system loses pressure?",
-            a: "Perform a leak check and repair before recharging.",
-          },
-        ],
+        practiceQs: EPA608_TYPE3,
         videos: [
           {
             title: "EPA 608 Type 3 Prep",
@@ -783,20 +721,16 @@ const CATEGORIES: Category[] = [
   },
 ];
 
-// ─── Section Icon Map ──────────────────────────────────────────
+// ─── Section Icon Map ────────────────────────────────────────────
 function sectionIcon(heading: string) {
   if (heading.toLowerCase().includes("safety"))
     return <AlertTriangle className="w-4 h-4 text-destructive" />;
   if (heading.toLowerCase().includes("step"))
     return <Settings className="w-4 h-4 text-primary" />;
-  if (heading.toLowerCase().includes("example"))
-    return (
-      <Lightbulb
-        className="w-4 h-4"
-        style={{ color: "oklch(var(--chart-4))" }}
-      />
-    );
-  if (heading.toLowerCase().includes("tip"))
+  if (
+    heading.toLowerCase().includes("example") ||
+    heading.toLowerCase().includes("tip")
+  )
     return (
       <Lightbulb
         className="w-4 h-4"
@@ -808,11 +742,11 @@ function sectionIcon(heading: string) {
   return null;
 }
 
-function isSafetySection(heading: string) {
-  return heading.toLowerCase().includes("safety");
+function isSafetySection(h: string) {
+  return h.toLowerCase().includes("safety");
 }
 
-// ─── Practice Question Component ──────────────────────────────
+// ─── Practice Question Component ──────────────────────────────────
 function PracticeQuestion({
   q,
   a,
@@ -832,9 +766,7 @@ function PracticeQuestion({
         </span>
         <p className="text-sm font-medium leading-snug flex-1">{q}</p>
         <ChevronRight
-          className={`w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5 transition-transform duration-200 ${
-            revealed ? "rotate-90" : ""
-          }`}
+          className={`w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5 transition-transform duration-200 ${revealed ? "rotate-90" : ""}`}
         />
       </div>
       {revealed && (
@@ -849,27 +781,47 @@ function PracticeQuestion({
   );
 }
 
-// ─── Topic View ────────────────────────────────────────────────
-function TopicView({ topic, category }: { topic: Topic; category: Category }) {
+// ─── Topic View ─────────────────────────────────────────────────────
+function TopicView({
+  topic,
+  category,
+  onStartExam,
+}: {
+  topic: Topic;
+  category: Category;
+  onStartExam: () => void;
+}) {
   return (
     <div className="space-y-5">
+      {/* Exam Simulation Entry — EPA 608 only */}
+      {topic.examQuestions && topic.examQuestions.length > 0 && (
+        <div className="p-4 rounded-xl border border-primary/20 bg-primary/5">
+          <div className="flex items-center gap-2 mb-2">
+            <ClipboardList className="w-4 h-4 text-primary" />
+            <p className="text-sm font-bold text-primary">Exam Simulation</p>
+            <Badge variant="secondary" className="text-xs px-2 py-0 h-5">
+              {topic.examQuestions.length} questions
+            </Badge>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">
+            Practice Mode or Exam Mode with randomized multiple-choice questions
+          </p>
+          <Button onClick={onStartExam} size="sm" className="gap-2 w-full">
+            <ClipboardList className="w-4 h-4" />
+            Start Exam Simulation
+          </Button>
+        </div>
+      )}
+
       {/* Sections */}
       {topic.sections.map((section) => (
         <div key={section.heading}>
           <div
-            className={`flex items-center gap-2 mb-2 pb-1.5 border-b ${
-              isSafetySection(section.heading)
-                ? "border-destructive/30"
-                : "border-border"
-            }`}
+            className={`flex items-center gap-2 mb-2 pb-1.5 border-b ${isSafetySection(section.heading) ? "border-destructive/30" : "border-border"}`}
           >
             {sectionIcon(section.heading)}
             <h3
-              className={`text-sm font-bold uppercase tracking-wider ${
-                isSafetySection(section.heading)
-                  ? "text-destructive"
-                  : "text-primary"
-              }`}
+              className={`text-sm font-bold uppercase tracking-wider ${isSafetySection(section.heading) ? "text-destructive" : "text-primary"}`}
             >
               {section.heading}
             </h3>
@@ -878,11 +830,7 @@ function TopicView({ topic, category }: { topic: Topic; category: Category }) {
             {section.items.map((item) => (
               <li key={item.slice(0, 40)} className="flex items-start gap-2">
                 <span
-                  className={`flex-shrink-0 w-1.5 h-1.5 rounded-full mt-2 ${
-                    isSafetySection(section.heading)
-                      ? "bg-destructive"
-                      : "bg-primary"
-                  }`}
+                  className={`flex-shrink-0 w-1.5 h-1.5 rounded-full mt-2 ${isSafetySection(section.heading) ? "bg-destructive" : "bg-primary"}`}
                 />
                 <p className="text-sm leading-relaxed text-foreground">
                   {item}
@@ -901,9 +849,10 @@ function TopicView({ topic, category }: { topic: Topic; category: Category }) {
             <h3 className="text-sm font-bold uppercase tracking-wider text-primary">
               Practice Questions
             </h3>
-            <span className="text-xs text-muted-foreground">
-              Tap to reveal answer
-            </span>
+            <Badge variant="secondary" className="text-xs px-2 py-0 h-5">
+              {topic.practiceQs.length} questions
+            </Badge>
+            <span className="text-xs text-muted-foreground">Tap to reveal</span>
           </div>
           <div className="space-y-2">
             {topic.practiceQs.map((pq, qi) => (
@@ -959,14 +908,11 @@ function TopicView({ topic, category }: { topic: Topic; category: Category }) {
   );
 }
 
-// ─── Category View ─────────────────────────────────────────────
+// ─── Category View ─────────────────────────────────────────────────
 function CategoryView({
   category,
   onSelectTopic,
-}: {
-  category: Category;
-  onSelectTopic: (topic: Topic) => void;
-}) {
+}: { category: Category; onSelectTopic: (t: Topic) => void }) {
   return (
     <div className="space-y-2">
       <p className="text-sm text-muted-foreground mb-4">{category.subtitle}</p>
@@ -993,6 +939,7 @@ function CategoryView({
               {topic.practiceQs
                 ? ` · ${topic.practiceQs.length} questions`
                 : ""}
+              {topic.examQuestions ? " · exam" : ""}
               {topic.videos
                 ? ` · ${topic.videos.length} video${topic.videos.length !== 1 ? "s" : ""}`
                 : ""}
@@ -1005,17 +952,16 @@ function CategoryView({
   );
 }
 
-// ─── Home View ─────────────────────────────────────────────────
+// ─── Home View ─────────────────────────────────────────────────────
 function HomeView({
   onSelectCategory,
   onSelectKnowledgeBase,
 }: {
-  onSelectCategory: (cat: Category) => void;
+  onSelectCategory: (c: Category) => void;
   onSelectKnowledgeBase: () => void;
 }) {
   return (
     <div className="space-y-3">
-      {/* Knowledge Base Card */}
       <button
         type="button"
         onClick={onSelectKnowledgeBase}
@@ -1089,7 +1035,7 @@ function HomeView({
   );
 }
 
-// ─── Main Page ─────────────────────────────────────────────────
+// ─── Main Page ─────────────────────────────────────────────────────
 export default function LearnPage() {
   const [view, setView] = useState<View>("home");
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
@@ -1115,7 +1061,9 @@ export default function LearnPage() {
   }
 
   function goBack() {
-    if (view === "topic") {
+    if (view === "exam") {
+      setView("topic");
+    } else if (view === "topic") {
       setSelectedTopic(null);
       setView("category");
     } else if (view === "category") {
@@ -1125,9 +1073,21 @@ export default function LearnPage() {
     }
   }
 
+  const headerTitle = () => {
+    if (view === "exam" && selectedTopic)
+      return { sub: selectedTopic.title, main: "Exam Simulation" };
+    if (view === "topic" && selectedCategory && selectedTopic)
+      return { sub: selectedCategory.title, main: selectedTopic.title };
+    if (view === "category" && selectedCategory)
+      return { main: selectedCategory.title };
+    if (view === "knowledge-base") return { main: "Knowledge Base" };
+    return null;
+  };
+
+  const ht = headerTitle();
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-lg mx-auto px-4 py-3">
           {view === "home" ? (
@@ -1153,34 +1113,23 @@ export default function LearnPage() {
                 <ArrowLeft className="w-4 h-4" />
                 Back
               </button>
-              <div className="flex-1 min-w-0">
-                {view === "category" && selectedCategory && (
-                  <p className="text-sm font-semibold text-foreground truncate">
-                    {selectedCategory.title}
-                  </p>
-                )}
-                {view === "topic" && selectedCategory && selectedTopic && (
-                  <div>
+              {ht && (
+                <div className="flex-1 min-w-0">
+                  {ht.sub && (
                     <p className="text-xs text-muted-foreground truncate">
-                      {selectedCategory.title}
+                      {ht.sub}
                     </p>
-                    <p className="text-sm font-semibold text-foreground truncate">
-                      {selectedTopic.title}
-                    </p>
-                  </div>
-                )}
-                {view === "knowledge-base" && (
+                  )}
                   <p className="text-sm font-semibold text-foreground truncate">
-                    Knowledge Base
+                    {ht.main}
                   </p>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           )}
         </div>
       </header>
 
-      {/* Content */}
       <main className="max-w-lg mx-auto px-4 py-5" data-ocid="learn.section">
         {view === "home" && (
           <div>
@@ -1199,16 +1148,27 @@ export default function LearnPage() {
         )}
 
         {view === "topic" && selectedTopic && selectedCategory && (
-          <TopicView topic={selectedTopic} category={selectedCategory} />
+          <TopicView
+            topic={selectedTopic}
+            category={selectedCategory}
+            onStartExam={() => setView("exam")}
+          />
+        )}
+
+        {view === "exam" && selectedTopic?.examQuestions && (
+          <EPA608Exam
+            sectionTitle={selectedTopic.title}
+            questions={selectedTopic.examQuestions}
+            onBack={() => setView("topic")}
+          />
         )}
 
         {view === "knowledge-base" && <KnowledgeBase />}
       </main>
 
-      {/* Footer */}
       <footer className="max-w-lg mx-auto px-4 py-6 mt-4 border-t border-border">
         <p className="text-xs text-muted-foreground text-center">
-          © {new Date().getFullYear()}.{" "}
+          © {new Date().getFullYear()}. 
           <a
             href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
             target="_blank"

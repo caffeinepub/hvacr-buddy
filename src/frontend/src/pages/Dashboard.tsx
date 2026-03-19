@@ -4,12 +4,15 @@ import { Separator } from "@/components/ui/separator";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import {
-  Bell,
   BookOpen,
   Briefcase,
+  ChevronRight,
   ExternalLink,
+  GraduationCap,
   LogOut,
-  Search,
+  MapPin,
+  QrCode,
+  Settings,
   Stethoscope,
   Wind,
   Wrench,
@@ -18,13 +21,6 @@ import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useGetCallerUserProfile } from "../hooks/useQueries";
-
-const NAV_LINKS = [
-  { label: "Dashboard", active: true },
-  { label: "Reports", active: false },
-  { label: "Customers", active: false },
-  { label: "My Account", active: false },
-];
 
 const FEATURE_CARDS = [
   {
@@ -82,7 +78,13 @@ interface Scenario {
 
 const SCENARIOS: Scenario[] = [
   {
-    keywords: ["ac not cooling", "not cooling", "warm air", "no cool"],
+    keywords: [
+      "ac not cooling",
+      "not cooling",
+      "warm air",
+      "no cool",
+      "low cooling",
+    ],
     causes: [
       "Low refrigerant charge",
       "Dirty or clogged air filter",
@@ -178,6 +180,7 @@ const SCENARIOS: Scenario[] = [
       "no power",
       "tripped breaker",
       "won't start",
+      "unit not starting",
     ],
     causes: [
       "Tripped circuit breaker",
@@ -258,12 +261,36 @@ function matchScenario(query: string): Scenario | null {
   return null;
 }
 
-const today = new Date().toLocaleDateString("en-US", {
-  weekday: "long",
-  month: "long",
-  day: "numeric",
-  year: "numeric",
-});
+const QUICK_ACTIONS = [
+  {
+    label: "Troubleshoot System",
+    icon: Wrench,
+    action: "troubleshoot" as const,
+    color: "var(--diagnose-icon)",
+    bg: "var(--diagnose-bg)",
+  },
+  {
+    label: "Identify Error Code",
+    icon: QrCode,
+    action: "diagnose" as const,
+    color: "var(--jobs-icon)",
+    bg: "var(--jobs-bg)",
+  },
+  {
+    label: "Find Parts Near Me",
+    icon: MapPin,
+    action: "tools" as const,
+    color: "var(--tools-icon)",
+    bg: "var(--tools-bg)",
+  },
+  {
+    label: "EPA Practice Mode",
+    icon: GraduationCap,
+    action: "learn" as const,
+    color: "var(--learn-icon)",
+    bg: "var(--learn-bg)",
+  },
+];
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -283,18 +310,32 @@ export default function Dashboard() {
     queryClient.clear();
   };
 
-  const handleQuickDiagnose = () => {
+  const handleTroubleshoot = () => {
     const result = matchScenario(symptomInput);
     setDiagResult(result ?? "no-match");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") handleQuickDiagnose();
+    if (e.key === "Enter") handleTroubleshoot();
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSymptomInput(e.target.value);
     if (diagResult !== null) setDiagResult(null);
+  };
+
+  const handleQuickAction = (
+    action: (typeof QUICK_ACTIONS)[number]["action"],
+  ) => {
+    if (action === "troubleshoot") {
+      handleTroubleshoot();
+    } else if (action === "diagnose") {
+      navigate({ to: "/diagnose" });
+    } else if (action === "tools") {
+      navigate({ to: "/tools" });
+    } else if (action === "learn") {
+      navigate({ to: "/learn" });
+    }
   };
 
   return (
@@ -311,7 +352,7 @@ export default function Dashboard() {
             </div>
             <div className="leading-tight">
               <span className="text-base font-bold text-foreground tracking-tight">
-                HVACR Buddy
+                HVAC Mentor AI
               </span>
               <span
                 className="block text-[10px] font-500 uppercase tracking-widest"
@@ -322,38 +363,13 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <nav className="hidden md:flex items-center gap-6">
-            {NAV_LINKS.map((link) => (
-              <button
-                type="button"
-                key={link.label}
-                data-ocid={`nav.${link.label.toLowerCase().replace(" ", "_")}.link`}
-                className="relative text-sm font-medium pb-0.5 transition-colors"
-                style={{
-                  color: link.active
-                    ? "oklch(var(--foreground))"
-                    : "oklch(var(--muted-foreground) / 1)",
-                }}
-              >
-                {link.label}
-                {link.active && (
-                  <span
-                    className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full"
-                    style={{ background: "oklch(var(--primary) / 1)" }}
-                  />
-                )}
-              </button>
-            ))}
-          </nav>
-
           <div className="flex items-center gap-3">
             <button
               type="button"
-              data-ocid="header.bell.button"
+              data-ocid="header.settings.button"
               className="relative p-1.5 rounded-md hover:bg-muted transition-colors"
             >
-              <Bell className="w-5 h-5 text-muted-foreground" />
-              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-destructive" />
+              <Settings className="w-5 h-5 text-muted-foreground" />
             </button>
             <div className="flex items-center gap-1.5">
               <span className="text-sm font-medium text-foreground hidden sm:block">
@@ -375,99 +391,101 @@ export default function Dashboard() {
       </header>
 
       <main className="flex-1">
-        {/* Hero */}
-        <section className="py-12 px-6 text-center">
+        {/* AI Assistant Card */}
+        <section className="pt-8 pb-4 px-6">
           <div className="max-w-[1200px] mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.45 }}
+              className="bg-card border border-border rounded-2xl shadow-card p-6"
+              data-ocid="assistant.card"
             >
-              <h1 className="text-4xl font-extrabold text-foreground tracking-tight mb-2">
-                Welcome Back, {displayName}!
-              </h1>
-              <p className="text-sm text-muted-foreground mb-8">{today}</p>
-              <div className="relative max-w-md mx-auto">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  data-ocid="dashboard.search_input"
-                  placeholder="Search jobs, customers, diagnostics…"
-                  className="pl-10 rounded-xl shadow-xs border-border bg-card"
-                />
-              </div>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Quick Diagnose */}
-        <section className="pb-8 px-6">
-          <div className="max-w-[1200px] mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.15 }}
-              className="bg-card border border-border rounded-xl shadow-card p-5"
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <div
-                  className="flex items-center justify-center w-7 h-7 rounded-lg"
-                  style={{ background: "oklch(var(--diagnose-bg))" }}
-                >
-                  <Stethoscope
-                    className="w-4 h-4"
-                    style={{ color: "oklch(var(--diagnose-icon))" }}
-                  />
+              {/* Greeting */}
+              <div className="mb-5">
+                <div className="flex items-center gap-2 mb-1">
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: "oklch(var(--primary) / 0.12)" }}
+                  >
+                    <Wind
+                      className="w-5 h-5"
+                      style={{ color: "oklch(var(--primary) / 1)" }}
+                    />
+                  </div>
+                  <span className="text-lg font-bold text-foreground tracking-tight">
+                    👋 What are you working on today?
+                  </span>
                 </div>
-                <h2 className="text-sm font-bold text-foreground tracking-tight">
-                  Quick Diagnose
-                </h2>
-                <span className="ml-auto text-xs text-muted-foreground">
-                  Instant results — no login needed
-                </span>
+                <p className="text-sm text-muted-foreground ml-11">
+                  Describe your issue and I'll help you diagnose it.
+                </p>
               </div>
 
-              <div className="flex gap-2">
+              {/* Input */}
+              <div className="flex gap-2 mb-5">
                 <Input
-                  data-ocid="quick_diagnose.input"
+                  data-ocid="assistant.input"
                   value={symptomInput}
                   onChange={handleInputChange}
                   onKeyDown={handleKeyDown}
-                  placeholder="Enter a symptom, e.g. AC not cooling…"
-                  className="flex-1 rounded-lg border-border bg-background text-sm"
+                  placeholder="Describe issue... (Low cooling, unit not starting, etc.)"
+                  className="flex-1 rounded-xl border-border bg-background text-sm h-11"
                 />
-                <Button
-                  data-ocid="quick_diagnose.submit_button"
-                  onClick={handleQuickDiagnose}
-                  size="sm"
-                  className="px-4 rounded-lg shrink-0"
-                  style={{ background: "oklch(var(--primary) / 1)" }}
-                >
-                  Check
-                </Button>
               </div>
 
+              {/* Quick Action Buttons — 2x2 grid */}
+              <div className="grid grid-cols-2 gap-3">
+                {QUICK_ACTIONS.map((qa) => {
+                  const Icon = qa.icon;
+                  return (
+                    <button
+                      key={qa.label}
+                      type="button"
+                      data-ocid={`assistant.${qa.action}.button`}
+                      onClick={() => handleQuickAction(qa.action)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border bg-background hover:border-primary/40 hover:bg-primary/5 transition-all text-left group"
+                    >
+                      <div
+                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-110"
+                        style={{ background: `oklch(${qa.bg})` }}
+                      >
+                        <Icon
+                          className="w-4 h-4"
+                          style={{ color: `oklch(${qa.color})` }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium text-foreground">
+                        {qa.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Diagnose Results */}
               <AnimatePresence>
                 {diagResult !== null && (
                   <motion.div
                     key="results"
-                    data-ocid="quick_diagnose.panel"
+                    data-ocid="assistant.panel"
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.25 }}
                     className="overflow-hidden"
                   >
-                    <Separator className="my-4" />
+                    <Separator className="my-5" />
 
                     {diagResult === "no-match" ? (
                       <div
-                        data-ocid="quick_diagnose.empty_state"
+                        data-ocid="assistant.empty_state"
                         className="text-sm text-muted-foreground"
                       >
                         No match found. Try the full{" "}
                         <button
                           type="button"
-                          data-ocid="quick_diagnose.diagnose.link"
+                          data-ocid="assistant.diagnose.link"
                           onClick={() => navigate({ to: "/diagnose" })}
                           className="underline font-medium text-foreground hover:text-primary transition-colors"
                         >
@@ -536,7 +554,7 @@ export default function Dashboard() {
                                 {diagResult.videos.map((video, vidIdx) => (
                                   <a
                                     key={video.url}
-                                    data-ocid={`quick_diagnose.video.item.${vidIdx + 1}`}
+                                    data-ocid={`assistant.video.item.${vidIdx + 1}`}
                                     href={video.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
@@ -560,7 +578,7 @@ export default function Dashboard() {
         </section>
 
         {/* Feature cards */}
-        <section className="pb-16 px-6">
+        <section className="py-6 px-6">
           <div className="max-w-[1200px] mx-auto">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {FEATURE_CARDS.map((card, i) => {
@@ -604,6 +622,49 @@ export default function Dashboard() {
             </div>
           </div>
         </section>
+
+        {/* Continue Learning */}
+        <section className="pb-12 px-6">
+          <div className="max-w-[1200px] mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.35 }}
+              className="bg-card border border-border rounded-xl shadow-card p-5 flex items-center justify-between gap-4"
+              data-ocid="continue_learning.card"
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: "oklch(var(--learn-bg))" }}
+                >
+                  <GraduationCap
+                    className="w-5 h-5"
+                    style={{ color: "oklch(var(--learn-icon))" }}
+                  />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">
+                    Continue Learning
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Pick up where you left off
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                data-ocid="continue_learning.link"
+                onClick={() => navigate({ to: "/learn" })}
+                className="flex items-center gap-1.5 text-sm font-semibold shrink-0 transition-colors hover:opacity-80"
+                style={{ color: "oklch(var(--primary) / 1)" }}
+              >
+                Resume EPA Section
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </motion.div>
+          </div>
+        </section>
       </main>
 
       <footer className="border-t border-border bg-card">
@@ -617,7 +678,7 @@ export default function Dashboard() {
                 <Wind className="w-3 h-3 text-white" />
               </div>
               <span className="text-sm font-bold text-foreground">
-                HVACR Buddy
+                HVAC Mentor AI
               </span>
             </div>
             <p className="text-xs text-muted-foreground text-center">
