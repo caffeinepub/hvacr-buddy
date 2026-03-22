@@ -10,6 +10,22 @@
   src: url("/assets/fonts/PlusJakartaSans.woff2") format("woff2");
 }
 
+@keyframes buddy-glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15), 0 0 12px
+      rgba(56, 189, 248, 0.35), 0 0 24px rgba(56, 189, 248, 0.12);
+  }
+  50% {
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25), 0 0 18px
+      rgba(56, 189, 248, 0.5), 0 0 36px rgba(56, 189, 248, 0.18);
+  }
+}
+
+.buddy-avatar-glow {
+  animation: buddy-glow-pulse 3s ease-in-out infinite;
+}
+
 @layer base {
   :root {
     --radius: 0.75rem;

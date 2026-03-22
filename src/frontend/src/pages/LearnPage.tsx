@@ -1060,6 +1060,16 @@ export default function LearnPage() {
     setView("topic");
   }
 
+  function navigateFromKB(categoryId: string, topicId: string) {
+    const cat = CATEGORIES.find((c) => c.id === categoryId);
+    if (!cat) return;
+    const topic = cat.topics.find((t) => t.id === topicId);
+    if (!topic) return;
+    setSelectedCategory(cat);
+    setSelectedTopic(topic);
+    setView("topic");
+  }
+
   function goBack() {
     if (view === "exam") {
       setView("topic");
@@ -1163,7 +1173,9 @@ export default function LearnPage() {
           />
         )}
 
-        {view === "knowledge-base" && <KnowledgeBase />}
+        {view === "knowledge-base" && (
+          <KnowledgeBase onNavigateToStudy={navigateFromKB} />
+        )}
       </main>
 
       <footer className="max-w-lg mx-auto px-4 py-6 mt-4 border-t border-border">

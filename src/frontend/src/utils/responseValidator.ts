@@ -1,4 +1,4 @@
-// ─── Buddy Response Validator ─────────────────────────────────────────────────
+// ─── Buddy Response Validator ─────────────────────────────────────────────────────
 // Runs before every Buddy message is displayed.
 // If any check fails, the response is auto-corrected before rendering.
 
@@ -13,21 +13,22 @@ export interface ValidationResult {
  * A question is a sentence ending with "?"
  */
 function countQuestions(text: string): number {
-  // Split on sentence boundaries that end with ?
   const matches = text.match(/[^.!?]*\?/g);
   return matches ? matches.length : 0;
 }
 
 /**
- * Detect whether the text lists multiple solutions / causes at once
- * (e.g. bullet list with 2+ items that look like diagnoses).
+ * Detect whether the text lists multiple solutions / causes at once.
+ * Threshold is 4+ items to avoid trimming legitimate tool-step lists
+ * (which typically use 3-4 numbered items for usage instructions).
+ * A response with 5+ list items is almost certainly stacking multiple
+ * solutions, not walking through a single procedure.
  */
 function hasMultipleSolutions(text: string): boolean {
-  // Look for patterns like "1. ... 2. ..." or "- ... \n- ..." with 3+ items
   const numberedList = text.match(/^\s*\d+\./gm);
   const bulletList = text.match(/^\s*[-•]/gm);
-  if (numberedList && numberedList.length >= 3) return true;
-  if (bulletList && bulletList.length >= 3) return true;
+  if (numberedList && numberedList.length >= 5) return true;
+  if (bulletList && bulletList.length >= 5) return true;
   return false;
 }
 
@@ -79,7 +80,7 @@ function trimToOneSolution(text: string): string {
  * Checks:
  * 1. Is Buddy guiding step-by-step? (message is not empty)
  * 2. Does it ask only ONE question?
- * 3. Does it avoid listing multiple solutions at once?
+ * 3. Does it avoid listing multiple solutions at once? (5+ items threshold)
  *
  * Auto-corrects and returns the fixed text if any check fails.
  */
@@ -104,7 +105,7 @@ export function validateBuddyResponse(
     corrected = trimToOneQuestion(corrected);
   }
 
-  // Check 3: avoid multiple solutions in a list
+  // Check 3: avoid stacking multiple solutions (5+ item threshold)
   if (!isDiagnosis && hasMultipleSolutions(corrected)) {
     issues.push(
       "Response lists multiple solutions at once — should give ONE focused next step.",

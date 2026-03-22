@@ -2,6 +2,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { createRootRoute, createRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import SplashScreen from "./components/SplashScreen";
 import { useInternetIdentity } from "./hooks/useInternetIdentity";
 import { useGetCallerUserProfile } from "./hooks/useQueries";
 import BuddyMascotPage from "./pages/BuddyMascotPage";
@@ -103,8 +105,11 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
   return (
     <QueryClientProvider client={queryClient}>
+      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
       <AuthGate>
         <RouterProvider router={router} />
       </AuthGate>

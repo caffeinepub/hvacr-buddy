@@ -14,17 +14,15 @@ const noHeatFlow: FlowDef = {
     "furnace won't come on",
     "heat pump not heating",
     "no warm air",
-    "heater not working",
   ],
   firstStep: "system_type",
+  // progressSteps only lists the shared trunk — furnace/heat-pump branches are
+  // shown as sequential Buddy messages, not separate progress dots, so the
+  // bar stays clean regardless of which branch the user takes.
   progressSteps: [
     "system_type",
     "thermostat_check",
     "power_check",
-    "furnace_ignition",
-    "furnace_flame_sensor",
-    "hp_reversing_valve",
-    "hp_outdoor_check",
     "diagnosis",
   ],
   steps: {
@@ -54,8 +52,8 @@ const noHeatFlow: FlowDef = {
     thermostat_fix: {
       id: "thermostat_fix",
       message:
-        "That's often the culprit.\n\nSet the thermostat to HEAT mode with the setpoint 2–3 degrees above room temperature. Wait 3–5 minutes and see if the system kicks on.",
-      quickAnswers: ["It came on", "Still nothing"],
+        "That's often the culprit.\n\nSet the thermostat to HEAT mode with the setpoint 2–3 degrees above room temperature. Wait 3–5 minutes and see if the system kicks on.\n\nDid fixing the thermostat get the heat working?",
+      quickAnswers: ["Yes, it came on", "Still nothing"],
       next: (answer) => {
         if (answer.toLowerCase().includes("came on")) return "diagnosis";
         return "power_check";
@@ -81,8 +79,8 @@ const noHeatFlow: FlowDef = {
     breaker_found: {
       id: "breaker_found",
       message:
-        "That'll do it.\n\nReset the breaker once and wait to see if the system starts. If it trips again immediately — stop. There's a fault in the circuit that needs to be diagnosed first.",
-      quickAnswers: ["It held, system started", "Tripped again"],
+        "That'll do it.\n\nReset the breaker once and wait to see if the system starts. If it trips again immediately — stop. There's a fault in the circuit that needs to be diagnosed first.\n\nDid the system come on after resetting?",
+      quickAnswers: ["Yes, it started", "Tripped again"],
       next: () => "diagnosis",
     },
 
@@ -164,12 +162,13 @@ const noHeatFlow: FlowDef = {
       systemAnswer.includes("gas") || systemAnswer.includes("furnace");
     const isHeatPump = systemAnswer.includes("heat pump");
 
+    // Thermostat fix resolved it
     if (
       (state.answers.thermostat_fix ?? "").toLowerCase().includes("came on")
     ) {
       return {
         buddySummary:
-          "Based on what you've told me, the most likely issue is: Thermostat not set correctly.\n\nNext step:\nMonitor the system for a full heating cycle to confirm it holds temperature.",
+          "Based on what you've told me, the most likely issue was: Thermostat not set correctly.\n\nNext step:\nMonitor the system for a full heating cycle to confirm it holds temperature.",
         causes: [
           "Thermostat in COOL or OFF mode",
           "Setpoint below room temperature",
@@ -219,7 +218,7 @@ const noHeatFlow: FlowDef = {
         safetyNote:
           "If you smell gas at any point, leave immediately and call your gas utility.",
         buddySummary: cleaned
-          ? "Based on what you've told me, the most likely issue is: Flame sensor recently cleaned but still failing — sensor may need replacement, or the ignitor itself is failing.\n\nNext step:\nTest the ignitor for continuity. Check the gas valve is opening and pressure is adequate."
+          ? "Based on what you've told me, the most likely issue is: Flame sensor recently cleaned but still failing — the sensor may need replacement, or the ignitor itself is failing.\n\nNext step:\nTest the ignitor for continuity. Check the gas valve is opening and pressure is adequate."
           : "Based on what you've told me, the most likely issue is: Dirty flame sensor causing lockout after ignition attempt.\n\nNext step:\nClean the flame sensor rod with steel wool or fine emery cloth. Reinstall and test. If it still locks out, replace the sensor.",
         causes: [
           "Dirty flame sensor not proving flame",

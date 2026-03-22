@@ -35,15 +35,12 @@ import {
   validateBuddyResponse,
   validateDiagnosisSummary,
 } from "@/utils/responseValidator";
-import {
-  AlertTriangle,
-  ExternalLink,
-  HardHat,
-  RefreshCw,
-  Send,
-} from "lucide-react";
+import { AlertTriangle, ExternalLink, RefreshCw, Send } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+
+const BUDDY_AVATAR =
+  "/assets/generated/buddy-avatar-transparent.dim_200x200.png";
 
 interface MentorChatProps {
   compact?: boolean;
@@ -354,13 +351,11 @@ function MentorBubble({
         className="flex items-start gap-2.5"
       >
         <div className="flex flex-col items-center gap-0.5 shrink-0 mt-0.5">
-          <div
-            className="w-7 h-7 rounded-full flex items-center justify-center"
-            style={{ background: "oklch(var(--primary) / 0.12)" }}
-          >
-            <HardHat
-              className="w-3.5 h-3.5"
-              style={{ color: "oklch(var(--primary) / 1)" }}
+          <div className="w-7 h-7 rounded-full overflow-hidden border border-sky-500/50 buddy-avatar-glow">
+            <img
+              src={BUDDY_AVATAR}
+              alt="Buddy"
+              className="w-full h-full object-cover"
             />
           </div>
           <span
@@ -373,9 +368,10 @@ function MentorBubble({
         <div
           className="rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm leading-relaxed whitespace-pre-line"
           style={{
-            background: "oklch(0.20 0.035 235)",
-            border: "1px solid oklch(0.28 0.04 235)",
-            color: "oklch(var(--foreground) / 1)",
+            background: "linear-gradient(160deg, #243447 0%, #1E293B 100%)",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.2)",
+            border: "1px solid rgba(56,189,248,0.15)",
+            color: "#F8FAFC",
             maxWidth: "85%",
           }}
         >
@@ -402,13 +398,11 @@ function ThinkingBubble() {
       data-ocid="mentor.thinking_state"
     >
       <div className="flex flex-col items-center gap-0.5 shrink-0 mt-0.5">
-        <div
-          className="w-7 h-7 rounded-full flex items-center justify-center"
-          style={{ background: "oklch(var(--primary) / 0.12)" }}
-        >
-          <HardHat
-            className="w-3.5 h-3.5"
-            style={{ color: "oklch(var(--primary) / 1)" }}
+        <div className="w-7 h-7 rounded-full overflow-hidden border border-sky-500/50 buddy-avatar-glow">
+          <img
+            src={BUDDY_AVATAR}
+            alt="Buddy"
+            className="w-full h-full object-cover"
           />
         </div>
         <span
@@ -421,8 +415,9 @@ function ThinkingBubble() {
       <div
         className="rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1.5"
         style={{
-          background: "oklch(0.20 0.035 235)",
-          border: "1px solid oklch(0.28 0.04 235)",
+          background: "linear-gradient(160deg, #243447 0%, #1E293B 100%)",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.2)",
+          border: "1px solid rgba(56,189,248,0.15)",
         }}
       >
         <span
@@ -458,8 +453,10 @@ function UserBubble({ text }: { text: string }) {
       <div
         className="rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm leading-relaxed"
         style={{
-          background: "oklch(var(--primary) / 1)",
-          color: "white",
+          background:
+            "linear-gradient(160deg, oklch(0.64 0.15 195) 0%, oklch(0.57 0.15 195) 100%)",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.15)",
+          color: "#F8FAFC",
           maxWidth: "80%",
         }}
       >
@@ -907,7 +904,7 @@ export default function MentorChat({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 6 }}
               transition={{ duration: 0.18 }}
-              className="flex flex-wrap gap-2"
+              className="flex flex-wrap gap-3"
               data-ocid="mentor.quick_answers"
             >
               {currentQuickAnswers.map((answer) => (
@@ -917,7 +914,7 @@ export default function MentorChat({
                   data-ocid="mentor.quick_answer.button"
                   onClick={() => submitInput(answer)}
                   disabled={isThinking}
-                  className="px-3 py-1.5 rounded-full border text-sm font-medium transition-all hover:border-primary/50 hover:bg-primary/5 active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+                  className="px-4 py-2 rounded-full border text-sm font-medium transition-all shadow-md hover:shadow-lg hover:border-sky-500/50 hover:bg-sky-500/5 active:scale-95 active:shadow-sm disabled:opacity-50 disabled:pointer-events-none"
                   style={{
                     borderColor: "oklch(var(--border) / 1)",
                     color: "oklch(var(--foreground) / 1)",
@@ -946,7 +943,7 @@ export default function MentorChat({
                   ? placeholder
                   : "Type your answer or tap a button above…"
             }
-            className="flex-1 rounded-xl border-border bg-background text-sm h-11"
+            className="flex-1 rounded-xl border-border/60 bg-slate-800/80 text-sm h-12 px-5 focus-visible:ring-2 focus-visible:ring-sky-500/40 focus-visible:border-sky-500/40 placeholder:text-muted-foreground/50"
           />
           <Button
             data-ocid="mentor.submit.button"

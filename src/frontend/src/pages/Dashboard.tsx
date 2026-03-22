@@ -1,3 +1,4 @@
+import BuddyLogo from "@/components/BuddyLogo";
 import MentorChat from "@/components/MentorChat";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -19,8 +20,7 @@ import { motion } from "motion/react";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useGetCallerUserProfile } from "../hooks/useQueries";
 
-const BUDDY_AVATAR =
-  "/assets/generated/buddy-avatar-transparent.dim_200x200.png";
+const BUDDY_AVATAR = "/assets/generated/hvac-mentor-ai-icon.dim_512x512.png";
 
 const FEATURE_CARDS = [
   {
@@ -118,25 +118,28 @@ export default function Dashboard() {
       {/* Header */}
       <header className="sticky top-0 z-10 bg-card border-b border-border shadow-xs">
         <div className="max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between">
+          {/* Logo */}
           <div className="flex items-center gap-2 shrink-0">
-            <img
-              src={BUDDY_AVATAR}
-              alt="Buddy"
-              className="w-8 h-8 rounded-lg object-cover"
-              style={{ boxShadow: "0 0 8px rgba(56,189,248,0.4)" }}
-            />
+            <div className="w-9 h-9 rounded-full overflow-hidden border border-sky-500/50 buddy-avatar-glow">
+              <img
+                src={BUDDY_AVATAR}
+                alt="Buddy"
+                className="w-full h-full object-cover"
+              />
+            </div>
             <div className="leading-tight">
               <span className="text-base font-bold text-foreground tracking-tight">
                 HVAC Mentor AI
               </span>
               <span
-                className="block text-[10px] font-500 uppercase tracking-widest"
-                style={{ color: "oklch(var(--primary) / 1)" }}
+                className="block mt-0.5 text-[9px] font-normal uppercase tracking-widest"
+                style={{ color: "rgba(56,189,248,0.65)" }}
               >
                 HVACR Buddy
               </span>
             </div>
           </div>
+
           <div className="flex items-center gap-2">
             {/* Buddy Mascot Assets link */}
             <button
@@ -196,12 +199,16 @@ export default function Dashboard() {
               {/* Greeting */}
               <div className="mb-5">
                 <div className="flex items-center gap-2 mb-1">
-                  <img
-                    src={BUDDY_AVATAR}
-                    alt="Buddy"
-                    className="w-10 h-10 rounded-xl object-cover shrink-0"
-                    style={{ boxShadow: "0 0 10px rgba(56,189,248,0.35)" }}
-                  />
+                  <div
+                    className="w-10 h-10 rounded-xl shrink-0 overflow-hidden buddy-avatar-glow"
+                    style={{ border: "1px solid rgba(56,189,248,0.4)" }}
+                  >
+                    <img
+                      src={BUDDY_AVATAR}
+                      alt="Buddy"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                   <div className="leading-tight">
                     <div className="flex items-center gap-1.5">
                       <span className="text-lg font-bold text-foreground tracking-tight">
@@ -221,7 +228,7 @@ export default function Dashboard() {
                       className="text-[11px] font-medium"
                       style={{ color: "oklch(var(--muted-foreground) / 1)" }}
                     >
-                      Your HVAC Field Mentor · 15+ yrs experience
+                      Field Mentor • 15+ Years Experience
                     </p>
                   </div>
                 </div>
@@ -351,7 +358,7 @@ export default function Dashboard() {
                 data-ocid="continue_learning.link"
                 onClick={() => navigate({ to: "/learn" })}
                 className="flex items-center gap-1.5 text-sm font-semibold shrink-0 transition-colors hover:opacity-80"
-                style={{ color: "oklch(var(--primary) / 1)" }}
+                style={{ color: "rgba(56,189,248,0.65)" }}
               >
                 Resume EPA Section
                 <ChevronRight className="w-4 h-4" />
@@ -364,25 +371,7 @@ export default function Dashboard() {
       <footer className="border-t border-border bg-card">
         <div className="max-w-[1200px] mx-auto px-6 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <img
-                src={BUDDY_AVATAR}
-                alt="Buddy"
-                className="w-6 h-6 rounded-md object-cover"
-                style={{ boxShadow: "0 0 6px rgba(56,189,248,0.35)" }}
-              />
-              <div className="leading-tight">
-                <span className="text-sm font-bold text-foreground">
-                  HVAC Mentor AI
-                </span>
-                <span
-                  className="block text-[10px] font-medium uppercase tracking-widest"
-                  style={{ color: "oklch(var(--primary) / 1)" }}
-                >
-                  HVACR Buddy
-                </span>
-              </div>
-            </div>
+            <BuddyLogo size="compact" showSubtitle />
             <p className="text-xs text-muted-foreground text-center">
               © {new Date().getFullYear()}. Built with ❤️ using{" "}
               <a

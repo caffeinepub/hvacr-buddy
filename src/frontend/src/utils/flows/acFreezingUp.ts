@@ -92,7 +92,7 @@ const acFreezingUpFlow: FlowDef = {
     refrigerant_eval: {
       id: "refrigerant_eval",
       message:
-        "Okay — here's where we are so far.\n\nWere the filter clean AND all vents open AND the blower running fine? If yes, airflow is probably not the problem — and that points us toward a refrigerant issue.\n\nDo you have manifold gauges to check the system pressures?",
+        "Okay — here's where we are so far.\n\nIf the filter was clean, all vents were open, and the blower is running fine, airflow is probably not the problem — and that points toward a refrigerant issue.\n\nDo you have manifold gauges to check the system pressures?",
       quickAnswers: ["Yes, I have gauges", "No gauges", "Not sure"],
       safetyNote:
         "EPA 608 certification is required to handle refrigerants. Wear safety glasses before connecting gauges.",
@@ -149,7 +149,7 @@ const acFreezingUpFlow: FlowDef = {
           : "Blocked vents";
 
       return {
-        buddySummary: `Based on what you've told me, the most likely issue is:\n→ ${partName}\n\nThis part controls airflow across the evaporator coil. Without enough air moving over it, the coil drops below freezing and ices over.\n\nNext step:\nFix the airflow issue first. Let the coil fully thaw — fan-only mode for 1–2 hours. Then restart cooling and monitor.`,
+        buddySummary: `Based on what you've told me, the most likely issue is:\n\u2192 ${partName}\n\nThis part controls airflow across the evaporator coil. Without enough air moving over it, the coil drops below freezing and ices over.\n\nNext step:\nFix the airflow issue first. Let the coil fully thaw — fan-only mode for 1–2 hours. Then restart cooling and monitor.`,
         causes,
         nextCheck:
           "Replace dirty filter. Open all vents. Confirm blower runs. Allow full thaw before restarting cooling mode.",
@@ -165,7 +165,7 @@ const acFreezingUpFlow: FlowDef = {
         safetyNote:
           "EPA 608 certification is required to handle refrigerants. Always use proper PPE.",
         buddySummary:
-          "Based on what you've told me, the most likely issue is:\n→ Low refrigerant charge\n\nThis means the system doesn't have enough refrigerant — the suction pressure drops below the freezing point and ices the coil.\n\nNext step:\nConnect your gauges and check suction pressure and superheat. Low suction + high superheat = low charge. Locate the leak before adding any refrigerant.",
+          "Based on what you've told me, the most likely issue is:\n→ Low refrigerant charge\n\nThe suction pressure drops below the freezing point, causing the coil to ice over.\n\nNext step:\nConnect your gauges and check suction pressure and superheat. Low suction + high superheat = low charge. Locate the leak before adding any refrigerant.",
         causes: [
           "Low refrigerant charge from a slow leak",
           "Metering device (TXV or piston) stuck closed, over-restricting flow",
@@ -180,11 +180,12 @@ const acFreezingUpFlow: FlowDef = {
       };
     }
 
+    // Default: airflow cleared, no gauges available
     return {
       safetyNote:
         "Always allow the coil to fully thaw before restarting the system in cooling mode.",
       buddySummary:
-        "Based on what you've told me, airflow looks okay — the next step is to check refrigerant pressures.\n\nBased on what you've told me, the most likely issue is:\n→ Low refrigerant charge\n\nThis is the most common cause when airflow is clear. You'll need manifold gauges to confirm.\n\nNext step:\nConnect manifold gauges and check suction pressure and superheat. If you don't have gauges, this is the point to call in a certified tech.",
+        "Based on what you've told me, the most likely issue is:\n→ Low refrigerant charge\n\nAirflow looks clear, so refrigerant is the likely culprit. You'll need manifold gauges to confirm.\n\nNext step:\nConnect manifold gauges and check suction pressure and superheat. If you don't have gauges, this is the point to call in a certified tech.",
       causes: [
         "Low refrigerant charge (most likely if airflow is clear)",
         "Faulty metering device restricting refrigerant flow",

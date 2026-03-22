@@ -3,8 +3,9 @@ import type { MentorDiagnosis } from "../mentorLogic";
 
 const breakerTrippingFlow: FlowDef = {
   id: "breaker_tripping",
+  // Triggers are deliberately specific — a standalone "breaker" keyword is too
+  // broad and would hijack mid-flow responses that mention checking a breaker.
   triggers: [
-    "breaker",
     "breaker tripping",
     "breaker keeps tripping",
     "breaker trips",
@@ -12,6 +13,7 @@ const breakerTrippingFlow: FlowDef = {
     "breaker won't stay on",
     "breaker blowing",
     "circuit breaker tripping",
+    "tripping breaker",
   ],
   firstStep: "identify_breaker",
   progressSteps: [
@@ -129,7 +131,7 @@ const breakerTrippingFlow: FlowDef = {
       return {
         safetyNote:
           "⚠️ Do NOT reset the breaker with burnt or damaged wiring present. This is a fire and electrocution hazard.",
-        buddySummary: `Based on what you've told me, the most likely issue is:\n→ Burnt wiring / short circuit\n\nDamaged wiring in the ${breakerLocation} creates a direct short that immediately trips the breaker.\n\nNext step:\nDo not reset the breaker. The wiring must be repaired or replaced by a qualified technician before the system is powered back on.`,
+        buddySummary: `Based on what you've told me, the most likely issue is:\n\u2192 Burnt wiring / short circuit\n\nDamaged wiring in the ${breakerLocation} creates a direct short that immediately trips the breaker.\n\nNext step:\nDo not reset the breaker. The wiring must be repaired or replaced by a qualified technician before the system is powered back on.`,
         causes: [
           "Burnt or melted wiring causing a direct short circuit",
           "Damaged insulation allowing wires to arc against the chassis",
@@ -149,7 +151,7 @@ const breakerTrippingFlow: FlowDef = {
         safetyNote:
           "⚠️ Discharge the capacitor before removing it. Short the terminals with an insulated screwdriver. Power must be OFF.",
         buddySummary:
-          "Based on what you've told me, the most likely issue is:\n→ Run capacitor\n\nThis part helps the compressor and fan motor start. A failed cap causes a hard-start condition — drawing 3–4x normal amps and tripping the breaker.\n\nNext step:\nReplace the capacitor — match the exact µF and voltage rating. After replacement, restore power and monitor amp draw on startup.",
+          "Based on what you've told me, the most likely issue is:\n→ Run capacitor\n\nA failed cap causes a hard-start condition — drawing 3–4x normal amps and tripping the breaker.\n\nNext step:\nReplace the capacitor — match the exact µF and voltage rating. After replacement, restore power and monitor amp draw on startup.",
         causes: [
           "Failed or weak run capacitor causing compressor hard-start (3–4x normal amp draw)",
           "Swollen capacitor indicating internal failure",
@@ -209,7 +211,7 @@ const breakerTrippingFlow: FlowDef = {
         safetyNote:
           "⚠️ EPA 608 certification required for refrigerant handling. Wear insulated gloves for all electrical checks.",
         buddySummary:
-          "Based on what you've told me, the most likely issue is:\n→ Dirty condenser coil or overloaded compressor\n\nWhen the coil is blocked, head pressure rises and the compressor draws more amps until the breaker trips.\n\nNext step:\nCheck the condenser coil for dirt and blockage. Connect manifold gauges and check head pressure. High head pressure confirms the coil or refrigerant charge is the issue.",
+          "Based on what you've told me, the most likely issue is:\n→ Dirty condenser coil or overloaded compressor\n\nWhen the coil is blocked, head pressure rises and the compressor draws more amps until the breaker trips.\n\nNext step:\nCheck the condenser coil for dirt and blockage. Connect manifold gauges and check head pressure.",
         causes: [
           "Dirty condenser coil raising head pressure and compressor amp draw",
           "Refrigerant overcharge or undercharge affecting system load",
@@ -227,7 +229,7 @@ const breakerTrippingFlow: FlowDef = {
     return {
       safetyNote:
         "⚠️ Do not keep resetting the breaker. Find the root cause before the next reset attempt.",
-      buddySummary: `Based on what you've described, the most likely issue is:\n→ Hard-start overload in the ${breakerLocation}\n\nThis typically points to a weak capacitor, a failing compressor, or a dirty condenser coil.\n\nNext step:\nTest the capacitor µF rating, check motor amperage draw, and inspect the refrigerant charge before resetting the breaker again.`,
+      buddySummary: `Based on what you've told me, the most likely issue is:\n\u2192 Hard-start overload in the ${breakerLocation}\n\nThis typically points to a weak capacitor, a failing compressor, or a dirty condenser coil.\n\nNext step:\nTest the capacitor µF rating, check motor amperage draw, and inspect the refrigerant charge before resetting the breaker again.`,
       causes: [
         "Weak or failed run capacitor causing hard-start overload",
         "Dirty condenser coil raising head pressure and current draw",

@@ -42,9 +42,15 @@ const acNotCoolingFlow: FlowDef = {
     thermostat_fix: {
       id: "thermostat_fix",
       message:
-        "That's likely your issue right there.\n\nSet the thermostat to COOL and make sure the setpoint is at least 2–3 degrees below the current room temperature. Give it 3–5 minutes to respond.",
-      quickAnswers: [],
-      next: () => "diagnosis",
+        "That's likely your issue right there.\n\nSet the thermostat to COOL and make sure the setpoint is at least 2–3 degrees below the current room temperature. Give it 3–5 minutes to respond.\n\nDid fixing the thermostat get the system cooling?",
+      quickAnswers: ["Yes, it's cooling now", "Still not cooling"],
+      next: (answer) => {
+        const a = answer.toLowerCase();
+        // If still not cooling after thermostat fix, continue to outdoor unit check
+        if (a.includes("still") || a.includes("not cooling"))
+          return "outdoor_check";
+        return "diagnosis";
+      },
     },
     outdoor_check: {
       id: "outdoor_check",
@@ -64,7 +70,13 @@ const acNotCoolingFlow: FlowDef = {
       quickAnswers: ["Yes, breaker tripped", "No, looks fine", "Not sure"],
       safetyNote:
         "Make sure power is off before checking any electrical components.",
-      next: () => "capacitor_check",
+      next: (answer) => {
+        const a = answer.toLowerCase();
+        // Tripped breaker → contactor is likely fine, focus on capacitor as root cause
+        // No breaker trip → capacitor still most common outdoor-unit-off culprit
+        if (a.includes("tripped")) return "capacitor_check";
+        return "capacitor_check";
+      },
     },
     capacitor_check: {
       id: "capacitor_check",
@@ -135,18 +147,40 @@ const acNotCoolingFlow: FlowDef = {
   },
 
   buildDiagnosis(state: FlowState): MentorDiagnosis {
-    // Thermostat fix branch
-    if (state.thermostat_ok === false) {
+    // Thermostat fix branch — user confirmed cooling restored
+    const thermostatFixAnswer = (
+      state.answers.thermostat_fix ?? ""
+    ).toLowerCase();
+    if (
+      thermostatFixAnswer &&
+      !thermostatFixAnswer.includes("still") &&
+      !thermostatFixAnswer.includes("not cooling")
+    ) {
       return {
         buddySummary:
-          "Based on what you've told me, the most likely issue is:\n→ Thermostat misconfiguration\n\nThis part controls when the system calls for cooling. It's not set correctly right now.\n\nNext step:\nSet thermostat to COOL mode with the setpoint 2–3°F below room temperature. Wait 5 minutes for the system to respond.",
+          "Based on what you've told me, the most likely issue was:\n→ Thermostat misconfiguration\n\nThe system is now cooling correctly. The setpoint wasn't calling for cooling.",
         causes: [
           "Thermostat not in COOL mode",
           "Setpoint above current room temperature",
           "Programmable schedule override keeping setpoint high",
         ],
         nextCheck:
-          "Set thermostat to COOL mode, setpoint below room temp. If system still doesn't respond after 5 minutes, move to checking the outdoor unit.",
+          "Monitor for a full cooling cycle. If it short-cycles or doesn't hold temperature, move to checking the outdoor unit.",
+      };
+    }
+
+    // Thermostat was off but still not cooling — treat as outdoor issue
+    if (state.thermostat_ok === false) {
+      return {
+        buddySummary:
+          "Based on what you've told me, the most likely issue is:\n→ Thermostat misconfiguration\n\nThis controls when the system calls for cooling. Correct the settings and allow 5 minutes to respond.",
+        causes: [
+          "Thermostat not in COOL mode",
+          "Setpoint above current room temperature",
+          "Programmable schedule override keeping setpoint high",
+        ],
+        nextCheck:
+          "Set thermostat to COOL mode, setpoint below room temp. If system still doesn't respond after 5 minutes, check the outdoor unit.",
       };
     }
 
@@ -164,7 +198,7 @@ const acNotCoolingFlow: FlowDef = {
           safetyNote:
             "Do NOT reset the breaker more than once. If it trips again, stop — you need further electrical diagnosis.",
           buddySummary:
-            "Based on what you've told me, the most likely issue is:\n→ Tripped breaker\n\nThis part protects the circuit by cutting power when too many amps are drawn — often caused by a failing capacitor or contactor.\n\nNext step:\nReset the breaker once and monitor. If it holds, check the capacitor. If it trips again, stop and test the compressor amperage.",
+            "Based on what you've told me, the most likely issue is:\n→ Tripped breaker\n\nThe breaker cuts power when too many amps are drawn — often caused by a failing capacitor or contactor.\n\nNext step:\nReset the breaker once and monitor. If it holds, test the capacitor µF. If it trips again, stop and test the compressor amperage.",
           causes: [
             "Tripped breaker from compressor hard-starting due to weak capacitor",
             "Failed contactor causing a short circuit condition",
@@ -204,7 +238,7 @@ const acNotCoolingFlow: FlowDef = {
           safetyNote:
             "Safety first — verify disconnect is open before checking the contactor.",
           buddySummary:
-            "Based on what you've told me, the most likely issue is:\n→ Contactor\n\nThis part is the electrical switch that energizes the compressor and outdoor fan. If it's not pulling in, the system won't start.\n\nNext step:\nCheck for 24V across the contactor coil terminals when the thermostat calls for cooling. No voltage means a control wiring or board issue.",
+            "Based on what you've told me, the most likely issue is:\n→ Contactor\n\nThis is the electrical switch that energizes the compressor and outdoor fan. If it's not pulling in, the system won't start.\n\nNext step:\nCheck for 24V across the contactor coil terminals when the thermostat calls for cooling. No voltage means a control wiring or board issue.",
           causes: [
             "Failed contactor — contacts burned or not pulling in",
             "24V control wiring issue (broken wire, loose terminal)",
@@ -223,7 +257,7 @@ const acNotCoolingFlow: FlowDef = {
         safetyNote:
           "Turn the disconnect off before opening the outdoor unit panel.",
         buddySummary:
-          "Based on what you've told me, the most likely issue is:\n→ Run capacitor\n\nThis part is the most common reason an outdoor unit won't start. Even if it looks okay, it can test out of spec.\n\nNext step:\nWith power off, visually inspect the run capacitor for swelling or oil. Then test with a multimeter.",
+          "Based on what you've told me, the most likely issue is:\n→ Run capacitor\n\nThis is the most common reason an outdoor unit won't start. Even if it looks okay, it can test out of spec.\n\nNext step:\nWith power off, visually inspect the run capacitor for swelling or oil. Then test with a multimeter.",
         causes: [
           "Failed run capacitor (most common reason outdoor unit won't start)",
           "Tripped breaker or blown fuse at the disconnect",
@@ -247,7 +281,7 @@ const acNotCoolingFlow: FlowDef = {
     if (weakAirflow && dirtyFilter) {
       return {
         buddySummary:
-          "Based on what you've told me, the most likely issue is:\n→ Air filter\n\nThis part controls airflow through the evaporator coil. A clogged filter starves the coil of air and causes it to freeze.\n\nNext step:\nReplace the filter immediately. If the coil is iced, shut down to cooling and run fan-only to thaw before restarting.",
+          "Based on what you've told me, the most likely issue is:\n→ Air filter\n\nA clogged filter starves the coil of air — it drops below freezing, ices over, and cooling stops.\n\nNext step:\nReplace the filter immediately. If the coil is iced, run fan-only to thaw before restarting.",
         causes: [
           "Dirty/clogged air filter severely restricting airflow",
           "Restricted airflow causing evaporator coil to freeze",
@@ -267,7 +301,7 @@ const acNotCoolingFlow: FlowDef = {
         safetyNote:
           "Shut the system off completely before attempting to thaw. Running a frozen coil can damage the compressor.",
         buddySummary:
-          "Based on what you've told me, the most likely issue is:\n→ Frozen evaporator coil\n\nThis part absorbs heat from the air. When refrigerant or airflow is too low, it drops below freezing and ices over.\n\nNext step:\nShut down and run fan-only to thaw. After full thaw, connect gauges and check superheat and suction pressure.",
+          "Based on what you've told me, the most likely issue is:\n→ Frozen evaporator coil\n\nWhen refrigerant or airflow is too low, the coil drops below freezing and ices over — blocking heat transfer completely.\n\nNext step:\nShut down and run fan-only to thaw. After full thaw, connect gauges and check superheat and suction pressure.",
         causes: [
           "Low refrigerant charge causing coil to drop below freezing",
           "Restricted airflow from dirty coil or blower issue",
@@ -285,7 +319,7 @@ const acNotCoolingFlow: FlowDef = {
     if (airCold && !iceOnCoil) {
       return {
         buddySummary:
-          "Based on what you've told me, the system appears to be cooling — but not reaching the setpoint.\n\nNext step:\nCheck for duct leaks, especially in unconditioned spaces like attics or crawlspaces. Also verify the system is properly sized for the space.",
+          "Based on what you've told me, the system is producing cold air — but not reaching the setpoint.\n\nNext step:\nCheck for duct leaks, especially in unconditioned spaces like attics or crawlspaces. Also verify the system is sized correctly for the space.",
         causes: [
           "Duct leaks reducing conditioned air delivery",
           "System undersized for the space or heat load",
@@ -301,7 +335,7 @@ const acNotCoolingFlow: FlowDef = {
         safetyNote:
           "EPA 608 certification is required to handle refrigerants. Wear safety glasses.",
         buddySummary:
-          "Based on what you've told me, the most likely issue is:\n→ Low refrigerant charge\n\nThis means the system doesn't have enough refrigerant to absorb heat properly — usually caused by a slow leak.\n\nNext step:\nConnect manifold gauges and check suction and head pressures. Compare to manufacturer specs for the refrigerant type.",
+          "Based on what you've told me, the most likely issue is:\n→ Low refrigerant charge\n\nThe system doesn't have enough refrigerant to absorb heat — usually caused by a slow leak.\n\nNext step:\nConnect manifold gauges and check suction and head pressures. Compare to manufacturer specs for the refrigerant type.",
         causes: [
           "Low refrigerant charge from a slow leak",
           "Dirty condenser coil blocking heat rejection",
