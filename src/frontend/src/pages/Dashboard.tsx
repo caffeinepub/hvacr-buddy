@@ -14,6 +14,7 @@ import {
   QrCode,
   Settings,
   Stethoscope,
+  Video,
   Wrench,
 } from "lucide-react";
 import { motion } from "motion/react";
@@ -67,6 +68,17 @@ const FEATURE_CARDS = [
       bg: "oklch(var(--tools-bg))",
     },
   },
+  {
+    key: "videos",
+    path: "/videos",
+    title: "Videos",
+    description: "Training and troubleshooting video library.",
+    icon: Video,
+    iconStyle: {
+      color: "oklch(var(--videos-icon))",
+      bg: "oklch(var(--videos-bg))",
+    },
+  },
 ];
 
 const QUICK_ACTIONS = [
@@ -97,6 +109,13 @@ const QUICK_ACTIONS = [
     path: "/learn",
     color: "var(--learn-icon)",
     bg: "var(--learn-bg)",
+  },
+  {
+    label: "Watch Training Videos",
+    icon: Video,
+    path: "/videos",
+    color: "var(--videos-icon)",
+    bg: "var(--videos-bg)",
   },
 ];
 

@@ -35,9 +35,17 @@ import {
   validateBuddyResponse,
   validateDiagnosisSummary,
 } from "@/utils/responseValidator";
-import { AlertTriangle, ExternalLink, RefreshCw, Send } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import {
+  AlertTriangle,
+  ExternalLink,
+  Play,
+  RefreshCw,
+  Send,
+} from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import { getRelatedVideo } from "../data/videos";
 
 const BUDDY_AVATAR =
   "/assets/generated/buddy-avatar-transparent.dim_200x200.png";
@@ -585,6 +593,7 @@ export default function MentorChat({
   const [messages, setMessages] = useState<EnrichedMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isThinking, setIsThinking] = useState(false);
+  const navigate = useNavigate();
   const bottomRef = useRef<HTMLDivElement>(null);
   const msgIdRef = useRef(0);
 
@@ -854,8 +863,20 @@ export default function MentorChat({
           >
             <ScrollArea className={scrollHeight}>
               <div className="space-y-3 py-1 pr-3">
-                {messages.map((msg) =>
-                  msg.role === "mentor" ? (
+                {messages.map((msg, msgIdx) => {
+                  const isLastMentor =
+                    msg.role === "mentor" &&
+                    msgIdx ===
+                      messages.map((m) => m.role).lastIndexOf("mentor");
+                  const relatedVideo = isLastMentor
+                    ? getRelatedVideo(
+                        msg.text
+                          .toLowerCase()
+                          .split(/\W+/)
+                          .filter((w) => w.length > 3),
+                      )
+                    : null;
+                  return msg.role === "mentor" ? (
                     <div key={msg.id} className="space-y-2">
                       <MentorBubble
                         text={msg.text}
@@ -876,11 +897,22 @@ export default function MentorChat({
                           }
                           return null;
                         })()}
+                      {relatedVideo && (
+                        <button
+                          type="button"
+                          data-ocid="videos.open_modal_button"
+                          onClick={() => navigate({ to: "/videos" })}
+                          className="mt-1 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border border-sky-400/30 text-sky-300 bg-sky-900/20 hover:bg-sky-900/40 transition-colors"
+                        >
+                          <Play className="w-3.5 h-3.5" />
+                          Watch related video: {relatedVideo.title}
+                        </button>
+                      )}
                     </div>
                   ) : (
                     <UserBubble key={msg.id} text={msg.text} />
-                  ),
-                )}
+                  );
+                })}
                 {state.diagnosis && (
                   <DiagnosisCard diagnosis={state.diagnosis} />
                 )}
