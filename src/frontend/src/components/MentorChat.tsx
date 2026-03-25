@@ -23,6 +23,7 @@ import {
   advanceFlow,
   initFlowState,
 } from "@/utils/flowEngine";
+import { type HowToGuide, detectHowToQuery } from "@/utils/howToLogic";
 import {
   type MentorDiagnosis,
   type MentorMessage,
@@ -63,6 +64,7 @@ interface ChatState {
   diagnosis: MentorDiagnosis | null;
   activeFlow: FlowDef | null;
   flowState: FlowState | null;
+  howToGuide: HowToGuide | null;
 }
 
 const INITIAL_STATE: ChatState = {
@@ -73,6 +75,7 @@ const INITIAL_STATE: ChatState = {
   diagnosis: null,
   activeFlow: null,
   flowState: null,
+  howToGuide: null,
 };
 
 // Flow step labels for the progress indicator
@@ -585,9 +588,148 @@ interface EnrichedMessage extends MentorMessage {
   toolGuidance?: ToolGuidance;
 }
 
+// ─── HowToCard Component ──────────────────────────────────────────────────────
+function HowToCard({ guide }: { guide: HowToGuide }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="space-y-4"
+      data-ocid="mentor.howto.card"
+    >
+      {/* Header with Buddy avatar */}
+      <div className="flex items-start gap-2.5">
+        <div className="flex flex-col items-center gap-0.5 shrink-0 mt-0.5">
+          <div className="w-7 h-7 rounded-full overflow-hidden border border-sky-500/50 buddy-avatar-glow">
+            <img
+              src={BUDDY_AVATAR}
+              alt="Buddy"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <span
+            className="text-[9px] font-semibold leading-none"
+            style={{ color: "oklch(var(--muted-foreground) / 0.7)" }}
+          >
+            Buddy
+          </span>
+        </div>
+        <div
+          className="rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm font-semibold leading-relaxed"
+          style={{
+            background: "linear-gradient(160deg, #243447 0%, #1E293B 100%)",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.2)",
+            border: "1px solid rgba(56,189,248,0.15)",
+            color: "#F8FAFC",
+          }}
+        >
+          {guide.title}
+        </div>
+      </div>
+
+      {/* Main card */}
+      <div
+        className="rounded-xl overflow-hidden ml-9"
+        style={{
+          background: "oklch(var(--card) / 1)",
+          border: "1px solid oklch(var(--border) / 1)",
+        }}
+      >
+        {/* Tools Needed */}
+        <div className="px-4 pt-4 pb-3">
+          <p
+            className="text-xs font-semibold uppercase tracking-wider mb-2.5"
+            style={{ color: "oklch(var(--muted-foreground) / 0.7)" }}
+          >
+            Tools Needed
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {guide.toolsNeeded.map((tool) => (
+              <span
+                key={tool}
+                className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
+                style={{
+                  background: "oklch(var(--primary) / 0.12)",
+                  color: "oklch(var(--primary) / 1)",
+                  border: "1px solid oklch(var(--primary) / 0.25)",
+                }}
+              >
+                {tool}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Steps */}
+        <div className="px-4 py-3">
+          <p
+            className="text-xs font-semibold uppercase tracking-wider mb-3"
+            style={{ color: "oklch(var(--muted-foreground) / 0.7)" }}
+          >
+            Step-by-Step
+          </p>
+          <ol className="space-y-3">
+            {guide.steps.map((step, i) => (
+              <li
+                key={step}
+                className="flex items-start gap-3 text-sm text-foreground leading-relaxed"
+                data-ocid={`mentor.howto.step.${i + 1}`}
+              >
+                <span
+                  className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold mt-0.5"
+                  style={{
+                    background: "oklch(var(--primary) / 1)",
+                    color: "white",
+                  }}
+                >
+                  {i + 1}
+                </span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <Separator />
+
+        {/* Pro Tips */}
+        <div
+          className="px-4 py-3 rounded-b-xl"
+          style={{ background: "oklch(0.35 0.06 85 / 0.15)" }}
+        >
+          <p
+            className="text-xs font-semibold uppercase tracking-wider mb-2.5"
+            style={{ color: "oklch(0.75 0.12 85 / 0.9)" }}
+          >
+            ★ Pro Tips
+          </p>
+          <ul className="space-y-2">
+            {guide.tips.map((tip) => (
+              <li
+                key={tip}
+                className="flex items-start gap-2 text-sm leading-relaxed"
+                style={{ color: "oklch(0.82 0.08 85 / 0.95)" }}
+              >
+                <span
+                  className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0"
+                  style={{ background: "oklch(0.75 0.12 85 / 0.8)" }}
+                />
+                {tip}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function MentorChat({
   compact = false,
-  placeholder = "Describe your symptom… (e.g. AC not cooling, unit not starting)",
+  placeholder = "Describe a problem or ask how to do something…",
 }: MentorChatProps) {
   const [state, setState] = useState<ChatState>(INITIAL_STATE);
   const [messages, setMessages] = useState<EnrichedMessage[]>([]);
@@ -642,6 +784,22 @@ export default function MentorChat({
   function processInput(trimmed: string) {
     // ── Stage: initial ────────────────────────────────────────────────────────
     if (state.stage === "initial") {
+      // Check for how-to query first
+      const howToGuide = detectHowToQuery(trimmed);
+      if (howToGuide) {
+        addMessage({
+          role: "mentor",
+          text: `Got it — here's how to ${howToGuide.title.toLowerCase()}, step by step.`,
+        });
+        setState((prev) => ({
+          ...prev,
+          stage: "howto",
+          symptom: trimmed,
+          howToGuide,
+        }));
+        return;
+      }
+
       // Check for a registered flow first
       const flow = activateFlow(trimmed);
 
@@ -913,6 +1071,7 @@ export default function MentorChat({
                     <UserBubble key={msg.id} text={msg.text} />
                   );
                 })}
+                {state.howToGuide && <HowToCard guide={state.howToGuide} />}
                 {state.diagnosis && (
                   <DiagnosisCard diagnosis={state.diagnosis} />
                 )}
@@ -960,7 +1119,7 @@ export default function MentorChat({
           )}
       </AnimatePresence>
 
-      {state.stage !== "diagnosis" && (
+      {state.stage !== "diagnosis" && state.stage !== "howto" && (
         <div className="flex gap-2">
           <Input
             data-ocid="mentor.input"
@@ -988,7 +1147,7 @@ export default function MentorChat({
         </div>
       )}
 
-      {state.stage === "diagnosis" && (
+      {(state.stage === "diagnosis" || state.stage === "howto") && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

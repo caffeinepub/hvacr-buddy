@@ -1,6 +1,11 @@
 // ─── HVAC Mentor Conversation Logic (Buddy Persona) ──────────────────────────
 
-export type MentorStage = "initial" | "followup" | "flow" | "diagnosis";
+export type MentorStage =
+  | "initial"
+  | "followup"
+  | "flow"
+  | "diagnosis"
+  | "howto";
 
 export interface MentorMessage {
   role: "mentor" | "user";
@@ -393,101 +398,102 @@ export function buildDiagnosis(
         buddySummary: `Based on what you've told me, the most likely issue is: ${causes[0]}\n\nNext step:\nCheck if the reversing valve solenoid is getting 24V in heat mode. Use a multimeter at the reversing valve coil terminals.`,
       };
     }
-    if (a0.includes("gas")) {
+    if (a0.includes("furnace") || a0.includes("gas")) {
       const causes = [
-        "Gas valve not opening or ignitor failure",
-        "Flame sensor dirty and not proving flame",
-        "Pressure switch fault from blocked flue or inducer motor issue",
+        "Failed igniter or ignition sequence lockout",
+        "Dirty or faulty flame sensor causing lockout after ignition",
+        "Pressure switch not closing due to blocked flue or failed inducer",
       ];
       return {
-        safetyNote:
-          "Safety first — if you smell gas, leave immediately and call the gas company. Do not operate any switches.",
         causes,
         nextCheck:
-          "Check the furnace error code on the LED board. Most modern furnaces flash a fault code that pinpoints the issue precisely.",
+          "Watch the ignition sequence — does the burner light? If it lights then shuts off within 10 seconds, suspect the flame sensor.",
         resource: {
-          title: "EPA 608 Core Prep Part 1",
-          url: "https://www.youtube.com/watch?v=BLtBaCt81i4",
+          title: "How Power Moves Through an AC Schematic",
+          url: "https://www.youtube.com/watch?v=VtC25cV1mU0",
         },
-        buddySummary: `Based on what you've told me, the most likely issue is: ${causes[0]}\n\nNext step:\nCheck the furnace error code on the LED board. Most modern furnaces flash a fault code that pinpoints the issue precisely.`,
+        buddySummary: `Based on what you've told me, the most likely issue is: ${causes[0]}\n\nNext step:\nWatch the ignition sequence — does the burner light? If it lights then shuts off within 10 seconds, suspect the flame sensor.`,
       };
     }
     const causes = [
-      "Thermostat not set to HEAT mode or setpoint too low",
-      "Tripped breaker on heating circuit",
-      "Faulty heat strips or sequencer on electric heat",
+      "Thermostat not calling for heat or incorrect mode setting",
+      "Tripped breaker or blown control fuse",
+      "Failed igniter or control board lockout",
     ];
     return {
       causes,
       nextCheck:
-        "Verify thermostat settings first. Then check the breaker panel for any tripped breakers on the air handler circuit.",
-      resource: {
-        title: "How Power Moves Through an AC Schematic",
-        url: "https://www.youtube.com/watch?v=VtC25cV1mU0",
-      },
-      buddySummary: `Based on what you've told me, the most likely issue is: ${causes[0]}\n\nNext step:\nVerify thermostat settings first. Then check the breaker panel for any tripped breakers on the air handler circuit.`,
+        "First confirm the thermostat is set to HEAT mode and the setpoint is above room temperature. Check for any fault codes on the furnace control board.",
+      buddySummary: `Based on what you've told me, the most likely issue is: ${causes[0]}\n\nNext step:\nFirst confirm the thermostat is set to HEAT mode and the setpoint is above room temperature. Check for any fault codes on the furnace control board.`,
     };
   }
 
   if (matchSym(s, ["leak", "refrigerant leak", "low charge", "oily"])) {
-    const causes = a0.includes("yes")
+    const hasOil = a0.includes("yes");
+    const causes = hasOil
       ? [
-          "Active leak at fittings or connections where oil is visible",
+          "Active refrigerant leak at a fitting or brazed joint near oily residue",
+          "Schrader valve leak allowing slow refrigerant loss",
           "Pinhole leak in evaporator or condenser coil",
-          "Loose flare fitting causing a slow seep",
         ]
       : [
-          "Schrader valve core leak — common and easy to miss",
-          "Hairline crack in evaporator coil from vibration",
-          "Compromised line set connection over time",
+          "Micro-leak in evaporator coil (common on older systems)",
+          "Slow leak at a service port or field connection",
+          "Previous undercharge from installation or service",
         ];
+    const nextCheck = hasOil
+      ? "Use an electronic leak detector around the oily areas. Start at the lowest point and work up — refrigerant sinks."
+      : "Inject UV dye and run the system. Return with a UV light to locate the leak source visually.";
     return {
-      safetyNote:
-        "Safety first — EPA 608 certification is required to work with refrigerants. Wear safety glasses and gloves.",
       causes,
-      nextCheck:
-        "Use an electronic leak detector in a sweeping motion starting low — refrigerant vapor is heavier than air. Check Schrader cores first.",
+      nextCheck,
       resource: {
-        title: "How to Remove/Recover Refrigerant",
-        url: "https://www.youtube.com/watch?v=fROHlPXw_H0",
+        title: "How to Evacuate an AC System",
+        url: "https://www.youtube.com/watch?v=JsnQeUSuUMU",
       },
-      buddySummary: `Based on what you've told me, the most likely issue is: ${causes[0]}\n\nNext step:\nUse an electronic leak detector in a sweeping motion starting low — refrigerant vapor is heavier than air. Check Schrader cores first.`,
+      buddySummary: `Based on what you've told me, the most likely issue is: ${causes[0]}\n\nNext step:\n${nextCheck}`,
     };
   }
 
   if (matchSym(s, ["breaker", "tripping", "trips"])) {
-    const causes = [
-      "Compressor hard-starting due to weak or failed run capacitor",
-      "Compressor motor winding partially shorted to ground",
-      "Undersized or aging breaker that can't handle startup current",
-    ];
+    const atStartup = a0.includes("startup") || a0.includes("start");
+    const causes = atStartup
+      ? [
+          "Weak run capacitor causing high locked-rotor amperage at startup",
+          "Compressor mechanically hard-starting due to refrigerant migrating into the crankcase",
+          "Undersized breaker for the actual load",
+        ]
+      : [
+          "Compressor drawing high amperage from electrical breakdown",
+          "Shorted winding in the compressor or fan motor",
+          "Ground fault in the wiring or contactor",
+        ];
+    const nextCheck = atStartup
+      ? "Test the run capacitor microfarads first — a weak cap is the most common startup trip cause. If capacitor is good, check compressor amp draw."
+      : "Clamp a meter on the compressor common wire and run the unit. If amps spike above RLA before tripping, suspect the compressor windings.";
     return {
       safetyNote:
-        "Safety first — do NOT keep resetting a tripping breaker. Repeated resets can damage the compressor or cause a fire.",
+        "Safety first — do NOT repeatedly reset a tripping breaker. Each reset on a fault can cause additional damage.",
       causes,
-      nextCheck:
-        "Clamp a meter on the compressor leads at startup and read the amperage. Compare to the RLA on the unit nameplate.",
+      nextCheck,
       resource: {
         title: "How Power Moves Through an AC Schematic",
         url: "https://www.youtube.com/watch?v=VtC25cV1mU0",
       },
-      buddySummary: `Based on what you've told me, the most likely issue is: ${causes[0]}\n\nNext step:\nClamp a meter on the compressor leads at startup and read the amperage. Compare to the RLA on the unit nameplate.`,
+      buddySummary: `Based on what you've told me, the most likely issue is: ${causes[0]}\n\nNext step:\n${nextCheck}`,
     };
   }
 
+  // Generic fallback
   const causes = [
-    "Air filter dirty — check and replace first",
-    "Thermostat settings incorrect or misconfigured",
-    "Tripped breaker or blown fuse",
+    "System-level issue requiring further investigation",
+    "Possible electrical or refrigerant fault",
+    "Component failure not yet identified",
   ];
   return {
     causes,
     nextCheck:
-      "Start with the basics — thermostat settings, filter condition, and breaker panel — before going any deeper.",
-    resource: {
-      title: "EPA 608 Core Prep Part 1",
-      url: "https://www.youtube.com/watch?v=BLtBaCt81i4",
-    },
-    buddySummary: `Based on what you've told me, the most likely issue is: ${causes[0]}\n\nNext step:\nStart with the basics — thermostat settings, filter condition, and breaker panel — before going any deeper.`,
+      "Start with a visual inspection of the equipment — check for obvious damage, disconnected wires, or error codes on the control board.",
+    buddySummary: `Based on what you've told me, the most likely issue is: ${causes[0]}\n\nNext step:\nStart with a visual inspection of the equipment — check for obvious damage, disconnected wires, or error codes on the control board.`,
   };
 }
