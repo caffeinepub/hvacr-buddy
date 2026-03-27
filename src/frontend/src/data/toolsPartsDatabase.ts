@@ -2,7 +2,12 @@
 // Mirrors the seeded tools[] and parts[] backend collections so Buddy can
 // look up full guidance data entirely on the frontend — no async call needed.
 
-export type SafetyCategory = "electrical" | "refrigerant" | "pressure" | null;
+export type SafetyCategory =
+  | "electrical"
+  | "refrigerant"
+  | "pressure"
+  | "mechanical"
+  | null;
 
 export interface ToolData {
   name: string;
@@ -102,7 +107,7 @@ export const TOOLS_DB: ToolData[] = [
   },
   {
     name: "Vacuum Pump",
-    category: "Refrigerant",
+    category: "Installation Tools",
     usedFor: ["evacuating system", "pulling vacuum", "removing moisture"],
     explanation:
       "A vacuum pump removes air and moisture from the refrigerant circuit before charging, which prevents acid formation and compressor damage.",
@@ -156,6 +161,305 @@ export const TOOLS_DB: ToolData[] = [
     ],
     safety: null,
     aliases: ["thermometer", "digital thermometer", "temperature probe"],
+  },
+
+  // ─── Hand Tools ────────────────────────────────────────────────────────────
+  {
+    name: "Adjustable Wrench",
+    category: "Hand Tools",
+    usedFor: ["tightening fittings", "loosening nuts", "pipe connections"],
+    explanation:
+      "An adjustable wrench grips flat-sided nuts and bolts so you can tighten or loosen threaded connections without a dedicated socket.",
+    whenToUse: "When tightening or loosening threaded connections and fittings",
+    steps: [
+      "Select appropriate jaw opening for the fastener size.",
+      "Engage the jaw fully on the flat sides of the nut or bolt.",
+      "Turn clockwise to tighten, counterclockwise to loosen.",
+      "Avoid over-tightening — snug plus a quarter turn is usually sufficient.",
+    ],
+    safety: "mechanical",
+    aliases: ["adjustable wrench", "crescent wrench"],
+  },
+  {
+    name: "Pipe Wrench",
+    category: "Hand Tools",
+    usedFor: [
+      "gripping pipes",
+      "tightening pipe fittings",
+      "removing corroded fittings",
+    ],
+    explanation:
+      "A pipe wrench grips round pipe and corroded fittings with serrated jaws so you can apply high torque to threaded pipe connections.",
+    whenToUse: "When working with round or corroded pipe fittings",
+    steps: [
+      "Adjust the jaw to fit snugly around the pipe.",
+      "Apply force in the direction the upper jaw is facing.",
+      "Use two wrenches for opposing force — one to hold, one to turn.",
+      "Protect finish surfaces with tape or cloth if needed.",
+    ],
+    safety: "mechanical",
+    aliases: ["pipe wrench", "pipe-wrench"],
+  },
+  {
+    name: "Screwdrivers",
+    category: "Hand Tools",
+    usedFor: [
+      "removing access panels",
+      "securing terminal screws",
+      "fastening covers",
+    ],
+    explanation:
+      "Screwdrivers drive and remove fasteners on HVAC panels, covers, and terminal blocks — flathead and Phillips are the two most common types in the field.",
+    whenToUse:
+      "When removing or securing screws on panels, covers, and terminal blocks",
+    steps: [
+      "Match the driver tip to the screw head (flathead or Phillips).",
+      "Press firmly into the screw head before turning to avoid cam-out.",
+      "Turn clockwise to tighten, counterclockwise to remove.",
+      "Use a magnetic tip to avoid dropping screws inside the unit.",
+    ],
+    safety: null,
+    aliases: [
+      "screwdriver",
+      "flathead",
+      "phillips",
+      "screwdrivers",
+      "flat head",
+      "phillips head",
+    ],
+  },
+  {
+    name: "Nut Drivers",
+    category: "Hand Tools",
+    usedFor: [
+      "removing hex-head screws",
+      "accessing panels",
+      "electrical terminal work",
+    ],
+    explanation:
+      "Nut drivers speed up removal of hex-head sheet metal screws on HVAC panels — much faster than a standard screwdriver for panel access.",
+    whenToUse:
+      "When removing or installing hex-head sheet metal screws on HVAC panels",
+    steps: [
+      'Select the correct nut driver size (typically 1/4" or 5/16" for HVAC panels).',
+      "Press firmly onto the hex screw head.",
+      "Turn counterclockwise to remove, clockwise to install.",
+      "Use a T-handle or ratcheting nut driver to speed up panel removal.",
+    ],
+    safety: null,
+    aliases: ["nut driver", "nut drivers"],
+  },
+  {
+    name: "Pliers",
+    category: "Hand Tools",
+    usedFor: ["gripping components", "bending wire", "holding tubing"],
+    explanation:
+      "Pliers grip, bend, and manipulate small components — needle nose works in tight spaces, channel locks handle larger fittings.",
+    whenToUse: "When gripping, bending, or manipulating small parts or wire",
+    steps: [
+      "Select needle nose for tight spaces, channel locks for larger grips.",
+      "Position the jaws fully on the object before squeezing.",
+      "Use channel locks on fittings — open to the correct jaw size first.",
+      "Avoid using pliers on soft brass fittings — use a proper wrench instead.",
+    ],
+    safety: "mechanical",
+    aliases: [
+      "pliers",
+      "needle nose",
+      "needle nose pliers",
+      "channel locks",
+      "channellock",
+    ],
+  },
+  {
+    name: "Tubing Cutter",
+    category: "Hand Tools",
+    usedFor: ["cutting copper tubing", "cutting refrigerant lines"],
+    explanation:
+      "A tubing cutter makes clean, square cuts on copper line sets without crimping or deforming the tube wall.",
+    whenToUse: "When cutting copper line set or refrigerant tubing to length",
+    steps: [
+      "Measure and mark the cut point on the tubing.",
+      "Clamp the cutter wheel onto the mark — wheel on top of the tube.",
+      "Rotate the cutter around the tube one full turn.",
+      "Tighten the feed knob a quarter turn, then rotate again.",
+      "Repeat until the tube is cut through cleanly.",
+    ],
+    safety: "mechanical",
+    aliases: ["tubing cutter", "tube cutter", "copper cutter"],
+  },
+  {
+    name: "Deburring Tool",
+    category: "Hand Tools",
+    usedFor: ["deburring cut tubing", "removing sharp edges from copper"],
+    explanation:
+      "A deburring tool removes the inner burr left after cutting copper tubing so the end is smooth and ready for flaring or brazing.",
+    whenToUse:
+      "Immediately after cutting copper tubing, before flaring or brazing",
+    steps: [
+      "Insert the reamer blade into the cut end of the tubing.",
+      "Rotate clockwise with gentle inward pressure.",
+      "Continue until the inner edge is smooth with no sharp burrs.",
+      "Wipe away any copper shavings before proceeding.",
+    ],
+    safety: "mechanical",
+    aliases: ["deburring tool", "deburring", "reamer", "deburrer"],
+  },
+
+  // ─── Power Tools ───────────────────────────────────────────────────────────
+  {
+    name: "Cordless Drill",
+    category: "Power Tools",
+    usedFor: [
+      "drilling mounting holes",
+      "driving screws",
+      "installing equipment",
+    ],
+    explanation:
+      "A cordless drill bores mounting holes and drives fasteners when installing HVAC equipment and routing line sets.",
+    whenToUse:
+      "When mounting equipment, drilling holes for line sets, or driving fasteners",
+    steps: [
+      "Select the correct bit — drill bit for holes, driver bit for screws.",
+      "Set the torque clutch to appropriate setting to avoid stripping.",
+      "Squeeze the trigger gently for control at the start.",
+      "Keep the drill perpendicular to the work surface.",
+    ],
+    safety: "mechanical",
+    aliases: ["cordless drill", "drill"],
+  },
+  {
+    name: "Impact Driver",
+    category: "Power Tools",
+    usedFor: [
+      "driving long screws",
+      "fastening lag bolts",
+      "high-torque fastening",
+    ],
+    explanation:
+      "An impact driver delivers high rotational torque in short bursts to drive long or heavy fasteners that a regular drill would struggle with.",
+    whenToUse: "When driving long or heavy fasteners into mounting surfaces",
+    steps: [
+      "Insert the correct impact-rated driver bit.",
+      "Position the bit fully in the fastener head.",
+      "Squeeze the trigger — the impact mechanism fires automatically under load.",
+      "Release before the fastener bottoms out to avoid over-driving.",
+    ],
+    safety: "mechanical",
+    aliases: ["impact driver", "impact"],
+  },
+  {
+    name: "Reciprocating Saw (Sawzall)",
+    category: "Power Tools",
+    usedFor: [
+      "cutting ductwork",
+      "demolition",
+      "cutting through walls for line sets",
+    ],
+    explanation:
+      "A reciprocating saw makes fast cuts through ductwork, walls, and old equipment during removal and installation.",
+    whenToUse:
+      "When cutting ductwork, penetrating walls, or removing old equipment",
+    steps: [
+      "Select the correct blade — metal blade for duct, demo blade for walls.",
+      "Keep the shoe plate pressed firmly against the work surface.",
+      "Let the blade do the work — don't force it.",
+      "Keep clear of hidden wires and pipes before cutting.",
+    ],
+    safety: "mechanical",
+    aliases: ["sawzall", "reciprocating saw", "recip saw"],
+  },
+
+  // ─── Installation Tools ───────────────────────────────────────────────────
+  {
+    name: "Flaring Tool",
+    category: "Installation Tools",
+    usedFor: ["creating flare fittings", "flaring copper tubing"],
+    explanation:
+      "A flaring tool forms a precise bell-shaped flare on the end of copper tubing so it seals correctly against a flare fitting without soldering.",
+    whenToUse: "When making flare connections on refrigerant line sets",
+    steps: [
+      "Cut and deburr the tubing end first.",
+      "Slide the flare nut onto the tubing before flaring.",
+      'Insert the tubing into the flaring block at the correct depth (about 1/8" above the block).',
+      "Tighten the yoke to press the cone into the tubing and form the flare.",
+      "Inspect the flare for cracks or uneven edges before connecting.",
+    ],
+    safety: "mechanical",
+    aliases: ["flaring tool", "flare tool"],
+  },
+  {
+    name: "Swaging Tool",
+    category: "Installation Tools",
+    usedFor: [
+      "swaging copper tubing",
+      "making swaged connections without fittings",
+    ],
+    explanation:
+      "A swaging tool expands one tube end so it fits over a mating tube for a brazed connection — no coupling fitting required.",
+    whenToUse:
+      "When connecting two tubes of the same size without a coupling fitting",
+    steps: [
+      "Deburr and clean both tube ends.",
+      "Insert the swaging punch into the tube end to the correct depth.",
+      "Strike the punch with a hammer or use a ratchet-style swager.",
+      "Check the swaged end fits snugly over the mating tube.",
+      "Braze the joint after fitting.",
+    ],
+    safety: "mechanical",
+    aliases: ["swaging tool", "swage tool"],
+  },
+  {
+    name: "Torque Wrench",
+    category: "Installation Tools",
+    usedFor: ["torquing flare fittings", "tightening to spec"],
+    explanation:
+      "A torque wrench tightens refrigerant flare fittings to the exact manufacturer torque specification so they seal without cracking the flare.",
+    whenToUse:
+      "When tightening refrigerant flare fittings to manufacturer torque specifications",
+    steps: [
+      "Set the desired torque value on the wrench handle.",
+      "Attach the correct socket or open-end adapter.",
+      "Apply force smoothly — the wrench will click when the set torque is reached.",
+      "Stop immediately when you hear the click — do not continue tightening.",
+    ],
+    safety: "mechanical",
+    aliases: ["torque wrench", "torque"],
+  },
+
+  // ─── Electrical Support ───────────────────────────────────────────────────
+  {
+    name: "Wire Strippers",
+    category: "Electrical",
+    usedFor: ["stripping wire insulation", "preparing wire ends for terminals"],
+    explanation:
+      "Wire strippers remove insulation from wire ends cleanly so control wiring can be connected to terminals without nicked conductors.",
+    whenToUse:
+      "When connecting control wiring or replacing electrical connections",
+    steps: [
+      "Match the wire gauge to the stripper notch (usually 18–22 AWG for control wiring).",
+      "Insert the wire into the correct gauge notch.",
+      "Squeeze firmly and pull toward the wire end in one smooth motion.",
+      "Confirm a clean strip — no nicks or cut strands.",
+    ],
+    safety: "electrical",
+    aliases: ["wire strippers", "wire stripper"],
+  },
+  {
+    name: "Crimpers",
+    category: "Electrical",
+    usedFor: ["crimping wire connectors", "securing terminals"],
+    explanation:
+      "Crimpers compress wire connectors and terminals onto stripped wire ends for a secure, vibration-resistant electrical connection.",
+    whenToUse: "When joining wires or attaching ring/spade terminals",
+    steps: [
+      "Select the correct connector for the wire gauge.",
+      "Insert the stripped wire end fully into the connector barrel.",
+      "Position the connector in the correct groove of the crimper.",
+      "Squeeze firmly in one motion — the connector should not spin or pull off the wire.",
+    ],
+    safety: "electrical",
+    aliases: ["crimpers", "crimping tool", "wire crimper"],
   },
 ];
 
@@ -305,6 +609,21 @@ const TOOL_PRIORITY = [
   "leak detector",
   "thermometer",
   "vacuum pump",
+  "adjustable wrench",
+  "tubing cutter",
+  "flaring tool",
+  "torque wrench",
+  "wire strippers",
+  "crimpers",
+  "screwdrivers",
+  "nut drivers",
+  "cordless drill",
+  "impact driver",
+  "reciprocating saw (sawzall)",
+  "pipe wrench",
+  "pliers",
+  "deburring tool",
+  "swaging tool",
 ];
 const PART_PRIORITY = [
   "capacitor",

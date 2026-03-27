@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { componentVisuals, nameToVisualKey } from "@/data/componentVisuals";
 import { useActor } from "@/hooks/useActor";
 import {
   useAddPart,
@@ -58,15 +59,169 @@ const TOOL_DETAILS: Record<
   },
   "Vacuum Pump": {
     usedFor: ["evacuating system"],
-    whenToUse: "Before charging refrigerant",
-    howToUse: "Connect to system and run until proper vacuum is reached.",
-    safety: "Ensure proper hose connections.",
+    whenToUse: "Before charging refrigerant after any repair",
+    howToUse:
+      "Connect to manifold center hose, open valves, run until 500 microns.",
+    safety: "Ensure proper hose connections and monitor for vacuum hold.",
   },
   "Leak Detector": {
     usedFor: ["finding refrigerant leaks"],
     whenToUse: "When system is low on refrigerant",
     howToUse: "Move sensor around coils and connections.",
     safety: "Use in ventilated area.",
+  },
+  // Hand Tools
+  "Adjustable Wrench": {
+    usedFor: ["tightening fittings", "loosening nuts", "pipe connections"],
+    whenToUse: "When tightening or loosening threaded connections",
+    howToUse:
+      "Engage jaw on flat sides of nut. Turn clockwise to tighten, counterclockwise to loosen.",
+    safety: "Avoid over-tightening brass fittings — they can crack.",
+  },
+  "Pipe Wrench": {
+    usedFor: [
+      "gripping pipes",
+      "tightening pipe fittings",
+      "removing corroded fittings",
+    ],
+    whenToUse: "When working with round or corroded pipe fittings",
+    howToUse:
+      "Adjust jaw to fit pipe, apply force in direction upper jaw faces. Use two wrenches for opposing force.",
+    safety: "Protect finish surfaces with tape or cloth to prevent damage.",
+  },
+  Screwdrivers: {
+    usedFor: [
+      "removing access panels",
+      "securing terminal screws",
+      "fastening covers",
+    ],
+    whenToUse:
+      "When removing or securing screws on panels, covers, and terminal blocks",
+    howToUse:
+      "Match tip to screw head (flathead or Phillips). Press firmly before turning to avoid cam-out.",
+    safety: "Use insulated screwdrivers near live terminals.",
+  },
+  "Nut Drivers": {
+    usedFor: [
+      "removing hex-head screws",
+      "accessing panels",
+      "electrical terminal work",
+    ],
+    whenToUse:
+      "When removing or installing hex-head sheet metal screws on HVAC panels",
+    howToUse:
+      'Select 1/4" or 5/16" for HVAC panels. Press onto hex head, turn counterclockwise to remove.',
+    safety: "Use correct size to avoid rounding off hex heads.",
+  },
+  Pliers: {
+    usedFor: ["gripping components", "bending wire", "holding tubing"],
+    whenToUse: "When gripping, bending, or manipulating small parts or wire",
+    howToUse:
+      "Select needle nose for tight spaces, channel locks for larger grips. Position jaws fully before squeezing.",
+    safety:
+      "Avoid using pliers on soft brass fittings — use a proper wrench instead.",
+  },
+  "Tubing Cutter": {
+    usedFor: ["cutting copper tubing", "cutting refrigerant lines"],
+    whenToUse: "When cutting copper line set or refrigerant tubing to length",
+    howToUse:
+      "Clamp wheel on mark, rotate full turn, tighten feed knob quarter turn, rotate again. Repeat until cut.",
+    safety:
+      "Deburr immediately after cutting to remove sharp edges inside the tube.",
+  },
+  "Deburring Tool": {
+    usedFor: ["deburring cut tubing", "removing sharp edges from copper"],
+    whenToUse:
+      "Immediately after cutting copper tubing, before flaring or brazing",
+    howToUse:
+      "Insert reamer blade into cut end, rotate clockwise with gentle pressure until smooth.",
+    safety:
+      "Wipe away copper shavings — they can contaminate the refrigerant circuit.",
+  },
+  // Power Tools
+  "Cordless Drill": {
+    usedFor: [
+      "drilling mounting holes",
+      "driving screws",
+      "installing equipment",
+    ],
+    whenToUse:
+      "When mounting equipment, drilling holes for line sets, or driving fasteners",
+    howToUse:
+      "Select correct bit, set torque clutch, squeeze trigger gently, keep drill perpendicular.",
+    safety: "Check for hidden wires or pipes before drilling into walls.",
+  },
+  "Impact Driver": {
+    usedFor: [
+      "driving long screws",
+      "fastening lag bolts",
+      "high-torque fastening",
+    ],
+    whenToUse: "When driving long or heavy fasteners into mounting surfaces",
+    howToUse:
+      "Insert impact-rated bit, position in fastener head, squeeze trigger. Release before bottoming out.",
+    safety:
+      "Use impact-rated bits only — standard bits can shatter under impact.",
+  },
+  "Reciprocating Saw (Sawzall)": {
+    usedFor: [
+      "cutting ductwork",
+      "demolition",
+      "cutting through walls for line sets",
+    ],
+    whenToUse:
+      "When cutting ductwork, penetrating walls, or removing old equipment",
+    howToUse:
+      "Select correct blade, keep shoe plate pressed against surface, let blade do the work.",
+    safety:
+      "Always check for hidden wires and pipes before cutting into walls.",
+  },
+  // Installation Tools
+  "Flaring Tool": {
+    usedFor: ["creating flare fittings", "flaring copper tubing"],
+    whenToUse: "When making flare connections on refrigerant line sets",
+    howToUse:
+      'Cut and deburr tube, slide flare nut on first, insert in block 1/8" above, tighten yoke to form flare.',
+    safety:
+      "Inspect flare for cracks before connecting — a cracked flare will leak refrigerant.",
+  },
+  "Swaging Tool": {
+    usedFor: [
+      "swaging copper tubing",
+      "making swaged connections without fittings",
+    ],
+    whenToUse:
+      "When connecting two tubes of the same size without a coupling fitting",
+    howToUse:
+      "Deburr both ends, insert swaging punch to correct depth, strike or ratchet to expand. Braze after fitting.",
+    safety:
+      "Ensure tubes are clean and free of burrs before brazing the swaged joint.",
+  },
+  "Torque Wrench": {
+    usedFor: ["torquing flare fittings", "tightening to spec"],
+    whenToUse:
+      "When tightening refrigerant flare fittings to manufacturer torque specifications",
+    howToUse:
+      "Set desired torque, attach adapter, apply force smoothly. Stop immediately when wrench clicks.",
+    safety:
+      "Never continue tightening after the click — over-torquing cracks the flare.",
+  },
+  // Electrical Support
+  "Wire Strippers": {
+    usedFor: ["stripping wire insulation", "preparing wire ends for terminals"],
+    whenToUse:
+      "When connecting control wiring or replacing electrical connections",
+    howToUse:
+      "Match gauge to notch (18–22 AWG for control wiring), insert wire, squeeze and pull in one motion.",
+    safety: "Turn power off before stripping wire near live terminals.",
+  },
+  Crimpers: {
+    usedFor: ["crimping wire connectors", "securing terminals"],
+    whenToUse: "When joining wires or attaching ring/spade terminals",
+    howToUse:
+      "Select correct connector, insert stripped wire fully, position in correct groove, squeeze firmly.",
+    safety:
+      "Confirm wire is fully seated before crimping — a partial insertion creates a weak connection.",
   },
 };
 
@@ -124,7 +279,7 @@ const SEED_TOOLS = [
     name: "Vacuum Pump",
     description:
       "Evacuates moisture and non-condensables from refrigerant circuits",
-    category: "Refrigerant",
+    category: "Installation Tools",
   },
   {
     name: "Refrigerant Scale",
@@ -146,6 +301,95 @@ const SEED_TOOLS = [
     name: "Leak Detector",
     description: "Electronic sensor for detecting refrigerant leaks",
     category: "Refrigerant",
+  },
+  // Hand Tools
+  {
+    name: "Adjustable Wrench",
+    description: "Tightens and loosens threaded fittings and nuts",
+    category: "Hand Tools",
+  },
+  {
+    name: "Pipe Wrench",
+    description: "Grips and turns round pipe and corroded fittings",
+    category: "Hand Tools",
+  },
+  {
+    name: "Screwdrivers",
+    description:
+      "Drives and removes flathead and Phillips screws on panels and covers",
+    category: "Hand Tools",
+  },
+  {
+    name: "Nut Drivers",
+    description: "Removes hex-head sheet metal screws for panel access",
+    category: "Hand Tools",
+  },
+  {
+    name: "Pliers",
+    description: "Grips, bends, and manipulates small components and wire",
+    category: "Hand Tools",
+  },
+  {
+    name: "Tubing Cutter",
+    description: "Makes clean, square cuts on copper refrigerant tubing",
+    category: "Hand Tools",
+  },
+  {
+    name: "Deburring Tool",
+    description:
+      "Removes inner burr from cut copper tubing before flaring or brazing",
+    category: "Hand Tools",
+  },
+  // Power Tools
+  {
+    name: "Cordless Drill",
+    description:
+      "Drills mounting holes and drives fasteners during installation",
+    category: "Power Tools",
+  },
+  {
+    name: "Impact Driver",
+    description:
+      "Drives long screws and lag bolts with high-torque impact action",
+    category: "Power Tools",
+  },
+  {
+    name: "Reciprocating Saw (Sawzall)",
+    description:
+      "Cuts ductwork, walls, and old equipment during removal and install",
+    category: "Power Tools",
+  },
+  // Installation Tools
+  {
+    name: "Flaring Tool",
+    description:
+      "Forms a precise flare on copper tubing for leak-free flare connections",
+    category: "Installation Tools",
+  },
+  {
+    name: "Swaging Tool",
+    description:
+      "Expands a tube end to accept a mating tube for a brazed connection",
+    category: "Installation Tools",
+  },
+  {
+    name: "Torque Wrench",
+    description:
+      "Tightens flare fittings to manufacturer torque spec to prevent leaks",
+    category: "Installation Tools",
+  },
+  // Electrical Support
+  {
+    name: "Wire Strippers",
+    description:
+      "Removes insulation cleanly from control wire ends for terminal connections",
+    category: "Electrical",
+  },
+  {
+    name: "Crimpers",
+    description:
+      "Compresses wire connectors and terminals for secure electrical connections",
+    category: "Electrical",
   },
 ];
 
@@ -328,6 +572,27 @@ function useSeeder(toolsEmpty: boolean, partsEmpty: boolean, ready: boolean) {
   }, [ready, actor, isAdmin, toolsEmpty, partsEmpty, addTool, addPart]);
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function getWhenToUseByCategory(category: string): string {
+  switch (category) {
+    case "Electrical":
+      return "When diagnosing electrical components";
+    case "Refrigerant":
+      return "When working with refrigerant systems";
+    case "Hand Tools":
+      return "For mechanical installation and repair tasks";
+    case "Power Tools":
+      return "During installation and removal of components";
+    case "Installation Tools":
+      return "When making refrigerant line connections";
+    case "Diagnostics":
+      return "When measuring system performance";
+    default:
+      return "As needed for HVAC service work";
+  }
+}
+
 // ─── Tool Card ────────────────────────────────────────────────────────────────
 
 function ToolCard({
@@ -340,6 +605,8 @@ function ToolCard({
   const details = TOOL_DETAILS[tool.name];
   const [expanded, setExpanded] = useState(false);
 
+  const whenToUse = details?.whenToUse ?? getWhenToUseByCategory(tool.category);
+
   return (
     <Card
       className="border border-border overflow-hidden"
@@ -348,9 +615,8 @@ function ToolCard({
       <button
         type="button"
         className="w-full text-left"
-        onClick={() => details && setExpanded((v) => !v)}
-        aria-expanded={details ? expanded : undefined}
-        style={details ? undefined : { cursor: "default" }}
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
       >
         <CardContent className="py-4 px-4">
           <div className="flex items-start gap-3">
@@ -371,63 +637,92 @@ function ToolCard({
               <p className="text-xs text-muted-foreground">
                 {tool.description}
               </p>
+              <p className="text-xs text-foreground/70 pt-0.5">
+                <span className="font-medium text-muted-foreground">
+                  When to use:{" "}
+                </span>
+                {whenToUse}
+              </p>
             </div>
-            {details && (
-              <div className="flex-shrink-0 mt-0.5">
-                {expanded ? (
-                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                )}
-              </div>
-            )}
+            <div className="flex-shrink-0 mt-0.5">
+              {expanded ? (
+                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              )}
+            </div>
           </div>
         </CardContent>
       </button>
 
-      {details && expanded && (
+      {expanded && (
         <div className="px-4 pb-4 space-y-3 border-t border-border pt-3">
-          {/* Used For */}
-          <div className="space-y-1.5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Used For
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {details.usedFor.map((use) => (
-                <Badge
-                  key={use}
-                  variant="secondary"
-                  className="text-xs font-normal"
-                >
-                  {use}
-                </Badge>
-              ))}
+          {/* Tool Image */}
+          {(() => {
+            const vk = nameToVisualKey[tool.name];
+            const v = vk ? componentVisuals[vk] : null;
+            return v ? (
+              <div className="flex justify-center pb-1">
+                <img
+                  src={v.imageSrc}
+                  alt={tool.name}
+                  className="h-36 object-contain rounded-lg opacity-95"
+                />
+              </div>
+            ) : null;
+          })()}
+          {details ? (
+            <>
+              {/* Used For */}
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Used For
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {details.usedFor.map((use) => (
+                    <Badge
+                      key={use}
+                      variant="secondary"
+                      className="text-xs font-normal"
+                    >
+                      {use}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* When to Use */}
+              <div className="space-y-0.5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  When to Use
+                </p>
+                <p className="text-sm text-foreground">{details.whenToUse}</p>
+              </div>
+
+              {/* How to Use */}
+              <div className="space-y-0.5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  How to Use
+                </p>
+                <p className="text-sm text-foreground">{details.howToUse}</p>
+              </div>
+
+              {/* Safety */}
+              <div className="flex items-start gap-2 rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-3 py-2.5">
+                <ShieldAlert className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-amber-800 dark:text-amber-300">
+                  {details.safety}
+                </p>
+              </div>
+            </>
+          ) : (
+            <div className="space-y-0.5">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                When to Use
+              </p>
+              <p className="text-sm text-foreground">{whenToUse}</p>
             </div>
-          </div>
-
-          {/* When to Use */}
-          <div className="space-y-0.5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              When to Use
-            </p>
-            <p className="text-sm text-foreground">{details.whenToUse}</p>
-          </div>
-
-          {/* How to Use */}
-          <div className="space-y-0.5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              How to Use
-            </p>
-            <p className="text-sm text-foreground">{details.howToUse}</p>
-          </div>
-
-          {/* Safety */}
-          <div className="flex items-start gap-2 rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-3 py-2.5">
-            <ShieldAlert className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-amber-800 dark:text-amber-300">
-              {details.safety}
-            </p>
-          </div>
+          )}
         </div>
       )}
     </Card>
@@ -437,10 +732,16 @@ function ToolCard({
 // ─── Tools Tab ────────────────────────────────────────────────────────────────
 
 function ToolsTab() {
-  const { data: tools = [], isLoading } = useGetTools();
+  const { data: backendTools = [], isLoading } = useGetTools();
   const [query, setQuery] = useState("");
 
-  const filtered = tools.filter((t) =>
+  // Fall back to SEED_TOOLS when backend has no data yet
+  const displayTools =
+    backendTools.length > 0
+      ? backendTools
+      : SEED_TOOLS.map((t, i) => ({ id: String(i), ...t }));
+
+  const filtered = displayTools.filter((t) =>
     t.name.toLowerCase().includes(query.toLowerCase().trim()),
   );
 
@@ -467,13 +768,9 @@ function ToolsTab() {
       ) : filtered.length === 0 ? (
         <div className="text-center py-14" data-ocid="tools.empty_state">
           <Wrench className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground font-medium">
-            {query ? "No tools found" : "No tools added yet"}
-          </p>
+          <p className="text-muted-foreground font-medium">No tools found</p>
           <p className="text-sm text-muted-foreground mt-1">
-            {query
-              ? "Try a different search term."
-              : "Check back after an admin seeds the data."}
+            Try a different search term.
           </p>
         </div>
       ) : (
@@ -556,6 +853,20 @@ function PartCard({
 
       {details && expanded && (
         <div className="px-4 pb-4 space-y-3 border-t border-border pt-3">
+          {/* Part Image */}
+          {(() => {
+            const vk = nameToVisualKey[part.name];
+            const v = vk ? componentVisuals[vk] : null;
+            return v ? (
+              <div className="flex justify-center pb-1">
+                <img
+                  src={v.imageSrc}
+                  alt={part.name}
+                  className="h-36 object-contain rounded-lg opacity-95"
+                />
+              </div>
+            ) : null;
+          })()}
           {/* Common Symptoms */}
           <div className="space-y-1.5">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
