@@ -25,6 +25,10 @@ import {
 } from "@/utils/flowEngine";
 import { type HowToGuide, detectHowToQuery } from "@/utils/howToLogic";
 import {
+  type ComponentIdentification,
+  detectIdentificationQuery,
+} from "@/utils/identificationLogic";
+import {
   type MentorDiagnosis,
   type MentorMessage,
   type MentorStage,
@@ -65,6 +69,7 @@ interface ChatState {
   activeFlow: FlowDef | null;
   flowState: FlowState | null;
   howToGuide: HowToGuide | null;
+  identificationResult: ComponentIdentification | null;
 }
 
 const INITIAL_STATE: ChatState = {
@@ -76,6 +81,7 @@ const INITIAL_STATE: ChatState = {
   activeFlow: null,
   flowState: null,
   howToGuide: null,
+  identificationResult: null,
 };
 
 // Flow step labels for the progress indicator
@@ -588,6 +594,140 @@ interface EnrichedMessage extends MentorMessage {
   toolGuidance?: ToolGuidance;
 }
 
+// ─── IdentificationCard Component ────────────────────────────────────────────
+function IdentificationCard({
+  component,
+}: { component: ComponentIdentification }) {
+  const imageMap: Record<string, string> = {
+    capacitor: "/assets/generated/part-capacitor.dim_400x300.png",
+    contactor: "/assets/generated/part-contactor.dim_400x300.png",
+    evaporator_coil: "/assets/generated/part-evaporator-coil.dim_400x300.png",
+    compressor: "/assets/generated/part-compressor.dim_400x300.png",
+    air_filter: "/assets/generated/part-air-filter.dim_400x300.png",
+    multimeter: "/assets/generated/tool-multimeter.dim_400x300.png",
+    manifold_gauge_set:
+      "/assets/generated/tool-manifold-gauge-set.dim_400x300.png",
+  };
+
+  const imageSrc = component.imageKey ? imageMap[component.imageKey] : null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="space-y-4"
+      data-ocid="mentor.identification.card"
+    >
+      {/* Header with Buddy avatar */}
+      <div className="flex items-start gap-2.5">
+        <div className="flex flex-col items-center gap-0.5 shrink-0 mt-0.5">
+          <div className="w-7 h-7 rounded-full overflow-hidden border border-sky-500/50 buddy-avatar-glow">
+            <img
+              src={BUDDY_AVATAR}
+              alt="Buddy"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <span
+            className="text-[9px] font-semibold leading-none"
+            style={{ color: "oklch(var(--muted-foreground) / 0.7)" }}
+          >
+            Buddy
+          </span>
+        </div>
+        <div
+          className="rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm font-semibold leading-relaxed"
+          style={{
+            background: "linear-gradient(160deg, #243447 0%, #1E293B 100%)",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.2)",
+            border: "1px solid rgba(56,189,248,0.15)",
+            color: "#F8FAFC",
+          }}
+        >
+          {component.name}
+        </div>
+      </div>
+
+      {/* Main card */}
+      <div
+        className="rounded-xl overflow-hidden ml-9"
+        style={{
+          background: "oklch(var(--card) / 1)",
+          border: "1px solid oklch(var(--border) / 1)",
+        }}
+      >
+        {/* Component image */}
+        {imageSrc && (
+          <div
+            className="w-full overflow-hidden"
+            style={{ maxHeight: "160px" }}
+          >
+            <img
+              src={imageSrc}
+              alt={component.name}
+              className="w-full object-cover"
+              style={{ maxHeight: "160px" }}
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
+            />
+          </div>
+        )}
+
+        {/* What it is */}
+        <div className="px-4 pt-4 pb-3">
+          <p
+            className="text-xs font-semibold uppercase tracking-wider mb-1.5"
+            style={{ color: "oklch(var(--muted-foreground) / 0.7)" }}
+          >
+            What It Is
+          </p>
+          <p className="text-sm leading-relaxed" style={{ color: "#F8FAFC" }}>
+            {component.whatItIs}
+          </p>
+        </div>
+
+        <div
+          className="mx-4"
+          style={{ height: "1px", background: "oklch(var(--border) / 1)" }}
+        />
+
+        {/* What it looks like */}
+        <div className="px-4 py-3">
+          <p
+            className="text-xs font-semibold uppercase tracking-wider mb-1.5"
+            style={{ color: "oklch(var(--muted-foreground) / 0.7)" }}
+          >
+            What It Looks Like
+          </p>
+          <p className="text-sm leading-relaxed" style={{ color: "#CBD5E1" }}>
+            {component.whatItLooksLike}
+          </p>
+        </div>
+
+        <div
+          className="mx-4"
+          style={{ height: "1px", background: "oklch(var(--border) / 1)" }}
+        />
+
+        {/* Where it's found */}
+        <div className="px-4 py-3 pb-4">
+          <p
+            className="text-xs font-semibold uppercase tracking-wider mb-1.5"
+            style={{ color: "oklch(var(--muted-foreground) / 0.7)" }}
+          >
+            Where It's Found
+          </p>
+          <p className="text-sm leading-relaxed" style={{ color: "#CBD5E1" }}>
+            {component.whereFound}
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 // ─── HowToCard Component ──────────────────────────────────────────────────────
 function HowToCard({ guide }: { guide: HowToGuide }) {
   return (
@@ -784,7 +924,23 @@ export default function MentorChat({
   function processInput(trimmed: string) {
     // ── Stage: initial ────────────────────────────────────────────────────────
     if (state.stage === "initial") {
-      // Check for how-to query first
+      // Check for identification query first
+      const identificationResult = detectIdentificationQuery(trimmed);
+      if (identificationResult) {
+        addMessage({
+          role: "mentor",
+          text: `Here's what you need to know about the ${identificationResult.name}.`,
+        });
+        setState((prev) => ({
+          ...prev,
+          stage: "identification",
+          symptom: trimmed,
+          identificationResult,
+        }));
+        return;
+      }
+
+      // Check for how-to query
       const howToGuide = detectHowToQuery(trimmed);
       if (howToGuide) {
         addMessage({
@@ -1071,6 +1227,9 @@ export default function MentorChat({
                     <UserBubble key={msg.id} text={msg.text} />
                   );
                 })}
+                {state.identificationResult && (
+                  <IdentificationCard component={state.identificationResult} />
+                )}
                 {state.howToGuide && <HowToCard guide={state.howToGuide} />}
                 {state.diagnosis && (
                   <DiagnosisCard diagnosis={state.diagnosis} />

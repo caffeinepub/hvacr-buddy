@@ -5,7 +5,8 @@ export type MentorStage =
   | "followup"
   | "flow"
   | "diagnosis"
-  | "howto";
+  | "howto"
+  | "identification";
 
 export interface MentorMessage {
   role: "mentor" | "user";
