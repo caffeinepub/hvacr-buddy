@@ -59,6 +59,7 @@ interface MentorChatProps {
   compact?: boolean;
   placeholder?: string;
   forceMessage?: string;
+  fullscreen?: boolean;
 }
 
 interface ChatState {
@@ -117,8 +118,6 @@ const FLOW_STEP_LABELS: Record<string, string> = {
 const DEFAULT_FLOW_STEPS = ["diagnosis"];
 
 // ─── Validation wrapper ───────────────────────────────────────────────────────
-// Pass every outgoing Buddy message through the validator before rendering.
-// Returns the corrected text (unchanged if it already passes all checks).
 function validated(text: string, opts: { isDiagnosis?: boolean } = {}): string {
   const result = validateBuddyResponse(text, opts.isDiagnosis);
   return result.correctedText;
@@ -145,8 +144,6 @@ function FlowProgressBar({
     ? steps.length - 1
     : Math.max(0, steps.indexOf(flowState.step));
 
-  // Human-readable "Step X / Y" — exclude the final "diagnosis" step from the
-  // count so it reads "Step 3 / 5" rather than "Step 5 / 6" at the last Q.
   const nonDiagnosisSteps = steps.filter((s) => s !== "diagnosis");
   const humanStep = Math.min(
     nonDiagnosisSteps.indexOf(flowState.step) + 1,
@@ -156,7 +153,6 @@ function FlowProgressBar({
 
   return (
     <div className="space-y-1.5 mb-4" data-ocid="mentor.flow_progress">
-      {/* Compact text counter */}
       {!isDone && humanStep > 0 && humanTotal > 0 && (
         <div className="flex items-center justify-between">
           <span
@@ -171,7 +167,7 @@ function FlowProgressBar({
           </span>
           <span
             className="text-[11px] font-medium tabular-nums"
-            style={{ color: "oklch(var(--muted-foreground) / 0.8)" }}
+            style={{ color: "#94A3B8" }}
             data-ocid="mentor.flow_step_counter"
           >
             Step {humanStep} / {humanTotal}
@@ -199,7 +195,6 @@ function FlowProgressBar({
           </span>
         </div>
       )}
-      {/* Step dots */}
       <div className="flex items-center gap-1">
         {steps.map((id, i) => (
           <div
@@ -214,10 +209,7 @@ function FlowProgressBar({
                     i <= currentIdx
                       ? "oklch(var(--primary) / 1)"
                       : "oklch(var(--muted) / 1)",
-                  color:
-                    i <= currentIdx
-                      ? "white"
-                      : "oklch(var(--muted-foreground) / 1)",
+                  color: i <= currentIdx ? "white" : "#64748B",
                 }}
               >
                 {i + 1}
@@ -225,10 +217,7 @@ function FlowProgressBar({
               <span
                 className="text-xs font-medium hidden sm:inline transition-colors duration-300"
                 style={{
-                  color:
-                    i <= currentIdx
-                      ? "oklch(var(--foreground) / 1)"
-                      : "oklch(var(--muted-foreground) / 0.5)",
+                  color: i <= currentIdx ? "#F8FAFC" : "#64748B",
                 }}
               >
                 {FLOW_STEP_LABELS[id] ?? id}
@@ -289,10 +278,7 @@ function StageIndicator({
                   i <= activeStep
                     ? "oklch(var(--primary) / 1)"
                     : "oklch(var(--muted) / 1)",
-                color:
-                  i <= activeStep
-                    ? "white"
-                    : "oklch(var(--muted-foreground) / 1)",
+                color: i <= activeStep ? "white" : "#64748B",
               }}
             >
               {i + 1}
@@ -300,10 +286,7 @@ function StageIndicator({
             <span
               className="text-xs font-medium hidden sm:inline transition-colors duration-300"
               style={{
-                color:
-                  i <= activeStep
-                    ? "oklch(var(--foreground) / 1)"
-                    : "oklch(var(--muted-foreground) / 0.5)",
+                color: i <= activeStep ? "#F8FAFC" : "#64748B",
               }}
             >
               {label}
@@ -355,7 +338,6 @@ function MentorBubble({
   text: string;
   visualComponent?: string;
 }) {
-  // Use explicit visualComponent from flow step, or auto-detect from text
   const visual =
     (visualComponent ? componentVisuals[visualComponent] : null) ??
     detectComponentVisual(text);
@@ -378,7 +360,7 @@ function MentorBubble({
           </div>
           <span
             className="text-[9px] font-semibold leading-none"
-            style={{ color: "oklch(var(--muted-foreground) / 0.7)" }}
+            style={{ color: "#94A3B8" }}
           >
             Buddy
           </span>
@@ -425,7 +407,7 @@ function ThinkingBubble() {
         </div>
         <span
           className="text-[9px] font-semibold leading-none"
-          style={{ color: "oklch(var(--muted-foreground) / 0.7)" }}
+          style={{ color: "#94A3B8" }}
         >
           Buddy
         </span>
@@ -438,10 +420,7 @@ function ThinkingBubble() {
           border: "1px solid rgba(56,189,248,0.15)",
         }}
       >
-        <span
-          className="text-xs mr-1"
-          style={{ color: "oklch(var(--muted-foreground) / 0.6)" }}
-        >
+        <span className="text-xs mr-1" style={{ color: "#94A3B8" }}>
           Buddy is thinking
         </span>
         {[0, 150, 300].map((delay) => (
@@ -449,7 +428,7 @@ function ThinkingBubble() {
             key={delay}
             className="inline-block w-1.5 h-1.5 rounded-full animate-bounce"
             style={{
-              background: "oklch(var(--muted-foreground) / 0.45)",
+              background: "#64748B",
               animationDelay: `${delay}ms`,
               animationDuration: "900ms",
             }}
@@ -471,10 +450,9 @@ function UserBubble({ text }: { text: string }) {
       <div
         className="rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm leading-relaxed"
         style={{
-          background:
-            "linear-gradient(160deg, oklch(0.64 0.15 195) 0%, oklch(0.57 0.15 195) 100%)",
+          background: "#0EA5E9",
           boxShadow: "0 2px 8px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.15)",
-          color: "#F8FAFC",
+          color: "#FFFFFF",
           maxWidth: "80%",
         }}
       >
@@ -519,21 +497,28 @@ function DiagnosisCard({ diagnosis }: { diagnosis: MentorDiagnosis }) {
           border: "1px solid oklch(var(--border) / 1)",
         }}
       >
-        <p className="text-sm font-medium text-foreground leading-relaxed whitespace-pre-line">
+        <p
+          className="text-sm font-medium leading-relaxed whitespace-pre-line"
+          style={{ color: "#F8FAFC" }}
+        >
           {diagnosis.buddySummary}
         </p>
 
         <Separator />
 
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+          <p
+            className="text-xs font-semibold uppercase tracking-wider mb-2"
+            style={{ color: "#94A3B8" }}
+          >
             Supporting Evidence
           </p>
           <ul className="space-y-1.5">
             {diagnosis.causes.map((cause, i) => (
               <li
                 key={cause}
-                className="flex items-start gap-2 text-sm text-foreground"
+                className="flex items-start gap-2 text-sm"
+                style={{ color: "#F8FAFC" }}
                 data-ocid={`mentor.cause.item.${i + 1}`}
               >
                 <span
@@ -549,10 +534,13 @@ function DiagnosisCard({ diagnosis }: { diagnosis: MentorDiagnosis }) {
         <Separator />
 
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+          <p
+            className="text-xs font-semibold uppercase tracking-wider mb-2"
+            style={{ color: "#94A3B8" }}
+          >
             Next Field Check
           </p>
-          <p className="text-sm text-foreground leading-relaxed">
+          <p className="text-sm leading-relaxed" style={{ color: "#F8FAFC" }}>
             {diagnosis.nextCheck}
           </p>
         </div>
@@ -561,7 +549,10 @@ function DiagnosisCard({ diagnosis }: { diagnosis: MentorDiagnosis }) {
           <>
             <Separator />
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+              <p
+                className="text-xs font-semibold uppercase tracking-wider mb-2"
+                style={{ color: "#94A3B8" }}
+              >
                 Suggested Resource
               </p>
               <a
@@ -632,7 +623,7 @@ function IdentificationCard({
           </div>
           <span
             className="text-[9px] font-semibold leading-none"
-            style={{ color: "oklch(var(--muted-foreground) / 0.7)" }}
+            style={{ color: "#94A3B8" }}
           >
             Buddy
           </span>
@@ -658,7 +649,6 @@ function IdentificationCard({
           border: "1px solid oklch(var(--border) / 1)",
         }}
       >
-        {/* Component image */}
         {imageSrc && (
           <div
             className="w-full overflow-hidden"
@@ -676,11 +666,10 @@ function IdentificationCard({
           </div>
         )}
 
-        {/* What it is */}
         <div className="px-4 pt-4 pb-3">
           <p
             className="text-xs font-semibold uppercase tracking-wider mb-1.5"
-            style={{ color: "oklch(var(--muted-foreground) / 0.7)" }}
+            style={{ color: "#94A3B8" }}
           >
             What It Is
           </p>
@@ -694,11 +683,10 @@ function IdentificationCard({
           style={{ height: "1px", background: "oklch(var(--border) / 1)" }}
         />
 
-        {/* What it looks like */}
         <div className="px-4 py-3">
           <p
             className="text-xs font-semibold uppercase tracking-wider mb-1.5"
-            style={{ color: "oklch(var(--muted-foreground) / 0.7)" }}
+            style={{ color: "#94A3B8" }}
           >
             What It Looks Like
           </p>
@@ -712,11 +700,10 @@ function IdentificationCard({
           style={{ height: "1px", background: "oklch(var(--border) / 1)" }}
         />
 
-        {/* Where it's found */}
         <div className="px-4 py-3 pb-4">
           <p
             className="text-xs font-semibold uppercase tracking-wider mb-1.5"
-            style={{ color: "oklch(var(--muted-foreground) / 0.7)" }}
+            style={{ color: "#94A3B8" }}
           >
             Where It's Found
           </p>
@@ -739,7 +726,6 @@ function HowToCard({ guide }: { guide: HowToGuide }) {
       className="space-y-4"
       data-ocid="mentor.howto.card"
     >
-      {/* Header with Buddy avatar */}
       <div className="flex items-start gap-2.5">
         <div className="flex flex-col items-center gap-0.5 shrink-0 mt-0.5">
           <div className="w-7 h-7 rounded-full overflow-hidden border border-sky-500/50 buddy-avatar-glow">
@@ -751,7 +737,7 @@ function HowToCard({ guide }: { guide: HowToGuide }) {
           </div>
           <span
             className="text-[9px] font-semibold leading-none"
-            style={{ color: "oklch(var(--muted-foreground) / 0.7)" }}
+            style={{ color: "#94A3B8" }}
           >
             Buddy
           </span>
@@ -769,7 +755,6 @@ function HowToCard({ guide }: { guide: HowToGuide }) {
         </div>
       </div>
 
-      {/* Main card */}
       <div
         className="rounded-xl overflow-hidden ml-9"
         style={{
@@ -777,11 +762,10 @@ function HowToCard({ guide }: { guide: HowToGuide }) {
           border: "1px solid oklch(var(--border) / 1)",
         }}
       >
-        {/* Tools Needed */}
         <div className="px-4 pt-4 pb-3">
           <p
             className="text-xs font-semibold uppercase tracking-wider mb-2.5"
-            style={{ color: "oklch(var(--muted-foreground) / 0.7)" }}
+            style={{ color: "#94A3B8" }}
           >
             Tools Needed
           </p>
@@ -804,11 +788,10 @@ function HowToCard({ guide }: { guide: HowToGuide }) {
 
         <Separator />
 
-        {/* Steps */}
         <div className="px-4 py-3">
           <p
             className="text-xs font-semibold uppercase tracking-wider mb-3"
-            style={{ color: "oklch(var(--muted-foreground) / 0.7)" }}
+            style={{ color: "#94A3B8" }}
           >
             Step-by-Step
           </p>
@@ -816,7 +799,8 @@ function HowToCard({ guide }: { guide: HowToGuide }) {
             {guide.steps.map((step, i) => (
               <li
                 key={step}
-                className="flex items-start gap-3 text-sm text-foreground leading-relaxed"
+                className="flex items-start gap-3 text-sm leading-relaxed"
+                style={{ color: "#F8FAFC" }}
                 data-ocid={`mentor.howto.step.${i + 1}`}
               >
                 <span
@@ -836,7 +820,6 @@ function HowToCard({ guide }: { guide: HowToGuide }) {
 
         <Separator />
 
-        {/* Pro Tips */}
         <div
           className="px-4 py-3 rounded-b-xl"
           style={{ background: "oklch(0.35 0.06 85 / 0.15)" }}
@@ -872,6 +855,7 @@ export default function MentorChat({
   compact = false,
   placeholder = "Describe a problem or ask how to do something…",
   forceMessage,
+  fullscreen = false,
 }: MentorChatProps) {
   const [state, setState] = useState<ChatState>(INITIAL_STATE);
   const [messages, setMessages] = useState<EnrichedMessage[]>([]);
@@ -905,7 +889,6 @@ export default function MentorChat({
 
   function addMessage(msg: Omit<EnrichedMessage, "id">) {
     const id = ++msgIdRef.current;
-    // Run validation on every outgoing Buddy message before storing it
     const validated_msg: EnrichedMessage =
       msg.role === "mentor"
         ? {
@@ -922,7 +905,6 @@ export default function MentorChat({
     if (!trimmed || isThinking) return;
     setInputValue("");
 
-    // Add user message immediately, then show thinking state before Buddy replies
     addMessage({ role: "user", text: trimmed });
     setIsThinking(true);
 
@@ -933,9 +915,7 @@ export default function MentorChat({
   }
 
   function processInput(trimmed: string) {
-    // ── Stage: initial ────────────────────────────────────────────────────────
     if (state.stage === "initial") {
-      // Check for identification query first
       const identificationResult = detectIdentificationQuery(trimmed);
       if (identificationResult) {
         addMessage({
@@ -951,7 +931,6 @@ export default function MentorChat({
         return;
       }
 
-      // Check for how-to query
       const howToGuide = detectHowToQuery(trimmed);
       if (howToGuide) {
         addMessage({
@@ -967,7 +946,6 @@ export default function MentorChat({
         return;
       }
 
-      // Check for a registered flow first
       const flow = activateFlow(trimmed);
 
       if (flow) {
@@ -998,7 +976,6 @@ export default function MentorChat({
         return;
       }
 
-      // Fallback: generic mentor logic
       const ack = getInitialAcknowledgment(trimmed);
       const firstQ = getFollowUpQuestion(trimmed, 0);
 
@@ -1029,18 +1006,9 @@ export default function MentorChat({
       return;
     }
 
-    // ── Stage: flow ──────────────────────────────────────────────────────────
-    // FLOW CONTROL RULES:
-    //  1. Once a flow is running, NEVER restart it or skip steps.
-    //  2. Each reply ALWAYS advances to the next logical step.
-    //  3. Only switch flows if the user's input triggers a DIFFERENT flow.
-    //  4. Do NOT jump to diagnosis early unless the flow's own step logic
-    //     determines we are at the final step.
     if (state.stage === "flow" && state.activeFlow && state.flowState) {
-      // ── Rule 3: detect a DIFFERENT flow trigger ──────────────────────────
       const differentFlow = activateDifferentFlow(trimmed, state.activeFlow.id);
       if (differentFlow) {
-        // User has switched to a completely different issue — start the new flow
         const newFlowState = initFlowState(differentFlow);
         const firstStep = differentFlow.steps[newFlowState.step];
 
@@ -1068,7 +1036,6 @@ export default function MentorChat({
         return;
       }
 
-      // ── Rules 1, 2, 4: advance the CURRENT flow by exactly one step ───────
       const result = advanceFlow(state.activeFlow, state.flowState, trimmed);
 
       if (result.isDiagnosis) {
@@ -1100,7 +1067,6 @@ export default function MentorChat({
       return;
     }
 
-    // ── Stage: followup ───────────────────────────────────────────────────────
     if (state.stage === "followup") {
       const newAnswers = [...state.answers, trimmed];
       const nextQ = getFollowUpQuestion(state.symptom, newAnswers.length);
@@ -1133,7 +1099,6 @@ export default function MentorChat({
     if (e.key === "Enter") submitInput(inputValue);
   }
 
-  // Quick answers: from current flow step (if in flow mode) or legacy followup
   const currentQuickAnswers: string[] = [];
   if (state.stage === "flow" && state.activeFlow && state.flowState) {
     const currentStep = state.activeFlow.steps[state.flowState.step];
@@ -1149,6 +1114,225 @@ export default function MentorChat({
   const scrollHeight = compact ? "h-48" : "h-72";
   const isInFlow = state.stage === "flow" && state.flowState !== null;
 
+  // ── Fullscreen layout ──────────────────────────────────────────────────────
+  if (fullscreen) {
+    return (
+      <div className="h-full flex flex-col gap-0" data-ocid="mentor.chat">
+        {/* Progress / stage indicator */}
+        <AnimatePresence>
+          {isActive && (
+            <motion.div
+              key="progress"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="flex-none px-4 pt-3 pb-2"
+            >
+              {isInFlow && state.flowState ? (
+                <FlowProgressBar
+                  flowState={state.flowState}
+                  activeFlow={state.activeFlow}
+                  isDone={state.stage === "diagnosis"}
+                />
+              ) : (
+                <StageIndicator
+                  stage={state.stage}
+                  symptom={state.symptom}
+                  answers={state.answers}
+                />
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Chat messages — fills remaining space */}
+        <ScrollArea className="flex-1 min-h-0 h-full">
+          <div className="space-y-4 py-3 px-4 pr-5">
+            {messages.length === 0 && !isThinking && (
+              <div className="flex items-start gap-2.5 pt-2">
+                <div className="flex flex-col items-center gap-0.5 shrink-0 mt-0.5">
+                  <div className="w-7 h-7 rounded-full overflow-hidden border border-sky-500/50 buddy-avatar-glow">
+                    <img
+                      src={BUDDY_AVATAR}
+                      alt="Buddy"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <span
+                    className="text-[9px] font-semibold leading-none"
+                    style={{ color: "#94A3B8" }}
+                  >
+                    Buddy
+                  </span>
+                </div>
+                <div
+                  className="rounded-2xl rounded-tl-sm px-4 py-3 text-sm leading-relaxed"
+                  style={{
+                    background:
+                      "linear-gradient(160deg, #243447 0%, #1E293B 100%)",
+                    boxShadow:
+                      "0 2px 8px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.2)",
+                    border: "1px solid rgba(56,189,248,0.15)",
+                    color: "#F8FAFC",
+                    maxWidth: "85%",
+                  }}
+                >
+                  What's going on with the system? I'll walk you through it
+                  step-by-step.
+                </div>
+              </div>
+            )}
+            {messages.map((msg, msgIdx) => {
+              const isLastMentor =
+                msg.role === "mentor" &&
+                msgIdx === messages.map((m) => m.role).lastIndexOf("mentor");
+              const relatedVideo = isLastMentor
+                ? getRelatedVideo(
+                    msg.text
+                      .toLowerCase()
+                      .split(/\W+/)
+                      .filter((w) => w.length > 3),
+                  )
+                : null;
+              return msg.role === "mentor" ? (
+                <div key={msg.id} className="space-y-2">
+                  <MentorBubble
+                    text={msg.text}
+                    visualComponent={msg.visualComponent}
+                  />
+                  {msg.safetyNote && <SafetyBanner text={msg.safetyNote} />}
+                  {msg.toolGuidance &&
+                    (() => {
+                      const toolData = lookupTool(msg.toolGuidance!.name);
+                      if (toolData) {
+                        return (
+                          <BuddySuggestionCard
+                            type="tool"
+                            data={toolData}
+                            situation={msg.toolGuidance!.situation}
+                          />
+                        );
+                      }
+                      return null;
+                    })()}
+                  {relatedVideo && (
+                    <button
+                      type="button"
+                      data-ocid="videos.open_modal_button"
+                      onClick={() => navigate({ to: "/videos" })}
+                      className="mt-1 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border border-sky-400/30 text-sky-300 bg-sky-900/20 hover:bg-sky-900/40 transition-colors"
+                    >
+                      <Play className="w-3.5 h-3.5" />
+                      Watch related video: {relatedVideo.title}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <UserBubble key={msg.id} text={msg.text} />
+              );
+            })}
+            {state.identificationResult && (
+              <IdentificationCard component={state.identificationResult} />
+            )}
+            {state.howToGuide && <HowToCard guide={state.howToGuide} />}
+            {state.diagnosis && <DiagnosisCard diagnosis={state.diagnosis} />}
+            <AnimatePresence>
+              {isThinking && <ThinkingBubble />}
+            </AnimatePresence>
+            <div ref={bottomRef} />
+          </div>
+        </ScrollArea>
+
+        {/* Quick answers */}
+        <AnimatePresence>
+          {currentQuickAnswers.length > 0 &&
+            !isThinking &&
+            (state.stage === "flow" || state.stage === "followup") && (
+              <motion.div
+                key="quick-answers"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 6 }}
+                transition={{ duration: 0.18 }}
+                className="flex-none px-4 py-2 flex flex-wrap gap-2"
+                data-ocid="mentor.quick_answers"
+              >
+                {currentQuickAnswers.map((answer) => (
+                  <button
+                    key={answer}
+                    type="button"
+                    data-ocid="mentor.quick_answer.button"
+                    onClick={() => submitInput(answer)}
+                    disabled={isThinking}
+                    className="px-4 py-2 rounded-full border text-sm font-medium transition-all shadow-md hover:shadow-lg active:scale-95 active:shadow-sm disabled:opacity-50 disabled:pointer-events-none"
+                    style={{
+                      borderColor: "rgba(56,189,248,0.3)",
+                      color: "#F8FAFC",
+                      background: "rgba(30,41,59,0.9)",
+                    }}
+                  >
+                    {answer}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+        </AnimatePresence>
+
+        {/* Input row */}
+        {state.stage !== "diagnosis" && state.stage !== "howto" && (
+          <div className="flex-none px-4 pb-3 flex gap-2">
+            <Input
+              data-ocid="mentor.input"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={isThinking}
+              placeholder={
+                isThinking
+                  ? "Buddy is thinking…"
+                  : state.stage === "initial"
+                    ? placeholder
+                    : "Type your answer or tap a button above…"
+              }
+              className="flex-1 rounded-xl border-border/60 bg-slate-800/80 text-sm h-12 px-5 focus-visible:ring-2 focus-visible:ring-sky-500/40 focus-visible:border-sky-500/40 placeholder:text-slate-500"
+            />
+            <Button
+              data-ocid="mentor.submit.button"
+              onClick={() => submitInput(inputValue)}
+              disabled={isThinking || !inputValue.trim()}
+              className="h-12 w-12 p-0 rounded-xl shrink-0"
+            >
+              <Send className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
+
+        {/* Start Over */}
+        {(state.stage === "diagnosis" || state.stage === "howto") && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="flex-none px-4 pb-4"
+          >
+            <Button
+              data-ocid="mentor.reset.button"
+              variant="outline"
+              size="sm"
+              onClick={handleReset}
+              className="gap-2 rounded-xl"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Start Over
+            </Button>
+          </motion.div>
+        )}
+      </div>
+    );
+  }
+
+  // ── Default (non-fullscreen) layout ───────────────────────────────────────
   return (
     <div className="space-y-3" data-ocid="mentor.chat">
       <AnimatePresence>
@@ -1277,9 +1461,9 @@ export default function MentorChat({
                   disabled={isThinking}
                   className="px-4 py-2 rounded-full border text-sm font-medium transition-all shadow-md hover:shadow-lg hover:border-sky-500/50 hover:bg-sky-500/5 active:scale-95 active:shadow-sm disabled:opacity-50 disabled:pointer-events-none"
                   style={{
-                    borderColor: "oklch(var(--border) / 1)",
-                    color: "oklch(var(--foreground) / 1)",
-                    background: "oklch(var(--background) / 1)",
+                    borderColor: "rgba(56,189,248,0.3)",
+                    color: "#F8FAFC",
+                    background: "rgba(30,41,59,0.9)",
                   }}
                 >
                   {answer}

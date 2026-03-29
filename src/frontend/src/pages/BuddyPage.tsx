@@ -34,7 +34,6 @@ export default function BuddyPage() {
   const forceKeyRef = useRef(0);
 
   function triggerMode(message: string) {
-    // Change the key suffix to allow re-triggering the same mode
     forceKeyRef.current += 1;
     setForceMessage(message + "\u200B".repeat(forceKeyRef.current));
   }
@@ -79,6 +78,7 @@ export default function BuddyPage() {
       <div className="flex-1 min-h-0">
         <MentorChat
           compact={false}
+          fullscreen={true}
           placeholder="Describe the issue or ask a question..."
           forceMessage={forceMessage}
         />
