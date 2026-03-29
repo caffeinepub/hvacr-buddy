@@ -1,3 +1,4 @@
+import BottomTabBar from "@/components/BottomTabBar";
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ExternalLink, Play, Search, Video, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -230,7 +231,7 @@ export default function VideosPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0F172A] text-white flex flex-col">
+    <div className="min-h-screen bg-[#0F172A] text-white flex flex-col pb-14">
       <header className="sticky top-0 z-10 bg-[#0F172A]/95 backdrop-blur-md border-b border-white/10">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center gap-3">
           <button
@@ -405,6 +406,7 @@ export default function VideosPage() {
           caffeine.ai
         </a>
       </footer>
+      <BottomTabBar />
     </div>
   );
 }

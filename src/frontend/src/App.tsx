@@ -7,6 +7,7 @@ import SplashScreen from "./components/SplashScreen";
 import { useInternetIdentity } from "./hooks/useInternetIdentity";
 import { useGetCallerUserProfile } from "./hooks/useQueries";
 import BuddyMascotPage from "./pages/BuddyMascotPage";
+import BuddyPage from "./pages/BuddyPage";
 import Dashboard from "./pages/Dashboard";
 import DiagnosePage from "./pages/DiagnosePage";
 import JobsPage from "./pages/JobsPage";
@@ -62,6 +63,12 @@ const buddyMascotRoute = createRoute({
   component: BuddyMascotPage,
 });
 
+const buddyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/buddy",
+  component: BuddyPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   diagnoseRoute,
@@ -70,6 +77,7 @@ const routeTree = rootRoute.addChildren([
   toolsRoute,
   videosRoute,
   buddyMascotRoute,
+  buddyRoute,
 ]);
 
 const router = createRouter({ routeTree });

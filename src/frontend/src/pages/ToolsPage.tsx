@@ -1,3 +1,4 @@
+import BottomTabBar from "@/components/BottomTabBar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -1076,7 +1077,7 @@ export default function ToolsPage() {
   useSeeder(tools.length === 0, parts.length === 0, dataReady);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-14">
       <div className="max-w-2xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
@@ -1140,6 +1141,7 @@ export default function ToolsPage() {
           </a>
         </p>
       </div>
+      <BottomTabBar />
     </div>
   );
 }

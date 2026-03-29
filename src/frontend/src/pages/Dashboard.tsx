@@ -1,3 +1,4 @@
+import BottomTabBar from "@/components/BottomTabBar";
 import BuddyLogo from "@/components/BuddyLogo";
 import MentorChat from "@/components/MentorChat";
 import { Button } from "@/components/ui/button";
@@ -133,7 +134,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col pb-14">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-card border-b border-border shadow-xs">
         <div className="max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between">
@@ -405,6 +406,7 @@ export default function Dashboard() {
           </div>
         </div>
       </footer>
+      <BottomTabBar />
     </div>
   );
 }

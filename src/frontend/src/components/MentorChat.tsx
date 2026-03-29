@@ -58,6 +58,7 @@ const BUDDY_AVATAR =
 interface MentorChatProps {
   compact?: boolean;
   placeholder?: string;
+  forceMessage?: string;
 }
 
 interface ChatState {
@@ -870,6 +871,7 @@ function HowToCard({ guide }: { guide: HowToGuide }) {
 export default function MentorChat({
   compact = false,
   placeholder = "Describe a problem or ask how to do something…",
+  forceMessage,
 }: MentorChatProps) {
   const [state, setState] = useState<ChatState>(INITIAL_STATE);
   const [messages, setMessages] = useState<EnrichedMessage[]>([]);
@@ -878,6 +880,15 @@ export default function MentorChat({
   const navigate = useNavigate();
   const bottomRef = useRef<HTMLDivElement>(null);
   const msgIdRef = useRef(0);
+
+  const lastForceMessageRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (forceMessage && forceMessage !== lastForceMessageRef.current) {
+      lastForceMessageRef.current = forceMessage;
+      submitInput(forceMessage);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [forceMessage]);
 
   const msgCount = messages.length + (state.diagnosis ? 1 : 0);
   // biome-ignore lint/correctness/useExhaustiveDependencies: scroll on message count or thinking state change
