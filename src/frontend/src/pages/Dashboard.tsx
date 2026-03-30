@@ -161,12 +161,12 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Buddy Mascot Assets link */}
+            {/* Buddy AI Chat link */}
             <button
               type="button"
-              data-ocid="header.buddy_mascot.button"
-              onClick={() => navigate({ to: "/buddy-mascot" })}
-              title="Buddy Mascot Assets"
+              data-ocid="header.buddy_chat.button"
+              onClick={() => navigate({ to: "/buddy" })}
+              title="Open Buddy AI Chat"
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all hover:scale-105"
               style={{
                 background: "rgba(56,189,248,0.08)",
@@ -179,7 +179,7 @@ export default function Dashboard() {
                 className="w-4 h-4 rounded object-cover"
                 alt="Buddy"
               />
-              <span className="hidden sm:inline">Buddy Assets</span>
+              <span className="hidden sm:inline">Buddy</span>
             </button>
             <button
               type="button"

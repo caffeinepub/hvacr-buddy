@@ -1,6 +1,7 @@
 import BottomTabBar from "@/components/BottomTabBar";
 import MentorChat from "@/components/MentorChat";
-import { BookOpen, Search, Stethoscope } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { ArrowLeft, BookOpen, Search, Stethoscope } from "lucide-react";
 import { useRef, useState } from "react";
 
 const BUDDY_AVATAR =
@@ -28,6 +29,7 @@ const QUICK_MODES = [
 ];
 
 export default function BuddyPage() {
+  const navigate = useNavigate();
   const [forceMessage, setForceMessage] = useState<string | undefined>(
     undefined,
   );
@@ -42,6 +44,17 @@ export default function BuddyPage() {
     <div className="flex flex-col bg-[#0F172A]" style={{ height: "100dvh" }}>
       {/* Header */}
       <header className="flex-none px-4 pt-4 pb-3 bg-[#0A1628] border-b border-sky-900/40">
+        {/* Back button row */}
+        <div className="flex items-center mb-3">
+          <button
+            type="button"
+            onClick={() => navigate({ to: "/" })}
+            className="flex items-center gap-1 text-sky-400 hover:text-sky-300 transition-colors text-sm font-medium"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Home</span>
+          </button>
+        </div>
         <div className="flex items-center gap-3">
           <div className="relative flex-none">
             <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-sky-500/50 buddy-avatar-glow">
