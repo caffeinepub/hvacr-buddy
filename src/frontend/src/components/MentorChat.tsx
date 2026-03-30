@@ -366,7 +366,7 @@ function MentorBubble({
           </span>
         </div>
         <div
-          className="rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm leading-relaxed whitespace-pre-line"
+          className="rounded-2xl rounded-tl-sm px-4 py-3 text-base leading-relaxed whitespace-pre-line"
           style={{
             background: "linear-gradient(160deg, #243447 0%, #1E293B 100%)",
             boxShadow: "0 2px 8px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.2)",
@@ -420,7 +420,7 @@ function ThinkingBubble() {
           border: "1px solid rgba(56,189,248,0.15)",
         }}
       >
-        <span className="text-xs mr-1" style={{ color: "#94A3B8" }}>
+        <span className="text-sm mr-1" style={{ color: "#94A3B8" }}>
           Buddy is thinking
         </span>
         {[0, 150, 300].map((delay) => (
@@ -428,7 +428,7 @@ function ThinkingBubble() {
             key={delay}
             className="inline-block w-1.5 h-1.5 rounded-full animate-bounce"
             style={{
-              background: "#64748B",
+              background: "#38BDF8",
               animationDelay: `${delay}ms`,
               animationDuration: "900ms",
             }}
@@ -448,7 +448,7 @@ function UserBubble({ text }: { text: string }) {
       className="flex justify-end"
     >
       <div
-        className="rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm leading-relaxed"
+        className="rounded-2xl rounded-tr-sm px-4 py-3 text-base leading-relaxed"
         style={{
           background: "#0EA5E9",
           boxShadow: "0 2px 8px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.15)",
@@ -498,7 +498,7 @@ function DiagnosisCard({ diagnosis }: { diagnosis: MentorDiagnosis }) {
         }}
       >
         <p
-          className="text-sm font-medium leading-relaxed whitespace-pre-line"
+          className="text-base font-medium leading-relaxed whitespace-pre-line"
           style={{ color: "#F8FAFC" }}
         >
           {diagnosis.buddySummary}
@@ -517,7 +517,7 @@ function DiagnosisCard({ diagnosis }: { diagnosis: MentorDiagnosis }) {
             {diagnosis.causes.map((cause, i) => (
               <li
                 key={cause}
-                className="flex items-start gap-2 text-sm"
+                className="flex items-start gap-2 text-base"
                 style={{ color: "#F8FAFC" }}
                 data-ocid={`mentor.cause.item.${i + 1}`}
               >
@@ -540,7 +540,7 @@ function DiagnosisCard({ diagnosis }: { diagnosis: MentorDiagnosis }) {
           >
             Next Field Check
           </p>
-          <p className="text-sm leading-relaxed" style={{ color: "#F8FAFC" }}>
+          <p className="text-base leading-relaxed" style={{ color: "#F8FAFC" }}>
             {diagnosis.nextCheck}
           </p>
         </div>
@@ -629,7 +629,7 @@ function IdentificationCard({
           </span>
         </div>
         <div
-          className="rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm font-semibold leading-relaxed"
+          className="rounded-2xl rounded-tl-sm px-4 py-3 text-base font-semibold leading-relaxed"
           style={{
             background: "linear-gradient(160deg, #243447 0%, #1E293B 100%)",
             boxShadow: "0 2px 8px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.2)",
@@ -673,7 +673,7 @@ function IdentificationCard({
           >
             What It Is
           </p>
-          <p className="text-sm leading-relaxed" style={{ color: "#F8FAFC" }}>
+          <p className="text-base leading-relaxed" style={{ color: "#F8FAFC" }}>
             {component.whatItIs}
           </p>
         </div>
@@ -690,7 +690,7 @@ function IdentificationCard({
           >
             What It Looks Like
           </p>
-          <p className="text-sm leading-relaxed" style={{ color: "#CBD5E1" }}>
+          <p className="text-base leading-relaxed" style={{ color: "#CBD5E1" }}>
             {component.whatItLooksLike}
           </p>
         </div>
@@ -707,7 +707,7 @@ function IdentificationCard({
           >
             Where It's Found
           </p>
-          <p className="text-sm leading-relaxed" style={{ color: "#CBD5E1" }}>
+          <p className="text-base leading-relaxed" style={{ color: "#CBD5E1" }}>
             {component.whereFound}
           </p>
         </div>
@@ -743,7 +743,7 @@ function HowToCard({ guide }: { guide: HowToGuide }) {
           </span>
         </div>
         <div
-          className="rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm font-semibold leading-relaxed"
+          className="rounded-2xl rounded-tl-sm px-4 py-3 text-base font-semibold leading-relaxed"
           style={{
             background: "linear-gradient(160deg, #243447 0%, #1E293B 100%)",
             boxShadow: "0 2px 8px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.2)",
@@ -799,7 +799,7 @@ function HowToCard({ guide }: { guide: HowToGuide }) {
             {guide.steps.map((step, i) => (
               <li
                 key={step}
-                className="flex items-start gap-3 text-sm leading-relaxed"
+                className="flex items-start gap-3 text-base leading-relaxed"
                 style={{ color: "#F8FAFC" }}
                 data-ocid={`mentor.howto.step.${i + 1}`}
               >
@@ -834,7 +834,7 @@ function HowToCard({ guide }: { guide: HowToGuide }) {
             {guide.tips.map((tip) => (
               <li
                 key={tip}
-                className="flex items-start gap-2 text-sm leading-relaxed"
+                className="flex items-start gap-2 text-base leading-relaxed"
                 style={{ color: "oklch(0.82 0.08 85 / 0.95)" }}
               >
                 <span
@@ -1148,7 +1148,7 @@ export default function MentorChat({
 
         {/* Chat messages — fills remaining space */}
         <ScrollArea className="flex-1 min-h-0 h-full">
-          <div className="space-y-4 py-3 px-4 pr-5">
+          <div className="space-y-5 py-4 px-4 pr-5">
             {messages.length === 0 && !isThinking && (
               <div className="flex items-start gap-2.5 pt-2">
                 <div className="flex flex-col items-center gap-0.5 shrink-0 mt-0.5">
@@ -1167,7 +1167,7 @@ export default function MentorChat({
                   </span>
                 </div>
                 <div
-                  className="rounded-2xl rounded-tl-sm px-4 py-3 text-sm leading-relaxed"
+                  className="rounded-2xl rounded-tl-sm px-4 py-3 text-base leading-relaxed"
                   style={{
                     background:
                       "linear-gradient(160deg, #243447 0%, #1E293B 100%)",
@@ -1280,36 +1280,40 @@ export default function MentorChat({
         </AnimatePresence>
 
         {/* Input row */}
-        {state.stage !== "diagnosis" && state.stage !== "howto" && (
-          <div className="flex-none px-4 pb-3 flex gap-2">
-            <Input
-              data-ocid="mentor.input"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              disabled={isThinking}
-              placeholder={
-                isThinking
-                  ? "Buddy is thinking…"
-                  : state.stage === "initial"
-                    ? placeholder
-                    : "Type your answer or tap a button above…"
-              }
-              className="flex-1 rounded-xl border-border/60 bg-slate-800/80 text-sm h-12 px-5 focus-visible:ring-2 focus-visible:ring-sky-500/40 focus-visible:border-sky-500/40 placeholder:text-slate-500"
-            />
-            <Button
-              data-ocid="mentor.submit.button"
-              onClick={() => submitInput(inputValue)}
-              disabled={isThinking || !inputValue.trim()}
-              className="h-12 w-12 p-0 rounded-xl shrink-0"
-            >
-              <Send className="w-4 h-4" />
-            </Button>
-          </div>
-        )}
+        {state.stage !== "diagnosis" &&
+          state.stage !== "howto" &&
+          state.stage !== "identification" && (
+            <div className="flex-none px-4 pb-3 flex gap-2">
+              <Input
+                data-ocid="mentor.input"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                disabled={isThinking}
+                placeholder={
+                  isThinking
+                    ? "Buddy is thinking…"
+                    : state.stage === "initial"
+                      ? placeholder
+                      : "Type your answer or tap a button above…"
+                }
+                className="flex-1 rounded-xl bg-[#0D1B2E] border border-sky-900/50 text-[#F8FAFC] text-base h-12 px-5 focus-visible:ring-2 focus-visible:ring-sky-500/50 focus-visible:border-sky-500/40 placeholder:text-[#64748B]"
+              />
+              <Button
+                data-ocid="mentor.submit.button"
+                onClick={() => submitInput(inputValue)}
+                disabled={isThinking || !inputValue.trim()}
+                className="h-12 w-12 p-0 rounded-xl shrink-0"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
 
         {/* Start Over */}
-        {(state.stage === "diagnosis" || state.stage === "howto") && (
+        {(state.stage === "diagnosis" ||
+          state.stage === "howto" ||
+          state.stage === "identification") && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1473,35 +1477,39 @@ export default function MentorChat({
           )}
       </AnimatePresence>
 
-      {state.stage !== "diagnosis" && state.stage !== "howto" && (
-        <div className="flex gap-2">
-          <Input
-            data-ocid="mentor.input"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={isThinking}
-            placeholder={
-              isThinking
-                ? "Buddy is thinking…"
-                : state.stage === "initial"
-                  ? placeholder
-                  : "Type your answer or tap a button above…"
-            }
-            className="flex-1 rounded-xl border-border/60 bg-slate-800/80 text-sm h-12 px-5 focus-visible:ring-2 focus-visible:ring-sky-500/40 focus-visible:border-sky-500/40 placeholder:text-muted-foreground/50"
-          />
-          <Button
-            data-ocid="mentor.submit.button"
-            onClick={() => submitInput(inputValue)}
-            disabled={isThinking || !inputValue.trim()}
-            className="h-11 w-11 p-0 rounded-xl shrink-0"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
-        </div>
-      )}
+      {state.stage !== "diagnosis" &&
+        state.stage !== "howto" &&
+        state.stage !== "identification" && (
+          <div className="flex gap-2">
+            <Input
+              data-ocid="mentor.input"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={isThinking}
+              placeholder={
+                isThinking
+                  ? "Buddy is thinking…"
+                  : state.stage === "initial"
+                    ? placeholder
+                    : "Type your answer or tap a button above…"
+              }
+              className="flex-1 rounded-xl bg-[#0D1B2E] border border-sky-900/50 text-[#F8FAFC] text-base h-12 px-5 focus-visible:ring-2 focus-visible:ring-sky-500/50 focus-visible:border-sky-500/40 placeholder:text-[#64748B]"
+            />
+            <Button
+              data-ocid="mentor.submit.button"
+              onClick={() => submitInput(inputValue)}
+              disabled={isThinking || !inputValue.trim()}
+              className="h-11 w-11 p-0 rounded-xl shrink-0"
+            >
+              <Send className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
 
-      {(state.stage === "diagnosis" || state.stage === "howto") && (
+      {(state.stage === "diagnosis" ||
+        state.stage === "howto" ||
+        state.stage === "identification") && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

@@ -1,37 +1,38 @@
-# HVAC Mentor AI — Buddy UI Full Upgrade
+# HVAC Mentor AI
 
 ## Current State
-- BuddyPage exists at `/pages/BuddyPage.tsx` with a dedicated tab layout
-- MentorChat is the main chat engine, used inside BuddyPage via `flex-1 min-h-0` container
-- MentorChat internally uses `ScrollArea` with fixed height `h-72` (non-compact) — does NOT fill parent
-- Buddy bubbles: `#1E293B` bg, `#F8FAFC` text — correct
-- User bubbles: oklch teal (~`#0EA5E9`) — needs exact `#0EA5E9` bg, `#FFFFFF` text
-- System/muted text: uses `oklch(var(--muted-foreground))` — needs to render as `#CBD5E1` on dark surfaces
-- Thinking state already exists with animated dots
-- Mode buttons (Diagnose/How-To/Identify Part) already exist in BuddyPage below input
-- BottomTabBar already exists with [Home][Buddy][Tools][Videos]
+The app is at Version 68. BuddyPage and MentorChat are implemented with full-screen layout, correct colors (#1E293B Buddy bubbles, #0EA5E9 user bubbles), breathing glow avatar, thinking state, quick mode buttons, and avatar consistency. The core structure is in place.
 
 ## Requested Changes (Diff)
 
 ### Add
-- `fullscreen` prop to MentorChat that makes it fill parent height (flex col, ScrollArea becomes flex-1)
+- Larger text size in chat bubbles (text-base / 16px minimum) for field readability
+- More generous vertical spacing between messages (gap-5 instead of gap-4)
+- `identification` stage should show a "Start Over" button when done (same as `howto`/`diagnosis`)
+- Input placeholder text color should be clearly readable (#94A3B8 instead of muted)
+- Buddy 'thinking' dots should be sky blue (#38BDF8) to match brand
 
 ### Modify
-- MentorChat: accept `fullscreen?: boolean` prop; when true, root becomes `h-full flex flex-col`, progress/input sections are `flex-none`, ScrollArea becomes `flex-1 min-h-0` with `h-full`
-- MentorChat: UserBubble color → exact `#0EA5E9` background, `#FFFFFF` text
-- MentorChat: all `color: 'oklch(var(--muted-foreground)...'` labels on dark surfaces → use literal `#CBD5E1` or `#94A3B8` for readability on dark backgrounds
-- BuddyPage: pass `fullscreen={true}` to MentorChat
-- BuddyPage: remove the hardcoded quick-mode buttons section below chat (since they overlap with BottomTabBar) — keep them ABOVE the input inside MentorChat OR keep in the dedicated area but ensure no double padding causing overlap. Currently there's `pb-[calc(0.5rem+56px)]` which accounts for the tab bar — keep that
-- Ensure the input area in BuddyPage full-screen mode doesn't get blocked by keyboard — use `env(safe-area-inset-bottom)` and ensure scroll area adjusts
+- MentorChat fullscreen: increase message text to `text-base leading-relaxed` for readability
+- BuddyPage header: ensure subtitle is `#94A3B8` (readable) not too faint
+- MentorChat input: text color should be `#F8FAFC`, placeholder `#64748B`
+- User bubble: ensure background is solid `#0EA5E9` with `#FFFFFF` text, no transparency issues
+- Buddy bubble: `#1E293B` bg, `#F8FAFC` text - ensure no CSS variable overrides
+- Quick reply buttons: ensure border is `rgba(56,189,248,0.3)` and text is `#F8FAFC`
+- System/label text across app: ensure it reads as `#CBD5E1` not near-white on light or near-invisible on dark
+- Remove `stage !== 'identification'` from Start Over condition so it shows for that stage too
 
 ### Remove
-- Nothing removed structurally
+- Nothing
 
 ## Implementation Plan
-1. Add `fullscreen` prop to MentorChat interface
-2. When `fullscreen=true`: wrap entire component in `h-full flex flex-col` div; make the chat ScrollArea section `flex-1 min-h-0` (height fills remaining space)
-3. Fix UserBubble: background `#0EA5E9`, text `#FFFFFF`
-4. Fix all muted label text in dark contexts (inside MentorChat): use `#94A3B8` explicitly instead of oklch CSS vars that may resolve to light-theme colors
-5. Thinking state text: ensure it uses `#CBD5E1` readable color
-6. BuddyPage: pass `fullscreen={true}` to MentorChat
-7. Validate build passes
+1. In `MentorChat.tsx`:
+   - Increase `text-sm` to `text-base` in `MentorBubble`, `UserBubble`, `ThinkingBubble` message text
+   - Increase spacing in fullscreen message list from `space-y-4` to `space-y-5`
+   - Add `identification` to the Start Over condition
+   - Fix thinking dots to use `#38BDF8` color
+   - Fix input placeholder color explicitly
+2. In `BuddyPage.tsx`:
+   - Ensure subtitle text has good readable contrast
+   - Ensure quick mode buttons are clearly readable
+3. Cross-check all text colors for contrast compliance on dark `#0F172A` background

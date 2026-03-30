@@ -54,7 +54,7 @@ export default function BuddyPage() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-white tracking-tight">
+              <span className="text-xl font-bold text-white tracking-tight">
                 Buddy
               </span>
               <span className="inline-flex items-center gap-1">
@@ -67,7 +67,7 @@ export default function BuddyPage() {
                 </span>
               </span>
             </div>
-            <p className="text-xs text-sky-300/60 font-medium mt-0.5">
+            <p className="text-xs text-sky-300/80 font-medium mt-0.5">
               Field Mentor • 15+ Years Experience
             </p>
           </div>
@@ -85,14 +85,14 @@ export default function BuddyPage() {
       </div>
 
       {/* Quick mode buttons */}
-      <div className="flex-none px-3 py-2 bg-[#0A1628] border-t border-sky-900/30 flex gap-2 justify-center pb-[calc(0.5rem+56px)]">
+      <div className="flex-none px-3 py-2 bg-[#0D1B2E] border-t border-sky-900/30 flex gap-2 justify-center pb-[calc(0.5rem+56px)]">
         {QUICK_MODES.map(({ id, label, icon: Icon, message }) => (
           <button
             key={id}
             data-ocid={`buddy.${id}.button`}
             type="button"
             onClick={() => triggerMode(message)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-800/80 border border-sky-500/25 text-sky-300 text-xs font-medium hover:border-sky-500/60 hover:bg-slate-700/80 active:scale-95 transition-all duration-150 whitespace-nowrap"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-slate-800/80 border border-sky-500/30 text-sky-200 text-xs font-semibold hover:border-sky-400/60 hover:bg-slate-700/80 active:scale-95 transition-all duration-150 whitespace-nowrap"
           >
             <Icon className="w-3.5 h-3.5 flex-none" />
             {label}
