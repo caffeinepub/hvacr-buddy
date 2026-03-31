@@ -3,41 +3,93 @@
 export interface ComponentIdentification {
   id: string;
   name: string;
+  category: string;
+  associatedSystem: string;
   keywords: string[];
-  whatItIs: string;
-  whatItLooksLike: string;
-  whereFound: string;
-  imageKey?: string; // matches tool/part image if available
+  definition: string; // simple 1-2 sentence definition
+  whatItLooksLike: string; // clear visual description
+  whereFound: string; // location in the system
+  whatItDoes: string; // function / role
+  // Only set when a verified image file exists. Never guess.
+  imageKey?: string;
+  // legacy compat
+  whatItIs?: string;
 }
 
 export const COMPONENT_IDENTIFICATIONS: ComponentIdentification[] = [
+  // ─ verified image: part-capacitor.dim_400x400.png ─
   {
     id: "capacitor",
     name: "Capacitor",
+    category: "Electrical",
+    associatedSystem: "Outdoor",
     keywords: ["capacitor", "run capacitor", "start capacitor", "dual run cap"],
-    whatItIs:
-      "A capacitor is an electrical component that stores and releases energy to help motors start and run efficiently. Most HVAC systems use a dual-run capacitor that supports both the compressor and fan motor simultaneously.",
+    definition:
+      "A capacitor is an electrical energy-storage device that helps motors start and run efficiently. Most HVAC systems use a dual-run capacitor that supports both the compressor and the condenser fan motor.",
     whatItLooksLike:
-      "It's a cylindrical or oval-shaped metal or plastic canister, typically silver, black, or blue. It has metal terminals on top labeled HERM (for the compressor), FAN (for the fan motor), and C (common). Sizes range from a small soda can to a large coffee thermos. A failed capacitor often looks bulged or swollen on top.",
+      "A cylindrical or oval metal/plastic canister, typically silver, black, or blue — ranging from soda-can to thermos size. The top has metal terminals labeled HERM (compressor), FAN, and C (common). A bad capacitor often looks bulged or swollen on top.",
     whereFound:
-      "Located inside the outdoor condenser unit. Open the side access panel — the capacitor is usually mounted near the contactor, attached to a bracket on the side wall of the cabinet.",
+      "Inside the outdoor condenser unit. Open the side access panel — the capacitor is mounted near the contactor on a bracket along the side wall of the cabinet.",
+    whatItDoes:
+      "Provides the starting boost and running support current that motors need. Without it, the compressor or fan motor will hum, struggle to start, or not run at all.",
     imageKey: "capacitor",
   },
+  // ─ verified image: part-contactor.dim_400x400.png ─
   {
     id: "contactor",
     name: "Contactor",
+    category: "Electrical",
+    associatedSystem: "Outdoor",
     keywords: ["contactor", "ac contactor", "hvac contactor"],
-    whatItIs:
-      "A contactor is an electrically operated switch that controls power to the compressor and outdoor fan motor. When the thermostat calls for cooling, it sends 24V to the contactor coil, which pulls in the contacts and allows 240V line power to flow through.",
+    definition:
+      "A contactor is an electrically operated high-voltage switch that controls power to the compressor and outdoor fan motor. When the thermostat calls for cooling, 24V closes the contactor and allows 240V to flow.",
     whatItLooksLike:
-      "It's a small rectangular electrical switch, about the size of a deck of cards. It has large screw terminals on the top (line side, L1/L2) and bottom (load side, T1/T2) for the high-voltage wires, and two smaller terminals on the side or bottom for the 24V control wires. The center has a visible plunger that pulls in when energized.",
+      "A small rectangular switch about the size of a deck of cards. Large screw terminals on top (L1/L2 line side) and bottom (T1/T2 load side) carry the high-voltage wires. Two smaller terminals accept the 24V control wires. A visible plunger in the center pulls in when energized.",
     whereFound:
-      "Located inside the outdoor condenser unit, typically in the lower corner near the electrical connections. Remove the side access panel and look for the component with heavy wires running to it.",
+      "Inside the outdoor condenser unit, typically in the lower corner near the electrical entry point. Remove the side access panel and look for the component with the heaviest wires.",
+    whatItDoes:
+      "Acts as the main power switch for the outdoor unit, opening and closing under thermostat command to start and stop the compressor and condenser fan motor.",
     imageKey: "contactor",
   },
+  // ─ no verified image for transformer ─
+  {
+    id: "transformer",
+    name: "Transformer",
+    category: "Electrical",
+    associatedSystem: "Indoor",
+    keywords: ["transformer", "control transformer", "24v transformer"],
+    definition:
+      "A transformer steps down 120V or 240V line voltage to the 24V signal used by the thermostat and all control circuits. It is the power source for the entire low-voltage control system.",
+    whatItLooksLike:
+      "A small rectangular or square block, usually black or gray, about the size of a large ice cube. It has two sets of wire leads — the primary side (high-voltage input) and the secondary side (24V output). A VA rating is printed on the label (common sizes: 40VA, 75VA).",
+    whereFound:
+      "Mounted inside the air handler or furnace cabinet, usually on the control board bracket or near the blower compartment.",
+    whatItDoes:
+      "Converts line voltage down to 24V AC to power the thermostat, contactor coil, control board, and all low-voltage components. If it fails, nothing in the control system will function.",
+  },
+  // ─ verified image: part-thermostat.dim_400x400.png ─
+  {
+    id: "thermostat",
+    name: "Thermostat",
+    category: "Electrical",
+    associatedSystem: "Indoor",
+    keywords: ["thermostat", "tstat", "t-stat", "wall thermostat"],
+    definition:
+      "The thermostat is the control center for the HVAC system. It monitors indoor temperature and sends low-voltage signals to start or stop heating and cooling.",
+    whatItLooksLike:
+      "A flat rectangular or square device mounted on an interior wall, typically white, gray, or black. Modern units have a digital display and touchscreen; older units use a rotary dial. A backplate behind it connects to thin 18 AWG low-voltage wires.",
+    whereFound:
+      "Mounted on an interior wall in a central location — hallway, living room, or stairwell. Should not be on an exterior wall or near heat sources.",
+    whatItDoes:
+      "Reads indoor temperature, compares it to the setpoint, and sends on/off signals to the heating and cooling equipment. It is the user's only interface for controlling the system.",
+    imageKey: "thermostat",
+  },
+  // ─ verified image: part-evaporator-coil.dim_400x400.png ─
   {
     id: "evaporator_coil",
     name: "Evaporator Coil",
+    category: "Refrigerant",
+    associatedSystem: "Indoor",
     keywords: [
       "evaporator coil",
       "evaporator",
@@ -45,144 +97,247 @@ export const COMPONENT_IDENTIFICATIONS: ComponentIdentification[] = [
       "a coil",
       "a-coil",
     ],
-    whatItIs:
-      "The evaporator coil is the indoor heat exchanger in your HVAC system. Refrigerant flows through it at low pressure and temperature, absorbing heat from the air blowing across it. This is what actually cools your home.",
+    definition:
+      "The evaporator coil is the indoor heat exchanger where refrigerant absorbs heat from the air inside your home. It is what actually cools the circulated air.",
     whatItLooksLike:
-      "It looks like a triangular or A-shaped set of aluminum fins with copper tubes running through them. The fins are very thin and closely spaced — similar to a car radiator but shaped like an upside-down V. It sits inside a metal housing (the coil cabinet) and connects to the refrigerant lines.",
+      "A triangular or A-shaped assembly of thin aluminum fins with copper tubes running through them — similar to a car radiator shaped like an upside-down V. It sits inside a metal housing connected to the refrigerant lines.",
     whereFound:
-      "Located in the air handler or furnace cabinet, directly above the blower motor. It sits in the supply air path so all the air passes through it before reaching the ducts.",
+      "In the air handler or furnace cabinet, directly above the blower motor. All indoor air passes through it before reaching the supply ducts.",
+    whatItDoes:
+      "Refrigerant enters at low pressure and temperature, absorbing heat from warm indoor air blown across the fins. This cools the air and evaporates the refrigerant into a vapor before it heads to the compressor.",
     imageKey: "evaporator_coil",
   },
+  // ─ verified image: component-condenser-coil-transparent.dim_400x300.png ─
+  {
+    id: "condenser_coil",
+    name: "Condenser Coil",
+    category: "Refrigerant",
+    associatedSystem: "Outdoor",
+    keywords: ["condenser coil", "outdoor coil", "condenser"],
+    definition:
+      "The condenser coil is the outdoor heat exchanger where refrigerant releases the heat it absorbed indoors. It is the outdoor counterpart to the evaporator coil.",
+    whatItLooksLike:
+      "A large grid of thin aluminum fins with copper tubes, wrapped around three or four sides of the outdoor unit cabinet. The closely spaced fins resemble a car radiator. The surface area is much larger than the evaporator coil.",
+    whereFound:
+      "Wrapped around the outside walls of the outdoor condenser unit. The fin surface is visible from outside the cabinet without removing any panels.",
+    whatItDoes:
+      "Hot high-pressure refrigerant vapor from the compressor flows through the coil. The condenser fan pulls outdoor air across the fins, removing heat and causing the refrigerant to condense into liquid so it can return indoors to absorb more heat.",
+    imageKey: "condenser_coil",
+  },
+  // ─ verified image: part-compressor.dim_400x400.png ─
   {
     id: "compressor",
     name: "Compressor",
+    category: "Refrigerant",
+    associatedSystem: "Outdoor",
     keywords: ["compressor", "ac compressor", "hvac compressor"],
-    whatItIs:
-      "The compressor is the heart of the refrigeration system. It pumps refrigerant through the system by compressing low-pressure refrigerant vapor into high-pressure vapor, which then flows to the condenser coil to release heat outside.",
+    definition:
+      "The compressor is the heart of the refrigeration system. It pressurizes the refrigerant vapor so the system can move heat from indoors to outdoors.",
     whatItLooksLike:
-      "It's a large black or gray cylindrical or dome-shaped metal component — about the size of a small fire extinguisher to a 5-gallon bucket, depending on the system size. It has refrigerant line connections on top (suction line, larger diameter; discharge line, smaller diameter) and electrical terminals under a cover cap.",
+      "A large black or gray dome-shaped or cylindrical metal component — about the size of a small fire extinguisher up to a 5-gallon bucket. It has a large suction line and a smaller discharge line on top, plus an electrical terminal block under a cover cap.",
     whereFound:
-      "Located inside the outdoor condenser unit, sitting in the lower section of the cabinet. It's the largest single component inside the outdoor unit.",
+      "Inside the outdoor condenser unit, sitting in the lower section of the cabinet. It is the largest single component inside the outdoor unit.",
+    whatItDoes:
+      "Compresses low-pressure refrigerant vapor from the evaporator into high-pressure, high-temperature vapor and pumps it to the condenser coil. This compression is what drives the entire heat transfer cycle.",
     imageKey: "compressor",
   },
-  {
-    id: "thermostat",
-    name: "Thermostat",
-    keywords: ["thermostat", "tstat", "t-stat", "wall thermostat"],
-    whatItIs:
-      "The thermostat is the control interface for the HVAC system. It monitors indoor temperature and sends signals to the system to heat or cool as needed. Modern smart thermostats can be programmed, controlled remotely, and track energy usage.",
-    whatItLooksLike:
-      "It's a flat rectangular or square device mounted on the interior wall, typically in a central hallway or living area. It has a display screen (digital on modern units), a few buttons or a touchscreen, and a backplate that connects to low-voltage control wires (usually 18 AWG). Common colors are white, gray, or black.",
-    whereFound:
-      "Mounted on an interior wall, usually in a central location of the home — hallway, living room, or stairwell. Avoid exterior walls and locations near heat sources, which can cause false readings.",
-  },
-  {
-    id: "air_filter",
-    name: "Air Filter",
-    keywords: ["air filter", "filter", "furnace filter", "ac filter"],
-    whatItIs:
-      "The air filter traps dust, pollen, pet dander, and debris before the air enters the blower and passes over the evaporator coil. It protects the system's internal components and improves indoor air quality.",
-    whatItLooksLike:
-      "A flat rectangular frame (cardboard or plastic) filled with a pleated or fiberglass filtering media. The size is printed on the frame — e.g., 16x25x1 or 20x25x4. Pleated filters have a zig-zag pattern and are typically white or off-white when new, turning gray as they collect debris.",
-    whereFound:
-      "Either at the return air grille on the wall or ceiling, or at the air handler/furnace cabinet where the return duct connects. There's usually only one filter per system, but some larger systems have two.",
-    imageKey: "air_filter",
-  },
-  {
-    id: "multimeter",
-    name: "Multimeter",
-    keywords: ["multimeter", "volt meter", "voltmeter", "meter"],
-    whatItIs:
-      "A multimeter is a diagnostic tool that measures voltage, resistance, continuity, and capacitance. It's the most important diagnostic instrument for an HVAC technician — used to check electrical components, verify power, and test parts without guessing.",
-    whatItLooksLike:
-      "A handheld rectangular device with a digital display, a large rotary dial in the center for selecting measurement modes, and two probe ports at the bottom. It comes with a red probe (positive) and black probe (negative/common). Most HVAC meters are yellow or bright-colored for visibility.",
-    whereFound:
-      "In the technician's tool bag. Not a system component — it's a test instrument brought to the job site.",
-    imageKey: "multimeter",
-  },
-  {
-    id: "manifold_gauge",
-    name: "Manifold Gauge Set",
-    keywords: [
-      "manifold gauge",
-      "manifold gauges",
-      "gauge set",
-      "refrigerant gauges",
-      "gauges",
-    ],
-    whatItIs:
-      "A manifold gauge set measures refrigerant pressure on both the high side and low side of the system. Technicians use it to diagnose refrigerant charge issues, check for restrictions, and charge or recover refrigerant.",
-    whatItLooksLike:
-      "A set of two or three large pressure gauges (blue for low side, red for high side) connected to a manifold block in the center. Three colored hoses extend from the manifold — blue (low side), red (high side), and yellow (utility/center). Gauges have scales for multiple refrigerant types around the dial.",
-    whereFound:
-      "In the technician's tool bag. Connected to the system's service ports (Schrader valves) on the suction and liquid lines during diagnostics.",
-    imageKey: "manifold_gauge_set",
-  },
-  {
-    id: "reversing_valve",
-    name: "Reversing Valve",
-    keywords: [
-      "reversing valve",
-      "reverse valve",
-      "4-way valve",
-      "four way valve",
-    ],
-    whatItIs:
-      "A reversing valve is a component found only in heat pumps. It reverses the direction of refrigerant flow to switch the system between heating and cooling modes. In heating mode, it redirects the refrigerant so the outdoor coil acts as the evaporator and the indoor coil acts as the condenser.",
-    whatItLooksLike:
-      "A cylindrical brass or copper valve, about 6–8 inches long, with four refrigerant line connections — one on each end and two on the side. It has a small solenoid coil (an electromagnet) mounted on top that shifts an internal slide to change refrigerant direction. The body is usually gold or copper-colored.",
-    whereFound:
-      "Located on the outdoor unit of a heat pump system, connected directly to the refrigerant lines near the compressor.",
-  },
+  // ─ no verified image for TXV ─
   {
     id: "txv",
     name: "TXV (Thermostatic Expansion Valve)",
+    category: "Refrigerant",
+    associatedSystem: "Indoor",
     keywords: [
       "txv",
       "expansion valve",
       "thermostatic expansion valve",
       "metering device",
     ],
-    whatItIs:
-      "The TXV (Thermostatic Expansion Valve) is the metering device that controls how much refrigerant enters the evaporator coil. It maintains the correct superheat by opening and closing in response to temperature and pressure at the evaporator outlet.",
+    definition:
+      "The TXV (Thermostatic Expansion Valve) is the metering device that precisely controls how much liquid refrigerant enters the evaporator coil, balancing the refrigerant charge to the system load.",
     whatItLooksLike:
-      "A small brass or copper valve, roughly the size of a large thumb, with refrigerant line connections on two ends (inlet and outlet) and a thin capillary tube that runs to a sensing bulb. The sensing bulb is a small copper bulb clamped to the suction line near the coil outlet. Some TXVs also have an external equalizer port.",
+      "A small brass or copper valve roughly the size of a large thumb, with refrigerant fittings on two ends (inlet and outlet) and a thin capillary tube running to a sensing bulb — a small copper bulb clamped tightly to the suction line just after the coil outlet, usually wrapped in foam insulation.",
     whereFound:
-      "Located at the inlet of the evaporator coil, usually inside the air handler cabinet. The sensing bulb is clamped to the suction line just after the coil outlet.",
+      "At the inlet of the evaporator coil, inside the air handler cabinet. The sensing bulb is clamped to the suction line just past the coil outlet.",
+    whatItDoes:
+      "Acts as a variable throttle that restricts refrigerant flow to match the cooling load. It reads suction line temperature via the sensing bulb and opens or closes to maintain correct superheat, protecting the compressor from liquid refrigerant.",
   },
+  // ─ no verified image for reversing valve ─
+  {
+    id: "reversing_valve",
+    name: "Reversing Valve",
+    category: "Refrigerant",
+    associatedSystem: "Outdoor",
+    keywords: [
+      "reversing valve",
+      "reverse valve",
+      "4-way valve",
+      "four way valve",
+    ],
+    definition:
+      "A reversing valve is found only in heat pumps. It switches the direction of refrigerant flow so the system can operate in both heating and cooling modes.",
+    whatItLooksLike:
+      "A cylindrical brass or copper valve, about 6–8 inches long, with four refrigerant line connections — one on each end and two on the side. A small solenoid coil (electromagnet) is mounted on top that shifts an internal slide to reverse the flow direction. The body is typically gold or copper-colored.",
+    whereFound:
+      "On the outdoor unit of a heat pump system, connected directly to the refrigerant lines near the compressor.",
+    whatItDoes:
+      "Redirects refrigerant flow between heating and cooling modes. In heating mode, refrigerant flows in reverse — the outdoor coil becomes the evaporator and the indoor coil becomes the condenser, extracting heat from outdoor air and releasing it indoors.",
+  },
+  // ─ no verified image for filter drier ─
+  {
+    id: "filter_drier",
+    name: "Filter Drier",
+    category: "Refrigerant",
+    associatedSystem: "Outdoor",
+    keywords: [
+      "filter drier",
+      "filter dryer",
+      "drier",
+      "dryer",
+      "liquid line drier",
+    ],
+    definition:
+      "A filter drier removes moisture, acid, and contaminants from the refrigerant before it reaches the metering device, protecting the system from internal corrosion and ice blockages.",
+    whatItLooksLike:
+      "A small cylindrical metal canister, typically 3–6 inches long and 1–2 inches in diameter, copper or silver in color, with flare or sweat fittings on each end. An arrow on the body shows the required refrigerant flow direction.",
+    whereFound:
+      "In-line on the liquid (smaller) refrigerant line, usually near the outdoor unit or at the service valve. Always installed on the high-pressure liquid side before the expansion device.",
+    whatItDoes:
+      "Acts as the system's internal filter. The desiccant core absorbs moisture that causes acid and freeze-ups, while the screen catches debris. Always replaced after a compressor burnout or any time the system is opened.",
+  },
+  // ─ no verified image for accumulator ─
+  {
+    id: "accumulator",
+    name: "Accumulator",
+    category: "Refrigerant",
+    associatedSystem: "Outdoor",
+    keywords: ["accumulator", "suction accumulator"],
+    definition:
+      "An accumulator is a safety device on the suction line that catches any liquid refrigerant before it can reach the compressor. Liquid entering a compressor causes catastrophic damage.",
+    whatItLooksLike:
+      "An upright cylindrical metal tank, typically 6–12 inches tall and 3–5 inches in diameter, installed in-line on the large suction refrigerant line. It looks like a small boiler or propane canister with a steel or gray finish.",
+    whereFound:
+      "On the suction line between the evaporator coil and the compressor, usually mounted near the outdoor unit. Common on heat pumps and systems prone to liquid floodback.",
+    whatItDoes:
+      "Any liquid refrigerant entering the accumulator settles to the bottom while only vapor is drawn off through the outlet tube to the compressor. This prevents liquid slugging — one of the most common causes of compressor failure.",
+  },
+  // ─ no verified image for blower motor ─
   {
     id: "blower_motor",
     name: "Blower Motor",
+    category: "Airflow",
+    associatedSystem: "Indoor",
     keywords: [
       "blower motor",
       "blower",
       "indoor fan motor",
       "air handler motor",
     ],
-    whatItIs:
-      "The blower motor drives the squirrel-cage blower wheel inside the air handler or furnace. It circulates indoor air across the evaporator coil (for cooling) or heat exchanger (for heating) and pushes conditioned air into the duct system.",
+    definition:
+      "The blower motor drives the squirrel-cage fan wheel inside the air handler or furnace that circulates air throughout the home.",
     whatItLooksLike:
-      "A cylindrical electric motor, typically 4–8 inches in diameter, mounted inside the air handler cabinet. The motor shaft connects directly to a squirrel-cage blower wheel — a cylindrical drum with many small curved blades. Most are single-speed or multi-speed, and newer systems use variable-speed ECM motors that are narrower and more efficient.",
+      "A cylindrical electric motor, typically 4–8 inches in diameter, mounted inside the air handler cabinet. The shaft connects to a squirrel-cage blower wheel — a cylindrical drum with many curved blades that resembles a hamster wheel. ECM variable-speed motors are slimmer and more modern.",
     whereFound:
-      "Located in the lower section of the air handler or furnace cabinet, below the evaporator coil. The motor is mounted in a housing that holds the blower wheel.",
+      "In the lower section of the air handler or furnace cabinet, below the evaporator coil, inside the blower housing assembly.",
+    whatItDoes:
+      "Pulls return air from the home, forces it across the evaporator coil or heat exchanger, and pushes conditioned air into the supply ducts. Without it, no air moves through the system.",
   },
+  // ─ no verified image for condenser fan motor ─
   {
     id: "condenser_fan_motor",
     name: "Condenser Fan Motor",
+    category: "Airflow",
+    associatedSystem: "Outdoor",
     keywords: [
       "condenser fan",
       "outdoor fan",
       "condenser fan motor",
       "fan motor",
     ],
-    whatItIs:
-      "The condenser fan motor drives the propeller fan blade on top of the outdoor unit. It pulls air through the condenser coil to dissipate heat, allowing the refrigerant to condense from a hot vapor into a liquid.",
+    definition:
+      "The condenser fan motor drives the propeller fan blade on top of the outdoor unit to pull air through the condenser coil and dissipate heat.",
     whatItLooksLike:
-      "A round electric motor, about 3–5 inches in diameter, mounted in the top of the outdoor unit beneath the fan grille. It has a vertical shaft that the propeller fan blade mounts to. The motor body is gray or black with a few electrical wire leads coming out of the side.",
+      "A round electric motor, about 3–5 inches in diameter, mounted in the top-center of the outdoor unit beneath the fan grille. It has a vertical shaft for the propeller blade and several wire leads from the side. The body is typically gray or black.",
     whereFound:
-      "Mounted in the top center of the outdoor condenser unit, directly below the fan grille. The fan blades sit on the motor shaft and push air upward and out of the unit.",
+      "Mounted in the top of the outdoor condenser unit, directly below the fan grille. The propeller sits on the motor shaft and pushes air upward out of the unit.",
+    whatItDoes:
+      "Keeps the condenser coil cool by pulling outdoor air across its fins. Without airflow, head pressure climbs and the system trips on high-pressure lockout.",
+  },
+  // ─ no verified image for pressure switch ─
+  {
+    id: "pressure_switch",
+    name: "Pressure Switch",
+    category: "Electrical",
+    associatedSystem: "Outdoor",
+    keywords: [
+      "pressure switch",
+      "high pressure switch",
+      "low pressure switch",
+      "hp switch",
+      "lp switch",
+    ],
+    definition:
+      "A pressure switch is a safety device that monitors refrigerant pressure and shuts the system down if pressure goes too high or too low. Most systems have both a high-pressure and a low-pressure switch.",
+    whatItLooksLike:
+      "A small cylindrical or disc-shaped electrical switch, about the size of a large coin or small spool, with a short refrigerant port that threads into the line and two electrical wire terminals. High-pressure switches are often red; low-pressure switches are often blue.",
+    whereFound:
+      "Threaded into the refrigerant lines on the outdoor unit. The high-pressure switch is on the discharge (smaller) line; the low-pressure switch is on the suction (larger) line.",
+    whatItDoes:
+      "Continuously monitors system pressure. If high pressure exceeds the cutout (e.g., dirty condenser coil, failed fan), it opens its contact and shuts down the compressor. If low pressure drops below cutout (e.g., low refrigerant), it does the same.",
+  },
+  // ─ no verified image for float switch ─
+  {
+    id: "float_switch",
+    name: "Float Switch",
+    category: "Electrical",
+    associatedSystem: "Indoor",
+    keywords: [
+      "float switch",
+      "condensate float switch",
+      "drain safety switch",
+      "float",
+    ],
+    definition:
+      "A float switch is a safety device in the condensate drain pan that shuts the system off if the pan fills with water, preventing overflow and water damage.",
+    whatItLooksLike:
+      "A small plastic device about the size of a matchbox with a buoyant float arm or ball on one end and two electrical wires coming from the body. Some versions clip into the drain line; others sit inside the secondary drain pan beneath the air handler.",
+    whereFound:
+      "In the primary or secondary condensate drain pan under the indoor air handler or evaporator coil cabinet. Some installs place it inline in the condensate drain line.",
+    whatItDoes:
+      "As condensate water rises due to a clogged drain line, the float lifts and opens the switch contact, cutting power to the system. This stops cooling and prevents the pan from overflowing onto ceilings or floors.",
+  },
+  // ─ verified image: part-air-filter.dim_400x400.png (extra, not in required list) ─
+  {
+    id: "air_filter",
+    name: "Air Filter",
+    category: "Airflow",
+    associatedSystem: "Indoor",
+    keywords: ["air filter", "filter", "furnace filter", "ac filter"],
+    definition:
+      "The air filter traps dust, pollen, pet dander, and debris before air enters the blower and passes over the evaporator coil, protecting internal components and improving air quality.",
+    whatItLooksLike:
+      "A flat rectangular frame (cardboard or plastic) filled with pleated or fiberglass filtering media. The size is printed on the frame edge (e.g., 16x25x1). Pleated filters are white or off-white when new, turning gray as they collect debris.",
+    whereFound:
+      "Either at the return air grille on the wall or ceiling, or at the air handler/furnace cabinet where the return duct connects.",
+    whatItDoes:
+      "Catches airborne particles before they reach the coil and blower. A clogged filter restricts airflow and is the single most common cause of reduced system performance and coil icing.",
+    imageKey: "air_filter",
   },
 ];
+
+// ─── Verified image map ───────────────────────────────────────────────────────
+// Only keys that map to a real, confirmed file in public/assets/generated/
+// If the imageKey is not in this map, NO image is shown. Never guess.
+export const VERIFIED_PART_IMAGES: Record<string, string> = {
+  capacitor: "/assets/generated/part-capacitor.dim_400x400.png",
+  contactor: "/assets/generated/part-contactor.dim_400x400.png",
+  thermostat: "/assets/generated/part-thermostat.dim_400x400.png",
+  evaporator_coil: "/assets/generated/part-evaporator-coil.dim_400x400.png",
+  compressor: "/assets/generated/part-compressor.dim_400x400.png",
+  air_filter: "/assets/generated/part-air-filter.dim_400x400.png",
+  condenser_coil:
+    "/assets/generated/component-condenser-coil-transparent.dim_400x300.png",
+};
 
 // ─── Identification Intent Detection ─────────────────────────────────────────
 
@@ -197,7 +352,6 @@ const IDENTIFICATION_PHRASES = [
   "what does an",
   "what does the",
   "what does it look like",
-  "what does a",
   "where is a",
   "where is the",
   "where is an",
@@ -219,20 +373,14 @@ export function detectIdentificationQuery(
   input: string,
 ): ComponentIdentification | null {
   const lower = input.toLowerCase().trim();
-
   const hasIntent = IDENTIFICATION_PHRASES.some((phrase) =>
     lower.includes(phrase),
   );
-
   if (!hasIntent) return null;
-
   for (const component of COMPONENT_IDENTIFICATIONS) {
     for (const keyword of component.keywords) {
-      if (lower.includes(keyword)) {
-        return component;
-      }
+      if (lower.includes(keyword)) return component;
     }
   }
-
   return null;
 }

@@ -26,6 +26,7 @@ import {
 import { type HowToGuide, detectHowToQuery } from "@/utils/howToLogic";
 import {
   type ComponentIdentification,
+  VERIFIED_PART_IMAGES,
   detectIdentificationQuery,
 } from "@/utils/identificationLogic";
 import {
@@ -371,7 +372,7 @@ function MentorBubble({
             background: "linear-gradient(160deg, #243447 0%, #1E293B 100%)",
             boxShadow: "0 2px 8px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.2)",
             border: "1px solid rgba(56,189,248,0.15)",
-            color: "#F8FAFC",
+            color: "#FFFFFF",
             maxWidth: "85%",
           }}
         >
@@ -590,28 +591,22 @@ interface EnrichedMessage extends MentorMessage {
 function IdentificationCard({
   component,
 }: { component: ComponentIdentification }) {
-  const imageMap: Record<string, string> = {
-    capacitor: "/assets/generated/part-capacitor.dim_400x300.png",
-    contactor: "/assets/generated/part-contactor.dim_400x300.png",
-    evaporator_coil: "/assets/generated/part-evaporator-coil.dim_400x300.png",
-    compressor: "/assets/generated/part-compressor.dim_400x300.png",
-    air_filter: "/assets/generated/part-air-filter.dim_400x300.png",
-    multimeter: "/assets/generated/tool-multimeter.dim_400x300.png",
-    manifold_gauge_set:
-      "/assets/generated/tool-manifold-gauge-set.dim_400x300.png",
-  };
-
-  const imageSrc = component.imageKey ? imageMap[component.imageKey] : null;
+  // Strict image map: only show image if imageKey is in VERIFIED_PART_IMAGES.
+  // Never guess. If not 100% confirmed, imageSrc is null and no image is rendered.
+  const imageSrc =
+    component.imageKey && VERIFIED_PART_IMAGES[component.imageKey]
+      ? VERIFIED_PART_IMAGES[component.imageKey]
+      : null;
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-4"
+      className="space-y-3"
       data-ocid="mentor.identification.card"
     >
-      {/* Header with Buddy avatar */}
+      {/* Buddy bubble — part name + meta */}
       <div className="flex items-start gap-2.5">
         <div className="flex flex-col items-center gap-0.5 shrink-0 mt-0.5">
           <div className="w-7 h-7 rounded-full overflow-hidden border border-sky-500/50 buddy-avatar-glow">
@@ -634,81 +629,113 @@ function IdentificationCard({
             background: "linear-gradient(160deg, #243447 0%, #1E293B 100%)",
             boxShadow: "0 2px 8px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.2)",
             border: "1px solid rgba(56,189,248,0.15)",
-            color: "#F8FAFC",
+            color: "#FFFFFF",
           }}
         >
           {component.name}
+          <span
+            className="ml-2 text-xs font-normal"
+            style={{ color: "#94A3B8" }}
+          >
+            {component.category} • {component.associatedSystem} Unit
+          </span>
         </div>
       </div>
 
-      {/* Main card */}
+      {/* Structured 4-section card */}
       <div
         className="rounded-xl overflow-hidden ml-9"
         style={{
-          background: "oklch(var(--card) / 1)",
-          border: "1px solid oklch(var(--border) / 1)",
+          background: "#0F1C2D",
+          border: "1px solid rgba(56,189,248,0.18)",
         }}
       >
+        {/* Verified image only — no fallback, no guessing */}
         {imageSrc && (
           <div
-            className="w-full overflow-hidden"
-            style={{ maxHeight: "160px" }}
+            className="w-full bg-[#0A1628]"
+            style={{ maxHeight: "170px", overflow: "hidden" }}
           >
             <img
               src={imageSrc}
               alt={component.name}
-              className="w-full object-cover"
-              style={{ maxHeight: "160px" }}
+              className="w-full object-contain"
+              style={{ maxHeight: "170px" }}
               onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
+                const parent = (e.target as HTMLImageElement).parentElement;
+                if (parent) parent.style.display = "none";
               }}
             />
           </div>
         )}
 
+        {/* 1 — Definition */}
         <div className="px-4 pt-4 pb-3">
           <p
-            className="text-xs font-semibold uppercase tracking-wider mb-1.5"
-            style={{ color: "#94A3B8" }}
+            className="text-[10px] font-bold uppercase tracking-widest mb-2"
+            style={{ color: "#38BDF8" }}
           >
-            What It Is
+            1 • Definition
           </p>
-          <p className="text-base leading-relaxed" style={{ color: "#F8FAFC" }}>
-            {component.whatItIs}
+          <p
+            className="text-base leading-relaxed font-medium"
+            style={{ color: "#FFFFFF" }}
+          >
+            {component.definition}
           </p>
         </div>
 
         <div
           className="mx-4"
-          style={{ height: "1px", background: "oklch(var(--border) / 1)" }}
+          style={{ height: "1px", background: "rgba(56,189,248,0.12)" }}
         />
 
+        {/* 2 — What it looks like */}
         <div className="px-4 py-3">
           <p
-            className="text-xs font-semibold uppercase tracking-wider mb-1.5"
-            style={{ color: "#94A3B8" }}
+            className="text-[10px] font-bold uppercase tracking-widest mb-2"
+            style={{ color: "#38BDF8" }}
           >
-            What It Looks Like
+            2 • What It Looks Like
           </p>
-          <p className="text-base leading-relaxed" style={{ color: "#CBD5E1" }}>
+          <p className="text-base leading-relaxed" style={{ color: "#FFFFFF" }}>
             {component.whatItLooksLike}
           </p>
         </div>
 
         <div
           className="mx-4"
-          style={{ height: "1px", background: "oklch(var(--border) / 1)" }}
+          style={{ height: "1px", background: "rgba(56,189,248,0.12)" }}
         />
 
+        {/* 3 — Where it's located */}
+        <div className="px-4 py-3">
+          <p
+            className="text-[10px] font-bold uppercase tracking-widest mb-2"
+            style={{ color: "#38BDF8" }}
+          >
+            3 • Where It's Located
+          </p>
+          <p className="text-base leading-relaxed" style={{ color: "#FFFFFF" }}>
+            {component.whereFound}
+          </p>
+        </div>
+
+        <div
+          className="mx-4"
+          style={{ height: "1px", background: "rgba(56,189,248,0.12)" }}
+        />
+
+        {/* 4 — What it does */}
         <div className="px-4 py-3 pb-4">
           <p
-            className="text-xs font-semibold uppercase tracking-wider mb-1.5"
-            style={{ color: "#94A3B8" }}
+            className="text-[10px] font-bold uppercase tracking-widest mb-2"
+            style={{ color: "#38BDF8" }}
           >
-            Where It's Found
+            4 • What It Does
           </p>
-          <p className="text-base leading-relaxed" style={{ color: "#CBD5E1" }}>
-            {component.whereFound}
+          <p className="text-base leading-relaxed" style={{ color: "#FFFFFF" }}>
+            {component.whatItDoes}
           </p>
         </div>
       </div>
@@ -1174,7 +1201,7 @@ export default function MentorChat({
                     boxShadow:
                       "0 2px 8px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.2)",
                     border: "1px solid rgba(56,189,248,0.15)",
-                    color: "#F8FAFC",
+                    color: "#FFFFFF",
                     maxWidth: "85%",
                   }}
                 >
@@ -1297,7 +1324,7 @@ export default function MentorChat({
                       ? placeholder
                       : "Type your answer or tap a button above…"
                 }
-                className="flex-1 rounded-xl bg-[#0D1B2E] border border-sky-900/50 text-[#F8FAFC] text-base h-12 px-5 focus-visible:ring-2 focus-visible:ring-sky-500/50 focus-visible:border-sky-500/40 placeholder:text-[#64748B]"
+                className="flex-1 rounded-xl bg-[#0D1B2E] border border-sky-900/50 text-[#F8FAFC] text-base h-12 px-5 focus-visible:ring-2 focus-visible:ring-sky-500/50 focus-visible:border-sky-500/40 placeholder:text-[#94A3B8]"
               />
               <Button
                 data-ocid="mentor.submit.button"
@@ -1494,7 +1521,7 @@ export default function MentorChat({
                     ? placeholder
                     : "Type your answer or tap a button above…"
               }
-              className="flex-1 rounded-xl bg-[#0D1B2E] border border-sky-900/50 text-[#F8FAFC] text-base h-12 px-5 focus-visible:ring-2 focus-visible:ring-sky-500/50 focus-visible:border-sky-500/40 placeholder:text-[#64748B]"
+              className="flex-1 rounded-xl bg-[#0D1B2E] border border-sky-900/50 text-[#F8FAFC] text-base h-12 px-5 focus-visible:ring-2 focus-visible:ring-sky-500/50 focus-visible:border-sky-500/40 placeholder:text-[#94A3B8]"
             />
             <Button
               data-ocid="mentor.submit.button"
