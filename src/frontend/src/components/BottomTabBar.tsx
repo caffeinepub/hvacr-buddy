@@ -1,11 +1,12 @@
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { Bot, House, Video, Wrench } from "lucide-react";
+import { BookOpen, Bot, House, Video, Wrench } from "lucide-react";
 
 const tabs = [
   { label: "Home", icon: House, path: "/" },
   { label: "Buddy", icon: Bot, path: "/buddy" },
   { label: "Tools", icon: Wrench, path: "/tools" },
   { label: "Videos", icon: Video, path: "/videos" },
+  { label: "Resources", icon: BookOpen, path: "/resources" },
 ];
 
 export default function BottomTabBar() {
@@ -16,7 +17,7 @@ export default function BottomTabBar() {
   return (
     <nav
       data-ocid="bottom_tab_bar"
-      className="fixed bottom-0 left-0 right-0 z-50 h-14 bg-[#0A1628] border-t border-sky-900/40 flex items-stretch"
+      className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around bg-[#0A1628] border-t border-sky-900/30"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       {tabs.map(({ label, icon: Icon, path }) => {
@@ -25,28 +26,16 @@ export default function BottomTabBar() {
         return (
           <button
             key={path}
-            data-ocid={`nav.${label.toLowerCase()}.link`}
             type="button"
+            data-ocid={`nav.${label.toLowerCase()}.link`}
             onClick={() => navigate({ to: path })}
-            className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-all duration-150 ${
-              isActive ? "text-sky-400" : "text-slate-500 hover:text-slate-300"
-            }`}
+            className="flex flex-col items-center gap-0.5 py-2 px-2 min-w-0 flex-1 transition-colors"
+            style={{ color: isActive ? "#38BDF8" : "#475569" }}
           >
-            <Icon
-              className={`w-5 h-5 transition-transform duration-150 ${
-                isActive ? "scale-110" : ""
-              }`}
-            />
-            <span
-              className={`text-[10px] font-medium leading-none ${
-                isActive ? "text-sky-400" : "text-slate-500"
-              }`}
-            >
+            <Icon className="w-5 h-5" />
+            <span className="text-[10px] font-semibold leading-none truncate">
               {label}
             </span>
-            {isActive && (
-              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-sky-400 rounded-full" />
-            )}
           </button>
         );
       })}

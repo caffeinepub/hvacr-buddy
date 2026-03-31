@@ -14,6 +14,7 @@ import JobsPage from "./pages/JobsPage";
 import LearnPage from "./pages/LearnPage";
 import LoginPage from "./pages/LoginPage";
 import ProfileSetup from "./pages/ProfileSetup";
+import ResourcesPage from "./pages/ResourcesPage";
 import ToolsPage from "./pages/ToolsPage";
 import VideosPage from "./pages/VideosPage";
 
@@ -57,6 +58,12 @@ const videosRoute = createRoute({
   component: VideosPage,
 });
 
+const resourcesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/resources",
+  component: ResourcesPage,
+});
+
 const buddyMascotRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/buddy-mascot",
@@ -76,6 +83,7 @@ const routeTree = rootRoute.addChildren([
   learnRoute,
   toolsRoute,
   videosRoute,
+  resourcesRoute,
   buddyMascotRoute,
   buddyRoute,
 ]);

@@ -1,35 +1,27 @@
-# HVAC Mentor AI — Parts Section
+# HVAC Mentor AI
 
 ## Current State
-- ToolsPage has a Parts tab but only seeds 8 parts (Capacitor, Contactor, TXV, Filter Drier, Reversing Valve, Blower Motor, Fan Blade, Run Capacitor)
-- Parts tab shows backend data only, shows empty state if backend has no data
-- PART_DETAILS only covers 4 parts with symptoms/function/howToCheck/replacementNote structure
-- PartCard expands in-place but uses old detail structure
-- identificationLogic.ts has all 15 parts but VERIFIED_PART_IMAGES only has 7 images
-- componentVisuals.ts nameToVisualKey missing most new parts
-- Images missing for: Transformer, TXV, Reversing Valve, Filter Drier, Accumulator, Blower Motor, Condenser Fan Motor, Pressure Switch, Float Switch
+ResourcesPage has static resource cards and a basic 3-step "Find Your System Schematic" informational panel. No interactive lookup flow exists.
 
 ## Requested Changes (Diff)
 
 ### Add
-- 9 new part images generated and stored in public/assets/generated/
-- Full PART_DETAILS for all 15 required parts using the 4-section structure: whatItIs, whatItDoes, whatItLooksLike, whereLocated
-- All 15 parts in SEED_PARTS so tab is never empty
-- New PartCard detail view showing image + 4 structured sections (What it is, What it does, What it looks like, Where it is located)
-- nameToVisualKey mappings for all 15 new parts
-- VERIFIED_PART_IMAGES entries for all 15 parts
+- Interactive `SchematicLookup` component embedded in ResourcesPage (above existing sections)
+- Two-step guided flow:
+  1. Input step: model number field (primary) + brand field (optional), with a "Find Schematic" button
+  2. If model number provided: identify manufacturer from model prefix, show targeted guidance (where to find schematic for that brand, what schematic shows, tips for reading it, direct links)
+  3. If no model number: prompt asking for brand + system type, then show brand-specific guidance
+- Manufacturer detection logic for common prefixes: Carrier (38/24/25/40/48), Trane (4T/2T/TTT/TW), Lennox (XC/XP/SL/ML/EL/CB), Goodman (GSXC/DSXC/CAPF/AMST/ASZ), Rheem (RA/RP/RLNL/RH), York (YXV/ZH/ZF), Heil (HVA/HVB), Amana (ASX/AVXC), Bryant (186B/189B/215A), Payne (PA4Z)
+- ManualsLib direct search link using model number
+- "What this schematic shows" + "Tips for reading" sections in response
+- No fake schematics generated — only real source guidance
 
 ### Modify
-- SEED_PARTS expanded from 8 to 15 with all required parts
-- PartsTab always falls back to SEED_PARTS (same pattern as ToolsTab)
-- PartCard detail uses new 4-section layout matching the detail page spec
-- componentVisuals.ts updated with all new part keys
-- identificationLogic.ts VERIFIED_PART_IMAGES updated with all new images
+- ResourcesPage: insert `<SchematicLookup />` below the page header, before existing resource sections
 
 ### Remove
-- Old PartCard detail format using commonSymptoms/howToCheck/replacementNote (replaced with new structure)
+- Nothing removed
 
 ## Implementation Plan
-1. Update ToolsPage.tsx: expand SEED_PARTS to 15, rewrite PART_DETAILS to 4-section structure, update PartCard to show image + 4 sections, make PartsTab never empty
-2. Update componentVisuals.ts: add nameToVisualKey entries for all 15 parts
-3. Update identificationLogic.ts: add all 9 new image entries to VERIFIED_PART_IMAGES
+1. Create `src/frontend/src/components/SchematicLookup.tsx` with full interactive lookup logic
+2. Import and embed it in `ResourcesPage.tsx` below the header

@@ -44,6 +44,7 @@ import {
 import { useNavigate } from "@tanstack/react-router";
 import {
   AlertTriangle,
+  BookOpen,
   ExternalLink,
   Play,
   RefreshCw,
@@ -585,6 +586,7 @@ interface EnrichedMessage extends MentorMessage {
   safetyNote?: string;
   visualComponent?: string;
   toolGuidance?: ToolGuidance;
+  showResourceSuggestion?: boolean;
 }
 
 // ─── IdentificationCard Component ────────────────────────────────────────────
@@ -890,6 +892,7 @@ export default function MentorChat({
   const [isThinking, setIsThinking] = useState(false);
   const navigate = useNavigate();
   const bottomRef = useRef<HTMLDivElement>(null);
+  const lastUserInputRef = useRef<string>("");
   const msgIdRef = useRef(0);
 
   const lastForceMessageRef = useRef<string | undefined>(undefined);
@@ -933,6 +936,7 @@ export default function MentorChat({
     setInputValue("");
 
     addMessage({ role: "user", text: trimmed });
+    lastUserInputRef.current = trimmed;
     setIsThinking(true);
 
     setTimeout(() => {
@@ -1222,6 +1226,18 @@ export default function MentorChat({
                       .filter((w) => w.length > 3),
                   )
                 : null;
+              const RESOURCE_KWS = [
+                "schematic",
+                "wiring",
+                "manual",
+                "manuals",
+                "installation guide",
+              ];
+              const isResourceQuery = isLastMentor
+                ? RESOURCE_KWS.some((kw) =>
+                    lastUserInputRef.current.toLowerCase().includes(kw),
+                  )
+                : false;
               return msg.role === "mentor" ? (
                 <div key={msg.id} className="space-y-2">
                   <MentorBubble
@@ -1252,6 +1268,17 @@ export default function MentorChat({
                     >
                       <Play className="w-3.5 h-3.5" />
                       Watch related video: {relatedVideo.title}
+                    </button>
+                  )}
+                  {isLastMentor && isResourceQuery && (
+                    <button
+                      type="button"
+                      data-ocid="resources.go_to_resources.button"
+                      onClick={() => navigate({ to: "/resources" })}
+                      className="mt-1 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border border-amber-400/30 text-amber-300 bg-amber-900/20 hover:bg-amber-900/40 transition-colors"
+                    >
+                      <BookOpen className="w-3.5 h-3.5" />
+                      Find manuals &amp; schematics in Resources tab
                     </button>
                   )}
                 </div>
@@ -1416,6 +1443,18 @@ export default function MentorChat({
                           .filter((w) => w.length > 3),
                       )
                     : null;
+                  const RESOURCE_KWS = [
+                    "schematic",
+                    "wiring",
+                    "manual",
+                    "manuals",
+                    "installation guide",
+                  ];
+                  const isResourceQuery = isLastMentor
+                    ? RESOURCE_KWS.some((kw) =>
+                        lastUserInputRef.current.toLowerCase().includes(kw),
+                      )
+                    : false;
                   return msg.role === "mentor" ? (
                     <div key={msg.id} className="space-y-2">
                       <MentorBubble
@@ -1446,6 +1485,17 @@ export default function MentorChat({
                         >
                           <Play className="w-3.5 h-3.5" />
                           Watch related video: {relatedVideo.title}
+                        </button>
+                      )}
+                      {isLastMentor && isResourceQuery && (
+                        <button
+                          type="button"
+                          data-ocid="resources.go_to_resources.button"
+                          onClick={() => navigate({ to: "/resources" })}
+                          className="mt-1 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border border-amber-400/30 text-amber-300 bg-amber-900/20 hover:bg-amber-900/40 transition-colors"
+                        >
+                          <BookOpen className="w-3.5 h-3.5" />
+                          Find manuals &amp; schematics in Resources tab
                         </button>
                       )}
                     </div>
