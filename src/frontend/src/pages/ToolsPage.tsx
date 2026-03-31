@@ -231,39 +231,165 @@ const TOOL_DETAILS: Record<
 const PART_DETAILS: Record<
   string,
   {
-    commonSymptoms: string[];
-    function: string;
-    howToCheck: string;
-    replacementNote: string;
+    whatItIs: string;
+    whatItDoes: string;
+    whatItLooksLike: string;
+    whereLocated: string;
   }
 > = {
   Capacitor: {
-    commonSymptoms: ["unit not starting", "humming sound", "fan not spinning"],
-    function: "Provides starting and running energy to motors",
-    howToCheck: "Use a multimeter in capacitance mode and compare to rating",
-    replacementNote: "Match exact microfarad rating",
+    whatItIs:
+      "A capacitor is an electrical energy-storage device that helps motors start and run efficiently. Most HVAC systems use a dual-run capacitor that supports both the compressor and the condenser fan motor.",
+    whatItDoes:
+      "Provides the starting boost and running support current that motors need. Without it, the compressor or fan motor will hum, struggle to start, or not run at all.",
+    whatItLooksLike:
+      "A cylindrical or oval metal/plastic canister, typically silver, black, or blue. The top has metal terminals labeled HERM, FAN, and C. A bad capacitor often looks bulged or swollen on top.",
+    whereLocated:
+      "Inside the outdoor condenser unit. Open the side access panel — mounted near the contactor on a bracket along the side wall of the cabinet.",
   },
   Contactor: {
-    commonSymptoms: ["outdoor unit not running", "clicking sound"],
-    function: "Controls power to compressor and fan",
-    howToCheck: "Check for voltage across terminals with multimeter",
-    replacementNote: "Ensure correct voltage rating",
+    whatItIs:
+      "A contactor is an electrically operated high-voltage switch that controls power to the compressor and outdoor fan motor. When the thermostat calls for cooling, 24V closes the contactor.",
+    whatItDoes:
+      "Acts as the main power switch for the outdoor unit, opening and closing under thermostat command to start and stop the compressor and condenser fan motor.",
+    whatItLooksLike:
+      "A small rectangular switch about the size of a deck of cards. Large screw terminals on top and bottom carry high-voltage wires. Two smaller terminals accept 24V control wires. A visible plunger pulls in when energized.",
+    whereLocated:
+      "Inside the outdoor condenser unit, typically in the lower corner near the electrical entry point. Look for the component with the heaviest wires.",
   },
-  "Air Filter": {
-    commonSymptoms: ["weak airflow", "system freezing", "poor cooling"],
-    function: "Filters air before entering system",
-    howToCheck: "Inspect for dirt or blockage",
-    replacementNote: "Replace regularly",
+  Transformer: {
+    whatItIs:
+      "A transformer steps down 120V or 240V line voltage to the 24V signal used by the thermostat and all control circuits. It is the power source for the entire low-voltage control system.",
+    whatItDoes:
+      "Converts line voltage down to 24V AC to power the thermostat, contactor coil, control board, and all low-voltage components. If it fails, nothing in the control system will function.",
+    whatItLooksLike:
+      "A small rectangular or square block, usually black or gray, about the size of a large ice cube. It has two sets of wire leads — the primary (high-voltage) side and the secondary (24V) side. A VA rating is printed on the label.",
+    whereLocated:
+      "Mounted inside the air handler or furnace cabinet, usually on the control board bracket or near the blower compartment.",
+  },
+  Thermostat: {
+    whatItIs:
+      "The thermostat is the control center for the HVAC system. It monitors indoor temperature and sends low-voltage signals to start or stop heating and cooling.",
+    whatItDoes:
+      "Reads indoor temperature, compares it to the setpoint, and sends on/off signals to the heating and cooling equipment. It is the user's only interface for controlling the system.",
+    whatItLooksLike:
+      "A flat rectangular or square device mounted on an interior wall, typically white, gray, or black. Modern units have a digital display and touchscreen; older units use a rotary dial.",
+    whereLocated:
+      "Mounted on an interior wall in a central location — hallway, living room, or stairwell. Should not be on an exterior wall or near heat sources.",
   },
   "Evaporator Coil": {
-    commonSymptoms: ["freezing", "not cooling"],
-    function: "Absorbs heat from indoor air",
-    howToCheck: "Inspect for ice or dirt buildup",
-    replacementNote: "Clean before replacing",
+    whatItIs:
+      "The evaporator coil is the indoor heat exchanger where refrigerant absorbs heat from the air inside your home. It is what actually cools the circulated air.",
+    whatItDoes:
+      "Refrigerant enters at low pressure and temperature, absorbing heat from warm indoor air blown across the fins. This cools the air and evaporates the refrigerant into a vapor before it heads to the compressor.",
+    whatItLooksLike:
+      "A triangular or A-shaped assembly of thin aluminum fins with copper tubes running through them — similar to a car radiator shaped like an upside-down V.",
+    whereLocated:
+      "In the air handler or furnace cabinet, directly above the blower motor. All indoor air passes through it before reaching the supply ducts.",
+  },
+  "Condenser Coil": {
+    whatItIs:
+      "The condenser coil is the outdoor heat exchanger where refrigerant releases the heat it absorbed indoors. It is the outdoor counterpart to the evaporator coil.",
+    whatItDoes:
+      "Hot high-pressure refrigerant vapor flows through the coil. The condenser fan pulls outdoor air across the fins, removing heat and causing the refrigerant to condense into liquid.",
+    whatItLooksLike:
+      "A large grid of thin aluminum fins with copper tubes, wrapped around three or four sides of the outdoor unit cabinet. The closely spaced fins resemble a car radiator.",
+    whereLocated:
+      "Wrapped around the outside walls of the outdoor condenser unit. The fin surface is visible from outside the cabinet without removing any panels.",
+  },
+  Compressor: {
+    whatItIs:
+      "The compressor is the heart of the refrigeration system. It pressurizes the refrigerant vapor so the system can move heat from indoors to outdoors.",
+    whatItDoes:
+      "Compresses low-pressure refrigerant vapor from the evaporator into high-pressure, high-temperature vapor and pumps it to the condenser coil, driving the entire heat transfer cycle.",
+    whatItLooksLike:
+      "A large black or gray dome-shaped or cylindrical metal component — about the size of a small fire extinguisher up to a 5-gallon bucket. It has a large suction line and a smaller discharge line on top.",
+    whereLocated:
+      "Inside the outdoor condenser unit, sitting in the lower section of the cabinet. It is the largest single component inside the outdoor unit.",
+  },
+  "TXV (Thermostatic Expansion Valve)": {
+    whatItIs:
+      "The TXV is the metering device that precisely controls how much liquid refrigerant enters the evaporator coil, balancing the refrigerant charge to match the cooling load.",
+    whatItDoes:
+      "Acts as a variable throttle that restricts refrigerant flow to match the cooling load. It reads suction line temperature via a sensing bulb and opens or closes to maintain correct superheat.",
+    whatItLooksLike:
+      "A small brass or copper valve roughly the size of a large thumb, with refrigerant fittings on two ends and a thin capillary tube running to a sensing bulb clamped to the suction line.",
+    whereLocated:
+      "At the inlet of the evaporator coil, inside the air handler cabinet. The sensing bulb is clamped to the suction line just past the coil outlet.",
+  },
+  "Reversing Valve": {
+    whatItIs:
+      "A reversing valve is found only in heat pumps. It switches the direction of refrigerant flow so the system can operate in both heating and cooling modes.",
+    whatItDoes:
+      "Redirects refrigerant flow between heating and cooling modes. In heating mode, the outdoor coil becomes the evaporator and the indoor coil becomes the condenser, extracting heat from outdoor air.",
+    whatItLooksLike:
+      "A cylindrical brass or copper valve, about 6–8 inches long, with four refrigerant line connections. A small solenoid coil is mounted on top that shifts an internal slide to reverse flow direction.",
+    whereLocated:
+      "On the outdoor unit of a heat pump system, connected directly to the refrigerant lines near the compressor.",
+  },
+  "Filter Drier": {
+    whatItIs:
+      "A filter drier removes moisture, acid, and contaminants from the refrigerant before it reaches the metering device, protecting the system from corrosion and ice blockages.",
+    whatItDoes:
+      "Acts as the system's internal filter. The desiccant core absorbs moisture that causes acid and freeze-ups, while the screen catches debris. Always replaced after a compressor burnout.",
+    whatItLooksLike:
+      "A small cylindrical metal canister, typically 3–6 inches long and 1–2 inches in diameter, copper or silver in color, with flare or sweat fittings on each end. An arrow shows the required flow direction.",
+    whereLocated:
+      "In-line on the liquid (smaller) refrigerant line, usually near the outdoor unit or at the service valve. Always on the high-pressure liquid side before the expansion device.",
+  },
+  Accumulator: {
+    whatItIs:
+      "An accumulator is a safety device on the suction line that catches any liquid refrigerant before it can reach the compressor. Liquid entering a compressor causes catastrophic damage.",
+    whatItDoes:
+      "Any liquid refrigerant entering the accumulator settles to the bottom while only vapor is drawn off through the outlet tube to the compressor, preventing liquid slugging.",
+    whatItLooksLike:
+      "An upright cylindrical metal tank, typically 6–12 inches tall and 3–5 inches in diameter, installed in-line on the large suction refrigerant line. Looks like a small boiler or propane canister.",
+    whereLocated:
+      "On the suction line between the evaporator coil and the compressor, usually mounted near the outdoor unit. Common on heat pumps.",
+  },
+  "Blower Motor": {
+    whatItIs:
+      "The blower motor drives the squirrel-cage fan wheel inside the air handler or furnace that circulates air throughout the home.",
+    whatItDoes:
+      "Pulls return air from the home, forces it across the evaporator coil or heat exchanger, and pushes conditioned air into the supply ducts. Without it, no air moves through the system.",
+    whatItLooksLike:
+      "A cylindrical electric motor, typically 4–8 inches in diameter, mounted inside the air handler cabinet. The shaft connects to a squirrel-cage blower wheel — a cylindrical drum with many curved blades.",
+    whereLocated:
+      "In the lower section of the air handler or furnace cabinet, below the evaporator coil, inside the blower housing assembly.",
+  },
+  "Condenser Fan Motor": {
+    whatItIs:
+      "The condenser fan motor drives the propeller fan blade on top of the outdoor unit to pull air through the condenser coil and dissipate heat.",
+    whatItDoes:
+      "Keeps the condenser coil cool by pulling outdoor air across its fins. Without airflow, head pressure climbs and the system trips on high-pressure lockout.",
+    whatItLooksLike:
+      "A round electric motor, about 3–5 inches in diameter, mounted in the top-center of the outdoor unit beneath the fan grille. It has a vertical shaft for the propeller blade and several wire leads.",
+    whereLocated:
+      "Mounted in the top of the outdoor condenser unit, directly below the fan grille. The propeller sits on the motor shaft and pushes air upward out of the unit.",
+  },
+  "Pressure Switch": {
+    whatItIs:
+      "A pressure switch is a safety device that monitors refrigerant pressure and shuts the system down if pressure goes too high or too low.",
+    whatItDoes:
+      "Continuously monitors system pressure. If high pressure exceeds the cutout (dirty condenser coil, failed fan), or low pressure drops (low refrigerant), it opens its contact and shuts down the compressor.",
+    whatItLooksLike:
+      "A small cylindrical or disc-shaped electrical switch, about the size of a large coin, with a short refrigerant port and two electrical wire terminals. High-pressure switches are often red; low-pressure often blue.",
+    whereLocated:
+      "Threaded into the refrigerant lines on the outdoor unit. The high-pressure switch is on the discharge (smaller) line; the low-pressure switch is on the suction (larger) line.",
+  },
+  "Float Switch": {
+    whatItIs:
+      "A float switch is a safety device in the condensate drain pan that shuts the system off if the pan fills with water, preventing overflow and water damage.",
+    whatItDoes:
+      "As condensate water rises due to a clogged drain line, the float lifts and opens the switch contact, cutting power to the system. This stops cooling and prevents the pan from overflowing.",
+    whatItLooksLike:
+      "A small plastic device about the size of a matchbox with a buoyant float arm or ball on one end and two electrical wires from the body. Some clip into the drain line; others sit inside the secondary drain pan.",
+    whereLocated:
+      "In the primary or secondary condensate drain pan under the indoor air handler or evaporator coil cabinet. Some installs place it inline in the condensate drain line.",
   },
 };
 
-// ─── Seed Data ────────────────────────────────────────────────────────────────
+// ─── Seed Data──────────────────────────────────────────────────────────────
 
 const SEED_TOOLS = [
   {
@@ -397,51 +523,94 @@ const SEED_TOOLS = [
 const SEED_PARTS = [
   {
     name: "Capacitor",
-    description: "Stores and releases electrical energy",
+    description:
+      "Stores and releases electrical energy to start and run motors",
     category: "Electrical",
     typicalUse: "Starts/runs compressor and fan motors",
   },
   {
     name: "Contactor",
-    description: "Electrically controlled switch",
+    description: "Electrically controlled high-voltage switch",
     category: "Electrical",
-    typicalUse: "Switches high voltage to compressor",
+    typicalUse: "Switches 240V power to compressor",
+  },
+  {
+    name: "Transformer",
+    description: "Steps down line voltage to 24V for control circuits",
+    category: "Electrical",
+    typicalUse: "Powers thermostat and control board",
+  },
+  {
+    name: "Thermostat",
+    description: "Control center that monitors and adjusts indoor temperature",
+    category: "Electrical",
+    typicalUse: "User interface for system control",
+  },
+  {
+    name: "Evaporator Coil",
+    description: "Indoor heat exchanger that absorbs heat from air",
+    category: "Refrigerant",
+    typicalUse: "Cools indoor air in air handler",
+  },
+  {
+    name: "Condenser Coil",
+    description: "Outdoor heat exchanger that releases heat to outside air",
+    category: "Refrigerant",
+    typicalUse: "Rejects heat in outdoor unit",
+  },
+  {
+    name: "Compressor",
+    description: "Heart of the refrigeration system — pressurizes refrigerant",
+    category: "Refrigerant",
+    typicalUse: "Pumps refrigerant through the system",
   },
   {
     name: "TXV (Thermostatic Expansion Valve)",
-    description: "Regulates refrigerant flow into evaporator",
+    description: "Precisely meters liquid refrigerant into the evaporator coil",
     category: "Refrigerant",
     typicalUse: "Metering device in split systems",
   },
   {
+    name: "Reversing Valve",
+    description: "Switches refrigerant flow direction for heating and cooling",
+    category: "Refrigerant",
+    typicalUse: "Heat pumps only",
+  },
+  {
     name: "Filter Drier",
-    description: "Removes moisture and debris from refrigerant",
+    description: "Removes moisture and debris from refrigerant circuit",
     category: "Refrigerant",
     typicalUse: "Installed on liquid line",
   },
   {
-    name: "Reversing Valve",
-    description: "Switches between heat and cool mode",
+    name: "Accumulator",
+    description: "Catches liquid refrigerant before it reaches the compressor",
     category: "Refrigerant",
-    typicalUse: "Heat pumps",
+    typicalUse: "Suction line safety device",
   },
   {
     name: "Blower Motor",
-    description: "Moves air across evaporator coil",
-    category: "Mechanical",
+    description: "Drives the indoor fan to circulate air through the system",
+    category: "Airflow",
     typicalUse: "Indoor air handler",
   },
   {
-    name: "Fan Blade",
-    description: "Moves air across condenser coil",
-    category: "Mechanical",
+    name: "Condenser Fan Motor",
+    description: "Drives the outdoor fan to cool the condenser coil",
+    category: "Airflow",
     typicalUse: "Outdoor condenser unit",
   },
   {
-    name: "Run Capacitor",
-    description: "Keeps motor running efficiently after startup",
+    name: "Pressure Switch",
+    description: "Safety switch that monitors refrigerant pressure levels",
     category: "Electrical",
-    typicalUse: "Compressor and fan motors",
+    typicalUse: "High and low pressure protection",
+  },
+  {
+    name: "Float Switch",
+    description: "Safety switch that prevents condensate drain pan overflow",
+    category: "Electrical",
+    typicalUse: "Condensate drain protection",
   },
 ];
 
@@ -803,6 +972,9 @@ function PartCard({
   const details = PART_DETAILS[part.name];
   const [expanded, setExpanded] = useState(false);
 
+  const visualKey = nameToVisualKey[part.name];
+  const visual = visualKey ? componentVisuals[visualKey] : null;
+
   return (
     <Card
       className="border border-border overflow-hidden"
@@ -811,9 +983,8 @@ function PartCard({
       <button
         type="button"
         className="w-full text-left"
-        onClick={() => details && setExpanded((v) => !v)}
-        aria-expanded={details ? expanded : undefined}
-        style={details ? undefined : { cursor: "default" }}
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
       >
         <CardContent className="py-4 px-4">
           <div className="flex items-start gap-3">
@@ -839,75 +1010,63 @@ function PartCard({
                 {part.typicalUse}
               </p>
             </div>
-            {details && (
-              <div className="flex-shrink-0 mt-0.5">
-                {expanded ? (
-                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                )}
-              </div>
-            )}
+            <div className="flex-shrink-0 mt-0.5">
+              {expanded ? (
+                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              )}
+            </div>
           </div>
         </CardContent>
       </button>
 
-      {details && expanded && (
+      {expanded && details && (
         <div className="px-4 pb-4 space-y-3 border-t border-border pt-3">
           {/* Part Image */}
-          {(() => {
-            const vk = nameToVisualKey[part.name];
-            const v = vk ? componentVisuals[vk] : null;
-            return v ? (
-              <div className="flex justify-center pb-1">
-                <img
-                  src={v.imageSrc}
-                  alt={part.name}
-                  className="h-36 object-contain rounded-lg opacity-95"
-                />
-              </div>
-            ) : null;
-          })()}
-          {/* Common Symptoms */}
-          <div className="space-y-1.5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Common Symptoms
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {details.commonSymptoms.map((symptom) => (
-                <Badge
-                  key={symptom}
-                  variant="secondary"
-                  className="text-xs font-normal"
-                >
-                  {symptom}
-                </Badge>
-              ))}
+          {visual && (
+            <div className="flex justify-center pb-1">
+              <img
+                src={visual.imageSrc}
+                alt={part.name}
+                className="h-40 object-contain rounded-lg opacity-95"
+              />
             </div>
-          </div>
+          )}
 
-          {/* Function */}
+          {/* What It Is */}
           <div className="space-y-0.5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Function
+            <p className="text-xs font-semibold uppercase tracking-wide text-sky-400">
+              What It Is
             </p>
-            <p className="text-sm text-foreground">{details.function}</p>
+            <p className="text-sm text-foreground">{details.whatItIs}</p>
           </div>
 
-          {/* How to Check */}
+          {/* What It Does */}
           <div className="space-y-0.5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              How to Check
+            <p className="text-xs font-semibold uppercase tracking-wide text-sky-400">
+              What It Does
             </p>
-            <p className="text-sm text-foreground">{details.howToCheck}</p>
+            <p className="text-sm text-foreground">{details.whatItDoes}</p>
           </div>
 
-          {/* Replacement Note */}
-          <div className="flex items-start gap-2 rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-3 py-2.5">
-            <ShieldAlert className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-amber-800 dark:text-amber-300">
-              {details.replacementNote}
+          {/* What It Looks Like */}
+          <div className="space-y-0.5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-sky-400">
+              What It Looks Like
             </p>
+            <p className="text-sm text-foreground">{details.whatItLooksLike}</p>
+          </div>
+
+          {/* Where Located */}
+          <div className="flex items-start gap-2 rounded-md bg-sky-950/40 border border-sky-800/40 px-3 py-2.5">
+            <MapPin className="h-4 w-4 text-sky-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-sky-400 mb-0.5">
+                Where It Is Located
+              </p>
+              <p className="text-sm text-foreground">{details.whereLocated}</p>
+            </div>
           </div>
         </div>
       )}
@@ -921,7 +1080,11 @@ function PartsTab() {
   const { data: parts = [], isLoading } = useGetParts();
   const [query, setQuery] = useState("");
 
-  const filtered = parts.filter((p) =>
+  const displayParts =
+    parts.length > 0
+      ? parts
+      : SEED_PARTS.map((p, i) => ({ id: String(i), ...p }));
+  const filtered = displayParts.filter((p) =>
     p.name.toLowerCase().includes(query.toLowerCase().trim()),
   );
 

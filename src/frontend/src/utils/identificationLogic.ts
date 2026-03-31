@@ -66,6 +66,7 @@ export const COMPONENT_IDENTIFICATIONS: ComponentIdentification[] = [
       "Mounted inside the air handler or furnace cabinet, usually on the control board bracket or near the blower compartment.",
     whatItDoes:
       "Converts line voltage down to 24V AC to power the thermostat, contactor coil, control board, and all low-voltage components. If it fails, nothing in the control system will function.",
+    imageKey: "transformer",
   },
   // ─ verified image: part-thermostat.dim_400x400.png ─
   {
@@ -161,6 +162,7 @@ export const COMPONENT_IDENTIFICATIONS: ComponentIdentification[] = [
       "At the inlet of the evaporator coil, inside the air handler cabinet. The sensing bulb is clamped to the suction line just past the coil outlet.",
     whatItDoes:
       "Acts as a variable throttle that restricts refrigerant flow to match the cooling load. It reads suction line temperature via the sensing bulb and opens or closes to maintain correct superheat, protecting the compressor from liquid refrigerant.",
+    imageKey: "txv",
   },
   // ─ no verified image for reversing valve ─
   {
@@ -182,6 +184,7 @@ export const COMPONENT_IDENTIFICATIONS: ComponentIdentification[] = [
       "On the outdoor unit of a heat pump system, connected directly to the refrigerant lines near the compressor.",
     whatItDoes:
       "Redirects refrigerant flow between heating and cooling modes. In heating mode, refrigerant flows in reverse — the outdoor coil becomes the evaporator and the indoor coil becomes the condenser, extracting heat from outdoor air and releasing it indoors.",
+    imageKey: "reversing_valve",
   },
   // ─ no verified image for filter drier ─
   {
@@ -204,6 +207,7 @@ export const COMPONENT_IDENTIFICATIONS: ComponentIdentification[] = [
       "In-line on the liquid (smaller) refrigerant line, usually near the outdoor unit or at the service valve. Always installed on the high-pressure liquid side before the expansion device.",
     whatItDoes:
       "Acts as the system's internal filter. The desiccant core absorbs moisture that causes acid and freeze-ups, while the screen catches debris. Always replaced after a compressor burnout or any time the system is opened.",
+    imageKey: "filter_drier",
   },
   // ─ no verified image for accumulator ─
   {
@@ -220,6 +224,7 @@ export const COMPONENT_IDENTIFICATIONS: ComponentIdentification[] = [
       "On the suction line between the evaporator coil and the compressor, usually mounted near the outdoor unit. Common on heat pumps and systems prone to liquid floodback.",
     whatItDoes:
       "Any liquid refrigerant entering the accumulator settles to the bottom while only vapor is drawn off through the outlet tube to the compressor. This prevents liquid slugging — one of the most common causes of compressor failure.",
+    imageKey: "accumulator",
   },
   // ─ no verified image for blower motor ─
   {
@@ -241,6 +246,7 @@ export const COMPONENT_IDENTIFICATIONS: ComponentIdentification[] = [
       "In the lower section of the air handler or furnace cabinet, below the evaporator coil, inside the blower housing assembly.",
     whatItDoes:
       "Pulls return air from the home, forces it across the evaporator coil or heat exchanger, and pushes conditioned air into the supply ducts. Without it, no air moves through the system.",
+    imageKey: "blower_motor",
   },
   // ─ no verified image for condenser fan motor ─
   {
@@ -262,6 +268,7 @@ export const COMPONENT_IDENTIFICATIONS: ComponentIdentification[] = [
       "Mounted in the top of the outdoor condenser unit, directly below the fan grille. The propeller sits on the motor shaft and pushes air upward out of the unit.",
     whatItDoes:
       "Keeps the condenser coil cool by pulling outdoor air across its fins. Without airflow, head pressure climbs and the system trips on high-pressure lockout.",
+    imageKey: "condenser_fan_motor",
   },
   // ─ no verified image for pressure switch ─
   {
@@ -284,6 +291,7 @@ export const COMPONENT_IDENTIFICATIONS: ComponentIdentification[] = [
       "Threaded into the refrigerant lines on the outdoor unit. The high-pressure switch is on the discharge (smaller) line; the low-pressure switch is on the suction (larger) line.",
     whatItDoes:
       "Continuously monitors system pressure. If high pressure exceeds the cutout (e.g., dirty condenser coil, failed fan), it opens its contact and shuts down the compressor. If low pressure drops below cutout (e.g., low refrigerant), it does the same.",
+    imageKey: "pressure_switch",
   },
   // ─ no verified image for float switch ─
   {
@@ -305,6 +313,7 @@ export const COMPONENT_IDENTIFICATIONS: ComponentIdentification[] = [
       "In the primary or secondary condensate drain pan under the indoor air handler or evaporator coil cabinet. Some installs place it inline in the condensate drain line.",
     whatItDoes:
       "As condensate water rises due to a clogged drain line, the float lifts and opens the switch contact, cutting power to the system. This stops cooling and prevents the pan from overflowing onto ceilings or floors.",
+    imageKey: "float_switch",
   },
   // ─ verified image: part-air-filter.dim_400x400.png (extra, not in required list) ─
   {
@@ -337,6 +346,16 @@ export const VERIFIED_PART_IMAGES: Record<string, string> = {
   air_filter: "/assets/generated/part-air-filter.dim_400x400.png",
   condenser_coil:
     "/assets/generated/component-condenser-coil-transparent.dim_400x300.png",
+  transformer: "/assets/generated/part-transformer.dim_400x400.png",
+  txv: "/assets/generated/part-txv.dim_400x400.png",
+  reversing_valve: "/assets/generated/part-reversing-valve.dim_400x400.png",
+  filter_drier: "/assets/generated/part-filter-drier.dim_400x400.png",
+  accumulator: "/assets/generated/part-accumulator.dim_400x400.png",
+  blower_motor: "/assets/generated/part-blower-motor.dim_400x400.png",
+  condenser_fan_motor:
+    "/assets/generated/part-condenser-fan-motor.dim_400x400.png",
+  pressure_switch: "/assets/generated/part-pressure-switch.dim_400x400.png",
+  float_switch: "/assets/generated/part-float-switch.dim_400x400.png",
 };
 
 // ─── Identification Intent Detection ─────────────────────────────────────────

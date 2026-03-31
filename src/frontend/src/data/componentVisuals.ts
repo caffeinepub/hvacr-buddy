@@ -34,7 +34,8 @@ export const componentVisuals: Record<string, ComponentVisual> = {
   "condenser coil": {
     name: "Condenser Coil",
     intro: "Here's what the condenser coil looks like:",
-    imageSrc: "/assets/generated/part-evaporator-coil.dim_400x400.png",
+    imageSrc:
+      "/assets/generated/component-condenser-coil-transparent.dim_400x300.png",
     diagramRef: "Refrigeration Cycle",
   },
   thermostat: {
@@ -58,6 +59,52 @@ export const componentVisuals: Record<string, ComponentVisual> = {
       title: "Refrigerant Recovery",
       url: "https://www.youtube.com/watch?v=fROHlPXw_H0",
     },
+  },
+
+  transformer: {
+    name: "Transformer",
+    intro: "Here's what the transformer looks like:",
+    imageSrc: "/assets/generated/part-transformer.dim_400x400.png",
+  },
+  txv: {
+    name: "TXV (Thermostatic Expansion Valve)",
+    intro: "Here's what the TXV looks like:",
+    imageSrc: "/assets/generated/part-txv.dim_400x400.png",
+  },
+  reversing_valve: {
+    name: "Reversing Valve",
+    intro: "Here's what a reversing valve looks like:",
+    imageSrc: "/assets/generated/part-reversing-valve.dim_400x400.png",
+  },
+  filter_drier: {
+    name: "Filter Drier",
+    intro: "Here's what a filter drier looks like:",
+    imageSrc: "/assets/generated/part-filter-drier.dim_400x400.png",
+  },
+  accumulator: {
+    name: "Accumulator",
+    intro: "Here's what a suction line accumulator looks like:",
+    imageSrc: "/assets/generated/part-accumulator.dim_400x400.png",
+  },
+  blower_motor: {
+    name: "Blower Motor",
+    intro: "Here's what the blower motor looks like:",
+    imageSrc: "/assets/generated/part-blower-motor.dim_400x400.png",
+  },
+  condenser_fan_motor: {
+    name: "Condenser Fan Motor",
+    intro: "Here's what the condenser fan motor looks like:",
+    imageSrc: "/assets/generated/part-condenser-fan-motor.dim_400x400.png",
+  },
+  pressure_switch: {
+    name: "Pressure Switch",
+    intro: "Here's what a pressure switch looks like:",
+    imageSrc: "/assets/generated/part-pressure-switch.dim_400x400.png",
+  },
+  float_switch: {
+    name: "Float Switch",
+    intro: "Here's what a float switch looks like:",
+    imageSrc: "/assets/generated/part-float-switch.dim_400x400.png",
   },
 
   // ── TOOLS ──────────────────────────────────────────────────────────────────
@@ -147,6 +194,16 @@ export function detectComponentVisual(text: string): ComponentVisual | null {
     "impact driver",
     "flaring tool",
     "manifold gauge",
+    "condenser fan motor",
+    "blower motor",
+    "pressure switch",
+    "float switch",
+    "filter drier",
+    "reversing valve",
+    "accumulator",
+    "expansion valve",
+    "transformer",
+    "txv",
     "multimeter",
     "capacitor",
     "contactor",
@@ -189,4 +246,14 @@ export const nameToVisualKey: Record<string, string> = {
   "Evaporator Coil": "evaporator coil",
   Compressor: "compressor",
   Thermostat: "thermostat",
+  Transformer: "transformer",
+  "Condenser Coil": "condenser coil",
+  "TXV (Thermostatic Expansion Valve)": "txv",
+  "Reversing Valve": "reversing_valve",
+  "Filter Drier": "filter_drier",
+  Accumulator: "accumulator",
+  "Blower Motor": "blower_motor",
+  "Condenser Fan Motor": "condenser_fan_motor",
+  "Pressure Switch": "pressure_switch",
+  "Float Switch": "float_switch",
 };
