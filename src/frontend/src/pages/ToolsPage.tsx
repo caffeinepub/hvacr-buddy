@@ -26,7 +26,9 @@ import {
   Store,
   Wrench,
 } from "lucide-react";
+import { Calculator, ChevronRight, Lock } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import PTChart from "../PTChart";
 
 // ─── Tool Details ─────────────────────────────────────────────────────────────
 
@@ -901,7 +903,7 @@ function ToolCard({
 
 // ─── Tools Tab ────────────────────────────────────────────────────────────────
 
-function ToolsTab() {
+function ToolsTab({ onOpenTool }: { onOpenTool: (tool: string) => void }) {
   const { data: backendTools = [], isLoading } = useGetTools();
   const [query, setQuery] = useState("");
 
@@ -917,6 +919,87 @@ function ToolsTab() {
 
   return (
     <div className="space-y-4">
+      {/* Calculators Section */}
+      <div className="space-y-2">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-0.5">
+          Calculators
+        </p>
+        <div className="flex flex-col gap-2">
+          {/* PT Chart */}
+          <button
+            type="button"
+            className="w-full text-left rounded-xl border border-[#38BDF8]/40 bg-[#38BDF8]/5 px-4 py-3 flex items-center gap-3 active:bg-[#38BDF8]/10 transition-colors"
+            onClick={() => onOpenTool("pt-chart")}
+            data-ocid="tools.pt_chart.button"
+          >
+            <div className="w-9 h-9 rounded-lg bg-[#38BDF8]/15 flex items-center justify-center flex-shrink-0">
+              <Calculator
+                className="h-4.5 w-4.5 text-[#38BDF8]"
+                style={{ color: "#38BDF8" }}
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm text-foreground">PT Chart</p>
+              <p className="text-xs text-muted-foreground">
+                Pressure → Saturation Temperature
+              </p>
+            </div>
+            <ChevronRight
+              className="h-4 w-4 text-[#38BDF8]"
+              style={{ color: "#38BDF8" }}
+            />
+          </button>
+          {/* Superheat Calculator — Coming Soon */}
+          <div
+            className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 flex items-center gap-3 opacity-60"
+            data-ocid="tools.superheat.card"
+          >
+            <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+              <Lock className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-sm text-foreground">
+                  Superheat Calculator
+                </p>
+                <span className="text-[10px] font-semibold bg-muted text-muted-foreground rounded px-1.5 py-0.5 uppercase tracking-wide">
+                  Soon
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Calculate system superheat
+              </p>
+            </div>
+          </div>
+          {/* Subcooling Calculator — Coming Soon */}
+          <div
+            className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 flex items-center gap-3 opacity-60"
+            data-ocid="tools.subcooling.card"
+          >
+            <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+              <Lock className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-sm text-foreground">
+                  Subcooling Calculator
+                </p>
+                <span className="text-[10px] font-semibold bg-muted text-muted-foreground rounded px-1.5 py-0.5 uppercase tracking-wide">
+                  Soon
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Calculate system subcooling
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="border-t border-border/50 pt-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-0.5">
+            Field Tools
+          </p>
+        </div>
+      </div>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
@@ -1239,6 +1322,17 @@ export default function ToolsPage() {
   const dataReady = toolsFetched && partsFetched;
   useSeeder(tools.length === 0, parts.length === 0, dataReady);
 
+  const [activeTool, setActiveTool] = useState<string | null>(null);
+
+  if (activeTool === "pt-chart") {
+    return (
+      <div className="min-h-screen bg-background pb-14">
+        <PTChart onBack={() => setActiveTool(null)} />
+        <BottomTabBar />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background pb-14">
       <div className="max-w-2xl mx-auto px-4 py-6">
@@ -1279,7 +1373,7 @@ export default function ToolsPage() {
           </TabsList>
 
           <TabsContent value="tools">
-            <ToolsTab />
+            <ToolsTab onOpenTool={setActiveTool} />
           </TabsContent>
 
           <TabsContent value="parts">
