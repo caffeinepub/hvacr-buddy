@@ -1,24 +1,46 @@
 import BottomTabBar from "@/components/BottomTabBar";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, ExternalLink, Play, Search, Video, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ExternalLink,
+  List,
+  Play,
+  Search,
+  Video,
+  X,
+} from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   HVAC_VIDEOS,
   type HvacVideo,
+  VIDEO_CATEGORIES,
   VIDEO_CATEGORIES_DATA,
   type VideoCategoryName,
 } from "../data/videos";
 
-const CATEGORY_COLORS: Record<string, string> = {
-  "EPA 608": "#A78BFA",
-  Tools: "#FBBF24",
-  Refrigerant: "#34D399",
-  Airflow: "#818CF8",
+const CATEGORY_COLORS: Record<VideoCategoryName, string> = {
+  "EPA 608 Prep": "#A78BFA",
+  Playlists: "#60A5FA",
+  Fundamentals: "#2DD4BF",
+  "Tools & Equipment": "#FBBF24",
+  "Refrigerant & Procedures": "#34D399",
+  Electrical: "#38BDF8",
   Troubleshooting: "#FB923C",
 };
 
 type ActiveFilter = "All" | VideoCategoryName;
+
+function PlaylistThumbnail({ title }: { title: string }) {
+  return (
+    <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800 flex flex-col items-center justify-center gap-2">
+      <List className="w-8 h-8 text-sky-400" />
+      <span className="text-[10px] text-slate-300 font-semibold text-center px-3 leading-tight line-clamp-2">
+        {title}
+      </span>
+    </div>
+  );
+}
 
 function VideoCard({
   video,
@@ -43,12 +65,16 @@ function VideoCard({
       style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.3)" }}
     >
       <div className="relative aspect-video overflow-hidden bg-slate-800">
-        <img
-          src={`https://img.youtube.com/vi/${video.youtubeId}/mqdefault.jpg`}
-          alt={video.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          loading="lazy"
-        />
+        {video.youtubeId ? (
+          <img
+            src={`https://img.youtube.com/vi/${video.youtubeId}/mqdefault.jpg`}
+            alt={video.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
+          />
+        ) : (
+          <PlaylistThumbnail title={video.title} />
+        )}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <div className="w-12 h-12 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center border border-white/30">
             <Play className="w-5 h-5 text-white fill-white ml-0.5" />
@@ -79,6 +105,18 @@ function VideoCard({
   );
 }
 
+function getYouTubeWatchUrl(video: HvacVideo): string {
+  if (video.youtubeId) {
+    return `https://www.youtube.com/watch?v=${video.youtubeId}`;
+  }
+  // Extract list ID from playlist embed URL
+  const match = video.embedUrl.match(/[?&]list=([^&]+)/);
+  if (match) {
+    return `https://www.youtube.com/playlist?list=${match[1]}`;
+  }
+  return "https://www.youtube.com/";
+}
+
 function VideoModal({
   video,
   onClose,
@@ -88,8 +126,9 @@ function VideoModal({
 }) {
   const [showFallback, setShowFallback] = useState(false);
   const color = CATEGORY_COLORS[video.category] ?? "#38BDF8";
-  const watchUrl = `https://www.youtube.com/watch?v=${video.youtubeId}`;
-  const embedUrl = `https://www.youtube.com/embed/${video.youtubeId}?autoplay=1&rel=0`;
+  const watchUrl = getYouTubeWatchUrl(video);
+  // Append autoplay — embedUrl already has ?rel=0, so use &
+  const iframeSrc = `${video.embedUrl}&autoplay=1`;
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -144,13 +183,13 @@ function VideoModal({
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-sky-500 hover:bg-sky-400 text-white text-sm font-semibold transition-colors"
               >
                 <ExternalLink className="w-4 h-4" />
-                Watch in browser
+                Open in YouTube
               </a>
             </div>
           ) : (
             <iframe
-              key={video.youtubeId}
-              src={embedUrl}
+              key={video.id}
+              src={iframeSrc}
               title={video.title}
               className="w-full h-full"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -184,10 +223,10 @@ function VideoModal({
             target="_blank"
             rel="noopener noreferrer"
             data-ocid="videos.link"
-            className="inline-flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-xs text-white font-semibold transition-colors"
           >
             <ExternalLink className="w-3 h-3" />
-            Watch in browser
+            Open in YouTube
           </a>
         </div>
       </motion.div>
@@ -221,14 +260,7 @@ export default function VideosPage() {
 
   const isSearching = search.trim().length > 0;
 
-  const filters: ActiveFilter[] = [
-    "All",
-    "EPA 608",
-    "Tools",
-    "Refrigerant",
-    "Airflow",
-    "Troubleshooting",
-  ];
+  const filters: ActiveFilter[] = ["All", ...VIDEO_CATEGORIES];
 
   return (
     <div className="min-h-screen bg-[#0F172A] text-white flex flex-col pb-14">
@@ -282,13 +314,13 @@ export default function VideosPage() {
           )}
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-3 mb-5 -mx-4 px-4">
+        <div className="flex gap-2 overflow-x-auto pb-3 mb-5 -mx-4 px-4 scrollbar-hide">
           {filters.map((filter) => {
             const isActive = activeFilter === filter;
             const color =
               filter === "All"
                 ? "#38BDF8"
-                : (CATEGORY_COLORS[filter] ?? "#38BDF8");
+                : (CATEGORY_COLORS[filter as VideoCategoryName] ?? "#38BDF8");
             return (
               <button
                 key={filter}
@@ -345,9 +377,10 @@ export default function VideosPage() {
         ) : (
           <div className="space-y-8">
             {VIDEO_CATEGORIES_DATA.map((cat) => {
-              const color = CATEGORY_COLORS[cat.name] ?? "#38BDF8";
+              const color =
+                CATEGORY_COLORS[cat.name as VideoCategoryName] ?? "#38BDF8";
               return (
-                <section key={cat.id}>
+                <section key={cat.name}>
                   <div className="flex items-center gap-2 mb-3">
                     <div
                       className="w-2 h-5 rounded-full"
@@ -360,7 +393,8 @@ export default function VideosPage() {
                       {cat.name}
                     </h2>
                     <span className="text-xs text-slate-500 ml-auto">
-                      {cat.videos.length} videos
+                      {cat.videos.length} video
+                      {cat.videos.length !== 1 ? "s" : ""}
                     </span>
                   </div>
                   <div className="-mx-4 px-4 overflow-x-auto sm:overflow-visible sm:mx-0 sm:px-0">
