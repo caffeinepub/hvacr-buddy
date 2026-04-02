@@ -485,16 +485,14 @@ export function buildDiagnosis(
     };
   }
 
-  // Generic fallback
-  const causes = [
-    "System-level issue requiring further investigation",
-    "Possible electrical or refrigerant fault",
-    "Component failure not yet identified",
-  ];
+  // ── No-match fallback (strict no-guessing rule) ───────────────────────────
   return {
-    causes,
+    safetyNote:
+      "Always disconnect power and follow EPA guidelines before beginning any HVAC work.",
+    causes: ["More information needed to diagnose accurately"],
     nextCheck:
-      "Start with a visual inspection of the equipment — check for obvious damage, disconnected wires, or error codes on the control board.",
-    buddySummary: `Based on what you've told me, the most likely issue is: ${causes[0]}\n\nNext step:\nStart with a visual inspection of the equipment — check for obvious damage, disconnected wires, or error codes on the control board.`,
+      "Describe the specific symptom in more detail (e.g., no cooling, not starting, strange noise)",
+    buddySummary:
+      "I want to make sure I give you accurate guidance. Based on what you've described, I'll need a bit more context. Can you describe exactly what the system is doing or not doing?",
   };
 }

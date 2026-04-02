@@ -74,6 +74,10 @@ interface ChatState {
   flowState: FlowState | null;
   howToGuide: HowToGuide | null;
   identificationResult: ComponentIdentification | null;
+  /** System type context — set once per conversation, never asked again */
+  systemType: string | null; // "residential" | "rooftop" | "commercial" | "other" | null
+  /** Symptom waiting for system type clarification before routing */
+  pendingSymptom: string | null;
 }
 
 const INITIAL_STATE: ChatState = {
@@ -86,6 +90,8 @@ const INITIAL_STATE: ChatState = {
   flowState: null,
   howToGuide: null,
   identificationResult: null,
+  systemType: null,
+  pendingSymptom: null,
 };
 
 // Flow step labels for the progress indicator
@@ -946,94 +952,72 @@ export default function MentorChat({
   }
 
   function processInput(trimmed: string) {
+    // ── Helper: detect intent type ───────────────────────────────────────────────
+    const lowerTrimmed = trimmed.toLowerCase();
+    const isIdentificationLike =
+      lowerTrimmed.includes("what is") ||
+      lowerTrimmed.includes("where is") ||
+      lowerTrimmed.includes("what does") ||
+      lowerTrimmed.includes("identify") ||
+      lowerTrimmed.includes("show me");
+    const isHowToLike =
+      lowerTrimmed.includes("how to") ||
+      lowerTrimmed.includes("how do i") ||
+      lowerTrimmed.includes("steps to") ||
+      lowerTrimmed.includes("show me how");
+    const isTroubleshootingLike =
+      !isIdentificationLike && !isHowToLike && trimmed.length > 5;
+
+    // ── System type clarification: Step A ────────────────────────────────────────
+    // If we're waiting for a system type answer (pendingSymptom is set),
+    // parse the answer and then process the stored symptom normally.
+    if (state.pendingSymptom !== null) {
+      const lower = trimmed.toLowerCase();
+      let detectedSystemType = "other";
+      if (lower.includes("residential")) detectedSystemType = "residential";
+      else if (lower.includes("rooftop")) detectedSystemType = "rooftop";
+      else if (lower.includes("commercial")) detectedSystemType = "commercial";
+
+      const originalSymptom = state.pendingSymptom;
+
+      // Update state to clear pending and set system type
+      setState((prev) => ({
+        ...prev,
+        systemType: detectedSystemType,
+        pendingSymptom: null,
+      }));
+
+      // Process the original symptom through normal intent routing
+      processInitialSymptom(originalSymptom);
+      return;
+    }
+
+    // ── System type clarification: Step B ────────────────────────────────────────
+    // Ask once if system type is unknown and this looks like troubleshooting.
+    const SYSTEM_TYPE_WORDS = ["residential", "rooftop", "commercial", "other"];
+    const isSystemTypeAnswer = SYSTEM_TYPE_WORDS.some((a) =>
+      lowerTrimmed.includes(a),
+    );
+    if (
+      state.systemType === null &&
+      isTroubleshootingLike &&
+      !isSystemTypeAnswer &&
+      state.stage === "initial"
+    ) {
+      setState((prev) => ({
+        ...prev,
+        pendingSymptom: trimmed,
+      }));
+      addMessage({
+        role: "mentor",
+        text: "Got it. Before I guide you through this — is this a residential unit, rooftop unit, commercial system, or something else? This helps me give you the most accurate steps.",
+      });
+      return;
+    }
+
+    // ── Route normally (system type already known, or non-troubleshooting) ───────
     if (state.stage === "initial") {
-      const identificationResult = detectIdentificationQuery(trimmed);
-      if (identificationResult) {
-        addMessage({
-          role: "mentor",
-          text: `Here's what you need to know about the ${identificationResult.name}.`,
-        });
-        setState((prev) => ({
-          ...prev,
-          stage: "identification",
-          symptom: trimmed,
-          identificationResult,
-        }));
-        return;
-      }
-
-      const howToGuide = detectHowToQuery(trimmed);
-      if (howToGuide) {
-        addMessage({
-          role: "mentor",
-          text: `Got it — here's how to ${howToGuide.title.toLowerCase()}, step by step.`,
-        });
-        setState((prev) => ({
-          ...prev,
-          stage: "howto",
-          symptom: trimmed,
-          howToGuide,
-        }));
-        return;
-      }
-
-      const flow = activateFlow(trimmed);
-
-      if (flow) {
-        const flowState = initFlowState(flow);
-        const firstStep = flow.steps[flowState.step];
-
-        addMessage({
-          role: "mentor",
-          text: "Alright — let me walk you through this step by step. I'll ask you one question at a time.",
-        });
-        if (firstStep) {
-          addMessage({
-            role: "mentor",
-            text: firstStep.message,
-            safetyNote: firstStep.safetyNote,
-            visualComponent: firstStep.visualComponent,
-            toolGuidance: firstStep.toolGuidance,
-          });
-        }
-
-        setState((prev) => ({
-          ...prev,
-          stage: "flow",
-          symptom: trimmed,
-          activeFlow: flow,
-          flowState,
-        }));
-        return;
-      }
-
-      const ack = getInitialAcknowledgment(trimmed);
-      const firstQ = getFollowUpQuestion(trimmed, 0);
-
-      addMessage({ role: "mentor", text: ack });
-
-      if (firstQ) {
-        addMessage({ role: "mentor", text: firstQ.text });
-        setState((prev) => ({
-          ...prev,
-          stage: "followup",
-          symptom: trimmed,
-          answers: [],
-        }));
-      } else {
-        const diag = validatedDiagnosis(buildDiagnosis(trimmed, []));
-        addMessage({
-          role: "mentor",
-          text: "Alright — here's what I'm seeing based on that:",
-        });
-        setState((prev) => ({
-          ...prev,
-          stage: "diagnosis",
-          symptom: trimmed,
-          answers: [],
-          diagnosis: diag,
-        }));
-      }
+      processInitialSymptom(trimmed);
       return;
     }
 
@@ -1041,11 +1025,14 @@ export default function MentorChat({
       const differentFlow = activateDifferentFlow(trimmed, state.activeFlow.id);
       if (differentFlow) {
         const newFlowState = initFlowState(differentFlow);
+        // Carry over systemType context into the new flow state
+        newFlowState.systemType = state.systemType;
         const firstStep = differentFlow.steps[newFlowState.step];
 
+        // Context continuity bridge message before switching flows
         addMessage({
           role: "mentor",
-          text: "Got it — sounds like a different issue. Let me start a fresh flow for that.",
+          text: "Switching to a new issue — let's tackle this one step at a time.",
         });
         if (firstStep) {
           addMessage({
@@ -1126,12 +1113,127 @@ export default function MentorChat({
     }
   }
 
+  function processInitialSymptom(trimmed: string) {
+    // Priority 1: Identification
+    const identificationResult = detectIdentificationQuery(trimmed);
+    if (identificationResult) {
+      addMessage({
+        role: "mentor",
+        text: `Here's what you need to know about the ${identificationResult.name}.`,
+      });
+      setState((prev) => ({
+        ...prev,
+        stage: "identification",
+        symptom: trimmed,
+        identificationResult,
+      }));
+      return;
+    }
+
+    // Priority 2: How-to instruction
+    const howToGuide = detectHowToQuery(trimmed);
+    if (howToGuide) {
+      addMessage({
+        role: "mentor",
+        text: `Got it — here's how to ${howToGuide.title.toLowerCase()}, step by step.`,
+      });
+      setState((prev) => ({
+        ...prev,
+        stage: "howto",
+        symptom: trimmed,
+        howToGuide,
+      }));
+      return;
+    }
+
+    // Priority 3: Structured flow
+    const flow = activateFlow(trimmed);
+    if (flow) {
+      const flowState = initFlowState(flow);
+      // Pass chat-level system type into flow state
+      flowState.systemType = state.systemType;
+      const firstStep = flow.steps[flowState.step];
+
+      addMessage({
+        role: "mentor",
+        text: "Alright — let me walk you through this step by step. I'll ask you one question at a time.",
+      });
+      if (firstStep) {
+        addMessage({
+          role: "mentor",
+          text: firstStep.message,
+          safetyNote: firstStep.safetyNote,
+          visualComponent: firstStep.visualComponent,
+          toolGuidance: firstStep.toolGuidance,
+        });
+      }
+
+      setState((prev) => ({
+        ...prev,
+        stage: "flow",
+        symptom: trimmed,
+        activeFlow: flow,
+        flowState,
+      }));
+      return;
+    }
+
+    // Priority 4: Legacy follow-up questions
+    const ack = getInitialAcknowledgment(trimmed);
+    const firstQ = getFollowUpQuestion(trimmed, 0);
+
+    addMessage({ role: "mentor", text: ack });
+
+    if (firstQ) {
+      addMessage({ role: "mentor", text: firstQ.text });
+      setState((prev) => ({
+        ...prev,
+        stage: "followup",
+        symptom: trimmed,
+        answers: [],
+      }));
+    } else {
+      // No-guessing fallback: ask for more context instead of guessing
+      const diag = validatedDiagnosis(buildDiagnosis(trimmed, []));
+
+      // If diagnosis has no specific match (no-match path), show context request
+      if (diag.causes[0] === "More information needed to diagnose accurately") {
+        addMessage({
+          role: "mentor",
+          text: "I want to make sure I guide you correctly — can you tell me more about the issue you're seeing? For example, is the unit not cooling, not turning on, or making a strange noise?",
+        });
+        // Stay in initial stage to allow follow-up
+        return;
+      }
+
+      addMessage({
+        role: "mentor",
+        text: "Alright — here's what I'm seeing based on that:",
+      });
+      setState((prev) => ({
+        ...prev,
+        stage: "diagnosis",
+        symptom: trimmed,
+        answers: [],
+        diagnosis: diag,
+      }));
+    }
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") submitInput(inputValue);
   }
 
   const currentQuickAnswers: string[] = [];
-  if (state.stage === "flow" && state.activeFlow && state.flowState) {
+  // Show system type quick answers when waiting for clarification
+  if (state.pendingSymptom !== null) {
+    currentQuickAnswers.push(
+      "Residential",
+      "Rooftop Unit",
+      "Commercial",
+      "Other",
+    );
+  } else if (state.stage === "flow" && state.activeFlow && state.flowState) {
     const currentStep = state.activeFlow.steps[state.flowState.step];
     if (currentStep?.quickAnswers) {
       currentQuickAnswers.push(...currentStep.quickAnswers);
@@ -1302,7 +1404,9 @@ export default function MentorChat({
         <AnimatePresence>
           {currentQuickAnswers.length > 0 &&
             !isThinking &&
-            (state.stage === "flow" || state.stage === "followup") && (
+            (state.stage === "flow" ||
+              state.stage === "followup" ||
+              state.pendingSymptom !== null) && (
               <motion.div
                 key="quick-answers"
                 initial={{ opacity: 0, y: 6 }}
@@ -1523,7 +1627,9 @@ export default function MentorChat({
       <AnimatePresence>
         {currentQuickAnswers.length > 0 &&
           !isThinking &&
-          (state.stage === "flow" || state.stage === "followup") && (
+          (state.stage === "flow" ||
+            state.stage === "followup" ||
+            state.pendingSymptom !== null) && (
             <motion.div
               key="quick-answers"
               initial={{ opacity: 0, y: 6 }}

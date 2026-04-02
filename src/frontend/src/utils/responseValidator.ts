@@ -8,6 +8,81 @@ export interface ValidationResult {
   correctedText: string;
 }
 
+// ─── Safety Keyword Groups ───────────────────────────────────────────────────
+const SAFETY_KEYWORDS = {
+  electrical: [
+    "capacitor",
+    "contactor",
+    "voltage",
+    "electrical",
+    "multimeter",
+    "clamp meter",
+    "power",
+    "circuit",
+    "wiring",
+  ],
+  refrigerant: [
+    "refrigerant",
+    "r-410a",
+    "r-22",
+    "freon",
+    "leak",
+    "recover",
+    "evacuate",
+    "charging",
+  ],
+  movingParts: ["fan blade", "belt", "motor"],
+};
+
+const SAFETY_ALREADY_PRESENT_KEYWORDS = [
+  "make sure power is off",
+  "safety",
+  "caution",
+  "wear",
+  "gloves",
+  "goggles",
+];
+
+/**
+ * Appends a brief safety reminder to a response if it mentions hazardous
+ * topics and doesn't already contain a safety note.
+ */
+export function injectSafetyReminder(text: string): string {
+  const lower = text.toLowerCase();
+
+  // Check if safety reminder already exists
+  const alreadyHasSafety = SAFETY_ALREADY_PRESENT_KEYWORDS.some((kw) =>
+    lower.includes(kw),
+  );
+  if (alreadyHasSafety) return text;
+
+  // Check for moving parts first (most specific)
+  const hasMovingParts = SAFETY_KEYWORDS.movingParts.some((kw) =>
+    lower.includes(kw),
+  );
+  if (hasMovingParts) {
+    return `${text}\n\n⚠️ Safety: Keep hands clear of moving parts. Disconnect power first.`;
+  }
+
+  // Check for refrigerant keywords
+  const hasRefrigerant = SAFETY_KEYWORDS.refrigerant.some((kw) =>
+    lower.includes(kw),
+  );
+  if (hasRefrigerant) {
+    return `${text}\n\n⚠️ Safety: Always wear gloves and goggles when handling refrigerant.`;
+  }
+
+  // Check for electrical keywords (compressor can go here too — has electrical aspect)
+  const hasElectrical = [...SAFETY_KEYWORDS.electrical, "compressor"].some(
+    (kw) => lower.includes(kw),
+  );
+  if (hasElectrical) {
+    return `${text}\n\n⚠️ Safety: Make sure power is off before testing any electrical components.`;
+  }
+
+  return text;
+}
+
 /**
  * Count the number of distinct questions in a block of text.
  * A question is a sentence ending with "?"
@@ -81,6 +156,7 @@ function trimToOneSolution(text: string): string {
  * 1. Is Buddy guiding step-by-step? (message is not empty)
  * 2. Does it ask only ONE question?
  * 3. Does it avoid listing multiple solutions at once? (5+ items threshold)
+ * 4. Injects safety reminder if hazardous topics are mentioned
  *
  * Auto-corrects and returns the fixed text if any check fails.
  */
@@ -112,6 +188,9 @@ export function validateBuddyResponse(
     );
     corrected = trimToOneSolution(corrected);
   }
+
+  // Check 4: inject safety reminder if relevant hazards are mentioned
+  corrected = injectSafetyReminder(corrected);
 
   return {
     passed: issues.length === 0,

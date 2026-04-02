@@ -10,7 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   HVAC_VIDEOS,
   type HvacVideo,
@@ -124,11 +124,12 @@ function VideoModal({
   video: HvacVideo;
   onClose: () => void;
 }) {
-  const [showFallback, setShowFallback] = useState(false);
+  const [iframeError, setIframeError] = useState(false);
   const color = CATEGORY_COLORS[video.category] ?? "#38BDF8";
   const watchUrl = getYouTubeWatchUrl(video);
-  // Append autoplay — embedUrl already has ?rel=0, so use &
-  const iframeSrc = `${video.embedUrl}&autoplay=1`;
+
+  // Use embedUrl as-is — no autoplay to avoid browser autoplay blocking issues
+  const iframeSrc = video.embedUrl;
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -158,6 +159,7 @@ function VideoModal({
         style={{ boxShadow: "0 24px 80px rgba(0,0,0,0.7)" }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Close button */}
         <button
           type="button"
           data-ocid="videos.close_button"
@@ -168,9 +170,14 @@ function VideoModal({
           <X className="w-4 h-4 text-white" />
         </button>
 
+        {/* Video area */}
         <div className="aspect-video bg-black">
-          {showFallback ? (
-            <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-slate-900">
+          {iframeError ? (
+            /* Error state — iframe failed to load */
+            <div
+              data-ocid="videos.error_state"
+              className="w-full h-full flex flex-col items-center justify-center gap-4 bg-slate-900"
+            >
               <Video className="w-12 h-12 text-slate-600" />
               <p className="text-sm text-slate-400 text-center px-6">
                 Unable to load the embedded player.
@@ -179,8 +186,8 @@ function VideoModal({
                 href={watchUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                data-ocid="videos.secondary_button"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-sky-500 hover:bg-sky-400 text-white text-sm font-semibold transition-colors"
+                data-ocid="videos.primary_button"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-white text-sm font-bold transition-colors"
               >
                 <ExternalLink className="w-4 h-4" />
                 Open in YouTube
@@ -194,12 +201,14 @@ function VideoModal({
               className="w-full h-full"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
-              onError={() => setShowFallback(true)}
+              referrerPolicy="strict-origin-when-cross-origin"
+              onError={() => setIframeError(true)}
             />
           )}
         </div>
 
-        <div className="px-4 py-3">
+        {/* Footer — always visible */}
+        <div className="px-4 py-4">
           <div className="flex items-start gap-3 mb-2">
             <span
               className="shrink-0 mt-0.5 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
@@ -215,17 +224,18 @@ function VideoModal({
               {video.title}
             </h2>
           </div>
-          <p className="text-xs text-slate-400 leading-relaxed mb-3">
+          <p className="text-xs text-slate-400 leading-relaxed mb-4">
             {video.description}
           </p>
+          {/* Always-visible Open in YouTube button */}
           <a
             href={watchUrl}
             target="_blank"
             rel="noopener noreferrer"
             data-ocid="videos.link"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-xs text-white font-semibold transition-colors"
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-sky-500/40 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 text-sm font-semibold transition-all duration-200"
           >
-            <ExternalLink className="w-3 h-3" />
+            <ExternalLink className="w-4 h-4" />
             Open in YouTube
           </a>
         </div>
@@ -239,7 +249,6 @@ export default function VideosPage() {
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<ActiveFilter>("All");
   const [activeVideo, setActiveVideo] = useState<HvacVideo | null>(null);
-  const searchRef = useRef<HTMLInputElement>(null);
 
   const totalCount = HVAC_VIDEOS.length;
 
@@ -268,7 +277,7 @@ export default function VideosPage() {
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center gap-3">
           <button
             type="button"
-            data-ocid="videos.back.button"
+            data-ocid="videos.button"
             onClick={() => navigate({ to: "/" })}
             className="w-9 h-9 rounded-xl flex items-center justify-center border border-white/10 hover:border-sky-500/40 hover:bg-sky-500/5 transition-all"
             aria-label="Back to home"
@@ -291,10 +300,10 @@ export default function VideosPage() {
       </header>
 
       <main className="flex-1 max-w-2xl mx-auto w-full px-4 pb-24 pt-4">
+        {/* Search bar */}
         <div className="relative mb-4">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
           <input
-            ref={searchRef}
             data-ocid="videos.search_input"
             type="search"
             value={search}
@@ -314,6 +323,7 @@ export default function VideosPage() {
           )}
         </div>
 
+        {/* Category filter tabs */}
         <div className="flex gap-2 overflow-x-auto pb-3 mb-5 -mx-4 px-4 scrollbar-hide">
           {filters.map((filter) => {
             const isActive = activeFilter === filter;
@@ -342,6 +352,7 @@ export default function VideosPage() {
           })}
         </div>
 
+        {/* Filtered/search results view */}
         {isSearching || activeFilter !== "All" ? (
           <div>
             {displayedVideos.length === 0 ? (
@@ -375,6 +386,7 @@ export default function VideosPage() {
             )}
           </div>
         ) : (
+          /* Default category sections view */
           <div className="space-y-8">
             {VIDEO_CATEGORIES_DATA.map((cat) => {
               const color =
@@ -420,6 +432,7 @@ export default function VideosPage() {
         )}
       </main>
 
+      {/* Video modal */}
       <AnimatePresence>
         {activeVideo && (
           <VideoModal

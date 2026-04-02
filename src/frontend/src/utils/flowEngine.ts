@@ -25,6 +25,8 @@ export interface FlowState {
   ice_on_coil: boolean | null;
   breaker_tripped: boolean | null;
   answers: Record<string, string>;
+  /** System type context from chat-level clarification (residential/rooftop/commercial/other) */
+  systemType?: string | null;
 }
 
 export interface FlowStep {
@@ -86,6 +88,7 @@ export function initFlowState(flow: FlowDef): FlowState {
     ice_on_coil: null,
     breaker_tripped: null,
     answers: {},
+    systemType: null,
   };
 }
 
