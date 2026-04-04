@@ -19,6 +19,7 @@ import {
   REFRIGERANTS,
   type RefrigerantGroup,
   getPsiRange,
+  isOutsideOperatingRange,
   ptLookup,
 } from "./PTChartData";
 
@@ -38,11 +39,14 @@ export default function PTChart({ onBack }: PTChartProps) {
 
   let satTemp: number | null = null;
   let outOfRange = false;
+  let outsideOperatingRange = false;
 
   if (psi !== null && !Number.isNaN(psi)) {
     satTemp = ptLookup(refrigerantId, psi);
     if (satTemp === null && range) {
       outOfRange = psi < range.min || psi > range.max;
+    } else if (satTemp !== null) {
+      outsideOperatingRange = isOutsideOperatingRange(refrigerantId, psi);
     }
   }
 
@@ -73,7 +77,7 @@ export default function PTChart({ onBack }: PTChartProps) {
               PT Chart
             </h1>
             <p className="text-xs text-muted-foreground">
-              Pressure → Saturation Temperature
+              Pressure \u2192 Saturation Temperature
             </p>
           </div>
         </div>
@@ -127,7 +131,7 @@ export default function PTChart({ onBack }: PTChartProps) {
             type="number"
             inputMode="decimal"
             placeholder={
-              range ? `${range.min} – ${range.max} PSI` : "Enter PSI"
+              range ? `${range.min} \u2013 ${range.max} PSI` : "Enter PSI"
             }
             value={psiInput}
             onChange={(e) => setPsiInput(e.target.value)}
@@ -136,7 +140,7 @@ export default function PTChart({ onBack }: PTChartProps) {
           />
           {range && (
             <p className="text-xs text-muted-foreground">
-              Valid range for {refrigerantId}: {range.min}–{range.max} PSI
+              Valid range for {refrigerantId}: {range.min}\u2013{range.max} PSI
             </p>
           )}
         </div>
@@ -193,7 +197,7 @@ export default function PTChart({ onBack }: PTChartProps) {
                       <>
                         {satTemp}
                         <span className="text-xl font-normal text-muted-foreground ml-1">
-                          °F
+                          \u00b0F
                         </span>
                       </>
                     ) : (
@@ -227,7 +231,7 @@ export default function PTChart({ onBack }: PTChartProps) {
                     <div className="flex items-center gap-1 ml-auto">
                       <TriangleAlert className="h-3.5 w-3.5 text-amber-400" />
                       <span className="text-xs text-amber-400">
-                        A2L — handle with care
+                        A2L \u2014 handle with care
                       </span>
                     </div>
                   )}
@@ -236,6 +240,21 @@ export default function PTChart({ onBack }: PTChartProps) {
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* Operating range warning */}
+        {outsideOperatingRange && satTemp !== null && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-start gap-2 rounded-lg px-4 py-3 bg-amber-900/30 border border-amber-500/50"
+            data-ocid="pt_chart.warning_state"
+          >
+            <TriangleAlert className="h-4 w-4 text-amber-300 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-amber-300">
+              Pressure is outside typical operating range for this refrigerant
+            </p>
+          </motion.div>
+        )}
 
         {/* Out-of-range warning */}
         {outOfRange && psi !== null && (
@@ -251,7 +270,7 @@ export default function PTChart({ onBack }: PTChartProps) {
               {range && (
                 <>
                   {" "}
-                  Valid range: {range.min}–{range.max} PSI.
+                  Valid range: {range.min}\u2013{range.max} PSI.
                 </>
               )}
             </p>

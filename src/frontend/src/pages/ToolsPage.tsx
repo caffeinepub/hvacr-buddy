@@ -26,9 +26,11 @@ import {
   Store,
   Wrench,
 } from "lucide-react";
-import { Calculator, ChevronRight, Lock } from "lucide-react";
+import { Calculator, ChevronRight, Droplets, Thermometer } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import PTChart from "../PTChart";
+import SubcoolingCalculator from "../SubcoolingCalculator";
+import SuperheatCalculator from "../SuperheatCalculator";
 
 // ─── Tool Details ─────────────────────────────────────────────────────────────
 
@@ -949,50 +951,49 @@ function ToolsTab({ onOpenTool }: { onOpenTool: (tool: string) => void }) {
               style={{ color: "#38BDF8" }}
             />
           </button>
-          {/* Superheat Calculator — Coming Soon */}
-          <div
-            className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 flex items-center gap-3 opacity-60"
+          {/* Superheat Calculator */}
+          <button
+            type="button"
+            className="w-full text-left rounded-xl border border-[#38BDF8]/40 bg-[#38BDF8]/5 px-4 py-3 flex items-center gap-3 active:bg-[#38BDF8]/10 transition-colors"
+            onClick={() => onOpenTool("superheat")}
             data-ocid="tools.superheat.card"
           >
-            <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-              <Lock className="h-4 w-4 text-muted-foreground" />
+            <div className="w-9 h-9 rounded-lg bg-[#38BDF8]/15 flex items-center justify-center flex-shrink-0">
+              <Thermometer
+                className="h-4.5 w-4.5"
+                style={{ color: "#38BDF8" }}
+              />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="font-semibold text-sm text-foreground">
-                  Superheat Calculator
-                </p>
-                <span className="text-[10px] font-semibold bg-muted text-muted-foreground rounded px-1.5 py-0.5 uppercase tracking-wide">
-                  Soon
-                </span>
-              </div>
+              <p className="font-semibold text-sm text-foreground">
+                Superheat Calculator
+              </p>
               <p className="text-xs text-muted-foreground">
-                Calculate system superheat
+                Suction side measurement
               </p>
             </div>
-          </div>
-          {/* Subcooling Calculator — Coming Soon */}
-          <div
-            className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 flex items-center gap-3 opacity-60"
+            <ChevronRight className="h-4 w-4" style={{ color: "#38BDF8" }} />
+          </button>
+          {/* Subcooling Calculator */}
+          <button
+            type="button"
+            className="w-full text-left rounded-xl border border-[#38BDF8]/40 bg-[#38BDF8]/5 px-4 py-3 flex items-center gap-3 active:bg-[#38BDF8]/10 transition-colors"
+            onClick={() => onOpenTool("subcooling")}
             data-ocid="tools.subcooling.card"
           >
-            <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-              <Lock className="h-4 w-4 text-muted-foreground" />
+            <div className="w-9 h-9 rounded-lg bg-[#38BDF8]/15 flex items-center justify-center flex-shrink-0">
+              <Droplets className="h-4.5 w-4.5" style={{ color: "#38BDF8" }} />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="font-semibold text-sm text-foreground">
-                  Subcooling Calculator
-                </p>
-                <span className="text-[10px] font-semibold bg-muted text-muted-foreground rounded px-1.5 py-0.5 uppercase tracking-wide">
-                  Soon
-                </span>
-              </div>
+              <p className="font-semibold text-sm text-foreground">
+                Subcooling Calculator
+              </p>
               <p className="text-xs text-muted-foreground">
-                Calculate system subcooling
+                Liquid line measurement
               </p>
             </div>
-          </div>
+            <ChevronRight className="h-4 w-4" style={{ color: "#38BDF8" }} />
+          </button>
         </div>
         <div className="border-t border-border/50 pt-2">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-0.5">
@@ -1328,6 +1329,24 @@ export default function ToolsPage() {
     return (
       <div className="min-h-screen bg-background pb-14">
         <PTChart onBack={() => setActiveTool(null)} />
+        <BottomTabBar />
+      </div>
+    );
+  }
+
+  if (activeTool === "superheat") {
+    return (
+      <div className="min-h-screen bg-background pb-14">
+        <SuperheatCalculator onBack={() => setActiveTool(null)} />
+        <BottomTabBar />
+      </div>
+    );
+  }
+
+  if (activeTool === "subcooling") {
+    return (
+      <div className="min-h-screen bg-background pb-14">
+        <SubcoolingCalculator onBack={() => setActiveTool(null)} />
         <BottomTabBar />
       </div>
     );

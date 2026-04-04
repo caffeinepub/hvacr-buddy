@@ -1,50 +1,43 @@
-# HVACR Buddy — Buddy Behavior Rules Enforcement
+# HVACR Buddy — PT Data System Upgrade
 
 ## Current State
 
-Buddy's logic is distributed across:
-- `mentorLogic.ts` — legacy keyword-based fallback for unregistered symptoms
-- `flowEngine.ts` — structured multi-step flows with branching
-- `howToLogic.ts` — 12 step-by-step how-to guides with intent detection
-- `MentorChat.tsx` — core chat component with intent routing, all sub-components
-- `responseValidator.ts` — pre-render quality gate (one question, no stacking)
-- `BuddyPage.tsx` — full-screen Buddy tab wrapper
-
-Current intent detection order: Identification → HowTo → Flow → Legacy.
-
-The existing rules (one question, step-by-step, validation) are partially enforced but lack:
-1. System type clarification (residential vs. rooftop vs. other)
-2. Explicit context continuity enforcement (don't restart, build on prior answers)
-3. Safety reminders for electricity/refrigerant/moving parts
-4. "No guessing" fallback phrasing
-5. Resource suggestion cap (only one video/resource at a time)
-6. Failure condition detection and recovery messaging
+- `PTChartData.ts` exists with 11 refrigerants, `ptLookup()`, `getPsiRange()`, and linear interpolation
+- PT tables use sparse data (coarse 50-PSI steps at high pressures) — not accurate enough for field use
+- Out-of-range warning exists but message wording is `"{psi} PSI is outside the data range..."`
+- PTChart, SuperheatCalculator, SubcoolingCalculator all import from PTChartData and call `ptLookup` / `getPsiRange`
+- No "typical operating range" concept separate from table bounds
 
 ## Requested Changes (Diff)
 
 ### Add
-- System type detection: when symptom input is ambiguous (no system type context), Buddy asks "Is this a residential unit, rooftop unit, or something else?" once before proceeding
-- Context continuity: store `systemType` in chat state; include it in every flow step and diagnosis so Buddy tailors responses
-- Safety reminder injection: auto-add safety note to any response involving electrical, refrigerant, or moving parts keywords
-- "No guessing" response path: when no flow or legacy match is found (truly unknown input), Buddy responds with the defined clarifying phrase instead of a generic fallback
-- Single resource rule: ensure only one video/resource is ever surfaced per response
-- Identification mode: strengthen the 4-part response (definition, looks like, location, function + optional image)
+- `getOperatingRange(refrigerantId)` — returns the typical HVAC field operating PSI range (not the full table bounds) per refrigerant, used for the "outside typical operating range" warning
+- Dense, accurate PT lookup tables (5–10 PSI steps) for all 11 refrigerants based on standard ASHRAE/REFPROP saturation data
+- Warning message: "Pressure is outside typical operating range for this refrigerant" shown when PSI is outside typical operating range
 
 ### Modify
-- `MentorChat.tsx`: add `systemType` field to `ChatState`, inject system type question logic before flow activation, improve no-match fallback to use the "I want to make sure I guide you correctly" phrasing
-- `responseValidator.ts`: add safety keyword detection; inject standard safety reminder if keywords present and no safety note already in response
-- `mentorLogic.ts`: ensure all fallback branches carry safety notes for relevant symptoms; improve no-match path
-- `flowEngine.ts`: pass `systemType` through `FlowState` so steps can reference it
-- `BuddyPage.tsx`: no changes needed
+- Replace sparse PT tables in `PTChartData.ts` with accurate, dense tabulated data for all 11 refrigerants
+- Update PTChart, SuperheatCalculator, SubcoolingCalculator to call `getOperatingRange` and show the new warning message when PSI is outside typical operating range
+- Keep existing out-of-table-bounds null return (extrapolation guard)
 
 ### Remove
-- Generic "I'm not sure" fallback responses that don't guide the user — replace with the no-guessing clarifying phrase
+- Old sparse PT table data
+- Old warning message wording (replaced with new exact wording)
 
 ## Implementation Plan
 
-1. Add `systemType: string | null` to `ChatState` and `FlowState`
-2. In `processInput`, before activating a flow or legacy path, check if `systemType` is null and input looks like a troubleshooting query — if so, ask the system type clarification question first and set a pending `pendingSymptom` so it resumes after the answer
-3. Add `SAFETY_KEYWORDS` list in `responseValidator.ts`; if any match and no safety note present, append a short safety reminder
-4. Replace generic no-match fallback in `MentorChat.tsx` with: "I want to make sure I guide you correctly — can you tell me more about the issue?"
-5. Enforce single resource rule: in `MentorChat.tsx`, ensure `relatedVideo` is only shown for the last mentor message (already partly done) and no additional resource links accumulate
-6. Validate and run frontend build
+1. Replace `PTChartData.ts` with accurate dense tables + `getOperatingRange()` function
+   - R-22: 0–300 PSI, typical operating 30–250 PSI, 5-PSI steps
+   - R-410A: 0–500 PSI, typical operating 50–450 PSI, 5-PSI steps
+   - R-134a: 0–280 PSI, typical operating 10–230 PSI, 5-PSI steps
+   - R-32: 0–500 PSI, typical operating 50–450 PSI, 10-PSI steps
+   - R-454B: 0–450 PSI, typical operating 50–400 PSI, 10-PSI steps
+   - R-1234yf: 0–280 PSI, typical operating 10–230 PSI, 5-PSI steps
+   - R-1234ze: 0–200 PSI, typical operating 5–170 PSI, 5-PSI steps
+   - R-404A: 0–400 PSI, typical operating 20–300 PSI, 5-PSI steps
+   - R-407C: 0–400 PSI, typical operating 20–300 PSI, 5-PSI steps
+   - R-448A: 0–400 PSI, typical operating 20–300 PSI, 5-PSI steps
+   - R-449A: 0–400 PSI, typical operating 20–300 PSI, 5-PSI steps
+2. Update PTChart.tsx — replace out-of-range warning with new wording, use `getOperatingRange`
+3. Update SuperheatCalculator.tsx — same warning update
+4. Update SubcoolingCalculator.tsx — same warning update
