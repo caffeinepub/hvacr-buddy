@@ -1,3 +1,4 @@
+import BottomTabBar from "@/components/BottomTabBar";
 import BuddySuggestionCard from "@/components/BuddySuggestionCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -925,7 +926,7 @@ export default function JobsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col pb-20">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-card border-b border-border shadow-xs">
         <div className="max-w-[1200px] mx-auto px-6 h-16 flex items-center gap-4">
@@ -1101,6 +1102,7 @@ export default function JobsPage() {
           </p>
         </div>
       </footer>
+      <BottomTabBar />
     </div>
   );
 }

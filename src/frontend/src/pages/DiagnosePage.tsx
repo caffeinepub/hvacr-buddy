@@ -1,3 +1,4 @@
+import BottomTabBar from "@/components/BottomTabBar";
 import ComponentVisualAid from "@/components/ComponentVisualAid";
 import MentorChat from "@/components/MentorChat";
 import VideoRecommendations from "@/components/VideoRecommendations";
@@ -1039,7 +1040,7 @@ export default function DiagnosePage() {
   const results = SCENARIOS.filter((s) => matchesQuery(s, query));
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       <div className="max-w-2xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
@@ -1217,6 +1218,7 @@ export default function DiagnosePage() {
           </a>
         </p>
       </div>
+      <BottomTabBar />
     </div>
   );
 }

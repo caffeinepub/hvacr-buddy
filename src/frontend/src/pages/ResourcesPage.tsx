@@ -1,3 +1,4 @@
+import BottomTabBar from "@/components/BottomTabBar";
 import SchematicLookup from "@/components/SchematicLookup";
 import { Button } from "@/components/ui/button";
 import {
@@ -403,6 +404,7 @@ export default function ResourcesPage() {
           </a>
         </p>
       </footer>
+      <BottomTabBar />
     </div>
   );
 }

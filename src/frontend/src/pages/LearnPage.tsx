@@ -1,3 +1,4 @@
+import BottomTabBar from "@/components/BottomTabBar";
 import EPA608Exam from "@/components/EPA608Exam";
 import KnowledgeBase from "@/components/KnowledgeBase";
 import { Badge } from "@/components/ui/badge";
@@ -1097,7 +1098,7 @@ export default function LearnPage() {
   const ht = headerTitle();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-lg mx-auto px-4 py-3">
           {view === "home" ? (
@@ -1191,6 +1192,7 @@ export default function LearnPage() {
           </a>
         </p>
       </footer>
+      <BottomTabBar />
     </div>
   );
 }
