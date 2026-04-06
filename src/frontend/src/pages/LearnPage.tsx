@@ -184,16 +184,52 @@ const CATEGORIES: Category[] = [
           {
             heading: "Key Concepts",
             items: [
-              "Low-pressure appliances (R-11, R-113 centrifugal chillers)",
-              "Leak detection and repair requirements",
-              "Standing pressure test",
-              "Pressure purging procedures",
+              "Low-pressure appliances — R-11, R-113 (CFCs) and R-123 (HCFC)",
+              "Systems operate BELOW atmospheric pressure (in vacuum)",
+              "35% annual leak rate triggers mandatory repair",
+              "Standing pressure test for leak detection",
+              "Low-pressure rated recovery equipment required",
+              "Purge unit operation and monitoring",
+              "Air and moisture contamination prevention",
+            ],
+          },
+          {
+            heading: "Equipment — Low-Pressure Chillers",
+            items: [
+              "Centrifugal Chiller — Large commercial cooling system using centrifugal compressor and low-pressure refrigerant (R-123, R-11). Cools chilled water for building HVAC systems.",
+              "Absorption Chiller (Awareness) — Uses heat energy (steam/hot water) instead of a compressor. No rotating refrigerant compressor — uses a lithium bromide/water absorption cycle.",
+              "Purge Unit — Automatic device that removes non-condensable gases from the chiller. Monitors purge rate as a leak indicator.",
+              "Evaporator Vessel — Shell-and-tube heat exchanger where refrigerant cools chilled water.",
+              "Water-Cooled Condenser — Shell-and-tube condenser rejecting heat to condenser water / cooling tower.",
+              "Float Valve — Internal metering device controlling refrigerant flow based on liquid level.",
+            ],
+          },
+          {
+            heading: "EPA Rules — Critical",
+            items: [
+              "Leak Repair Threshold: 35% annual leak rate — systems with MORE than 50 lbs of refrigerant must be repaired within 30 days.",
+              "Evacuation Requirement: Low-pressure systems must be pressurized to 0 psig (atmospheric) before opening — NOT evacuated like high-pressure systems.",
+              "Recovery Requirement: Must use recovery equipment specifically rated for low-pressure refrigerant. Recover before ANY service that opens the circuit.",
+              "Service Records: Required for systems > 50 lbs — log date, refrigerant type, amount added/recovered, and leak check results.",
+              "Refrigerant Status: R-11 is fully banned from new production. R-123 is an HCFC being phased out — only reclaimed refrigerant may be used in existing equipment.",
+              "Purge Unit Venting: Purge units must use recovery/recycling devices and minimize refrigerant emissions.",
+            ],
+          },
+          {
+            heading: "Safety — Always Remember",
+            items: [
+              "Operating Under Vacuum: System runs BELOW atmospheric pressure. Any breach PULLS IN air and moisture — it does not leak refrigerant outward.",
+              "Air and Moisture Contamination: Air entry causes non-condensable buildup. Moisture causes acid formation and compressor damage. Both reduce efficiency and can cause system failure.",
+              "System Sensitivity: Low-pressure systems are more sensitive to leaks than high-pressure systems. A small leak that would be minor on a high-pressure system can quickly contaminate a chiller.",
+              "Never Open Without Recovery: Always recover refrigerant fully before opening ANY part of the circuit.",
+              "Standing Pressure Test: Pressurize with nitrogen to check for leaks BEFORE opening — never assume a low-pressure system is at atmospheric pressure.",
+              "PPE Requirements: R-123 exposure requires splash goggles and chemical-resistant gloves. Ensure adequate ventilation in chiller rooms.",
             ],
           },
           {
             heading: "Explanation",
             items: [
-              "Type III covers low-pressure systems like large centrifugal chillers. These systems operate below atmospheric pressure and require special handling to prevent moisture entry.",
+              "Type III covers large centrifugal chillers used in commercial buildings, hospitals, universities, and industrial facilities. These systems use low-pressure refrigerants (R-123, R-11) and operate below atmospheric pressure — meaning any breach in the refrigerant circuit pulls in air and moisture rather than leaking refrigerant outward. This makes them extremely sensitive to leaks and requires rigorous purge unit monitoring. The 35% annual leak threshold (compared to 20% for Type II) reflects the different operational characteristics. Recovery requires specialized low-pressure equipment. Before any service that opens the circuit, pressurize to 0 psig with nitrogen first — never assume the system is at atmosphere.",
             ],
           },
         ],

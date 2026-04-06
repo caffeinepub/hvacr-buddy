@@ -57,6 +57,31 @@ import { getRelatedVideo } from "../data/videos";
 const BUDDY_AVATAR =
   "/assets/generated/buddy-avatar-transparent.dim_200x200.png";
 
+// ─── Type III Low-Pressure Chiller Detection ──────────────────────────────────
+const TYPE3_CHILLER_KEYWORDS = [
+  "chiller",
+  "centrifugal",
+  "r-123",
+  "r-11",
+  "low pressure",
+  "low-pressure refrigerant",
+  "low pressure chiller",
+  "centrifugal chiller",
+];
+
+function isType3ChillerQuery(input: string): boolean {
+  const lower = input.toLowerCase();
+  return TYPE3_CHILLER_KEYWORDS.some((k) => lower.includes(k));
+}
+
+const TYPE3_SAFETY_NOTE = [
+  "⚠️ Low-Pressure System Safety:",
+  "• This system operates BELOW atmospheric pressure (vacuum). Any breach pulls in air and moisture.",
+  "• Air and moisture contamination causes acid formation and serious compressor damage.",
+  "• Never open the system without proper recovery — always use low-pressure rated equipment.",
+  "• Monitor purge unit operation — excessive purging indicates an active leak.",
+].join("\n");
+
 interface MentorChatProps {
   compact?: boolean;
   placeholder?: string;
@@ -379,7 +404,7 @@ function MentorBubble({
             background: "linear-gradient(160deg, #243447 0%, #1E293B 100%)",
             boxShadow: "0 2px 8px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.2)",
             border: "1px solid rgba(56,189,248,0.15)",
-            color: "#FFFFFF",
+            color: "#1A1A1A",
             maxWidth: "85%",
           }}
         >
@@ -460,7 +485,7 @@ function UserBubble({ text }: { text: string }) {
         style={{
           background: "#0EA5E9",
           boxShadow: "0 2px 8px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.15)",
-          color: "#FFFFFF",
+          color: "#1A1A1A",
           maxWidth: "80%",
         }}
       >
@@ -507,7 +532,7 @@ function DiagnosisCard({ diagnosis }: { diagnosis: MentorDiagnosis }) {
       >
         <p
           className="text-base font-medium leading-relaxed whitespace-pre-line"
-          style={{ color: "#F8FAFC" }}
+          style={{ color: "#1A1A1A" }}
         >
           {diagnosis.buddySummary}
         </p>
@@ -526,7 +551,7 @@ function DiagnosisCard({ diagnosis }: { diagnosis: MentorDiagnosis }) {
               <li
                 key={cause}
                 className="flex items-start gap-2 text-base"
-                style={{ color: "#F8FAFC" }}
+                style={{ color: "#1A1A1A" }}
                 data-ocid={`mentor.cause.item.${i + 1}`}
               >
                 <span
@@ -548,7 +573,7 @@ function DiagnosisCard({ diagnosis }: { diagnosis: MentorDiagnosis }) {
           >
             Next Field Check
           </p>
-          <p className="text-base leading-relaxed" style={{ color: "#F8FAFC" }}>
+          <p className="text-base leading-relaxed" style={{ color: "#1A1A1A" }}>
             {diagnosis.nextCheck}
           </p>
         </div>
@@ -637,7 +662,7 @@ function IdentificationCard({
             background: "linear-gradient(160deg, #243447 0%, #1E293B 100%)",
             boxShadow: "0 2px 8px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.2)",
             border: "1px solid rgba(56,189,248,0.15)",
-            color: "#FFFFFF",
+            color: "#1A1A1A",
           }}
         >
           {component.name}
@@ -687,7 +712,7 @@ function IdentificationCard({
           </p>
           <p
             className="text-base leading-relaxed font-medium"
-            style={{ color: "#FFFFFF" }}
+            style={{ color: "#1A1A1A" }}
           >
             {component.definition}
           </p>
@@ -706,7 +731,7 @@ function IdentificationCard({
           >
             2 • What It Looks Like
           </p>
-          <p className="text-base leading-relaxed" style={{ color: "#FFFFFF" }}>
+          <p className="text-base leading-relaxed" style={{ color: "#1A1A1A" }}>
             {component.whatItLooksLike}
           </p>
         </div>
@@ -724,7 +749,7 @@ function IdentificationCard({
           >
             3 • Where It's Located
           </p>
-          <p className="text-base leading-relaxed" style={{ color: "#FFFFFF" }}>
+          <p className="text-base leading-relaxed" style={{ color: "#1A1A1A" }}>
             {component.whereFound}
           </p>
         </div>
@@ -742,7 +767,7 @@ function IdentificationCard({
           >
             4 • What It Does
           </p>
-          <p className="text-base leading-relaxed" style={{ color: "#FFFFFF" }}>
+          <p className="text-base leading-relaxed" style={{ color: "#1A1A1A" }}>
             {component.whatItDoes}
           </p>
         </div>
@@ -783,7 +808,7 @@ function HowToCard({ guide }: { guide: HowToGuide }) {
             background: "linear-gradient(160deg, #243447 0%, #1E293B 100%)",
             boxShadow: "0 2px 8px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.2)",
             border: "1px solid rgba(56,189,248,0.15)",
-            color: "#F8FAFC",
+            color: "#1A1A1A",
           }}
         >
           {guide.title}
@@ -835,7 +860,7 @@ function HowToCard({ guide }: { guide: HowToGuide }) {
               <li
                 key={step}
                 className="flex items-start gap-3 text-base leading-relaxed"
-                style={{ color: "#F8FAFC" }}
+                style={{ color: "#1A1A1A" }}
                 data-ocid={`mentor.howto.step.${i + 1}`}
               >
                 <span
@@ -977,6 +1002,12 @@ export default function MentorChat({
       if (lower.includes("residential")) detectedSystemType = "residential";
       else if (lower.includes("rooftop")) detectedSystemType = "rooftop";
       else if (lower.includes("commercial")) detectedSystemType = "commercial";
+      else if (
+        lower.includes("chiller") ||
+        lower.includes("centrifugal") ||
+        lower.includes("low pressure")
+      )
+        detectedSystemType = "type3_chiller";
 
       const originalSymptom = state.pendingSymptom;
 
@@ -994,7 +1025,15 @@ export default function MentorChat({
 
     // ── System type clarification: Step B ────────────────────────────────────────
     // Ask once if system type is unknown and this looks like troubleshooting.
-    const SYSTEM_TYPE_WORDS = ["residential", "rooftop", "commercial", "other"];
+    const SYSTEM_TYPE_WORDS = [
+      "residential",
+      "rooftop",
+      "commercial",
+      "other",
+      "chiller",
+      "low pressure",
+      "centrifugal",
+    ];
     const isSystemTypeAnswer = SYSTEM_TYPE_WORDS.some((a) =>
       lowerTrimmed.includes(a),
     );
@@ -1146,6 +1185,27 @@ export default function MentorChat({
       return;
     }
 
+    // Priority 2.5: Type III Chiller — specialized low-pressure handling
+    if (isType3ChillerQuery(trimmed) || state.systemType === "type3_chiller") {
+      const chillMsg =
+        state.systemType === "type3_chiller"
+          ? "I see you're working on a low-pressure chiller system. These require extra care — they operate under vacuum, making them very sensitive to leaks and air/moisture entry. I'll guide you step by step, moving carefully through each check. What symptoms are you seeing?"
+          : "It looks like you're asking about a low-pressure chiller system (Type III). These operate below atmospheric pressure — any breach pulls in air and moisture rather than leaking refrigerant out. Let me help. What's the issue you're seeing?";
+      addMessage({
+        role: "mentor",
+        text: chillMsg,
+        safetyNote: TYPE3_SAFETY_NOTE,
+      });
+      setState((prev) => ({
+        ...prev,
+        stage: "followup",
+        symptom: trimmed,
+        systemType: prev.systemType ?? "type3_chiller",
+        answers: [],
+      }));
+      return;
+    }
+
     // Priority 3: Structured flow
     const flow = activateFlow(trimmed);
     if (flow) {
@@ -1231,6 +1291,7 @@ export default function MentorChat({
       "Residential",
       "Rooftop Unit",
       "Commercial",
+      "Chiller / Low Pressure",
       "Other",
     );
   } else if (state.stage === "flow" && state.activeFlow && state.flowState) {
@@ -1307,7 +1368,7 @@ export default function MentorChat({
                     boxShadow:
                       "0 2px 8px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.2)",
                     border: "1px solid rgba(56,189,248,0.15)",
-                    color: "#FFFFFF",
+                    color: "#1A1A1A",
                     maxWidth: "85%",
                   }}
                 >
@@ -1426,7 +1487,7 @@ export default function MentorChat({
                     className="px-4 py-2 rounded-full border text-sm font-medium transition-all shadow-md hover:shadow-lg active:scale-95 active:shadow-sm disabled:opacity-50 disabled:pointer-events-none"
                     style={{
                       borderColor: "rgba(56,189,248,0.3)",
-                      color: "#F8FAFC",
+                      color: "#1A1A1A",
                       background: "rgba(30,41,59,0.9)",
                     }}
                   >
@@ -1649,7 +1710,7 @@ export default function MentorChat({
                   className="px-4 py-2 rounded-full border text-sm font-medium transition-all shadow-md hover:shadow-lg hover:border-sky-500/50 hover:bg-sky-500/5 active:scale-95 active:shadow-sm disabled:opacity-50 disabled:pointer-events-none"
                   style={{
                     borderColor: "rgba(56,189,248,0.3)",
-                    color: "#F8FAFC",
+                    color: "#1A1A1A",
                     background: "rgba(30,41,59,0.9)",
                   }}
                 >

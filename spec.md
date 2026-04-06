@@ -1,43 +1,53 @@
-# HVACR Buddy — PT Data System Upgrade
+# HVACR Buddy — Type III Low Pressure Systems Expansion
 
 ## Current State
-
-- `PTChartData.ts` exists with 11 refrigerants, `ptLookup()`, `getPsiRange()`, and linear interpolation
-- PT tables use sparse data (coarse 50-PSI steps at high pressures) — not accurate enough for field use
-- Out-of-range warning exists but message wording is `"{psi} PSI is outside the data range..."`
-- PTChart, SuperheatCalculator, SubcoolingCalculator all import from PTChartData and call `ptLookup` / `getPsiRange`
-- No "typical operating range" concept separate from table bounds
+- App supports EPA 608 Core, Type I (small appliances), and Type II (high-pressure systems)
+- Type III section exists in LearnPage with EPA 608 practice questions (25 Qs already in epa608Questions.ts)
+- MentorChat supports systemType clarification (residential/rooftop/commercial/other) but NO Type III / chiller / low-pressure detection
+- identificationLogic.ts has 15 standard HVAC parts — no Type III-specific parts (purge unit, rupture disc, float valve, evaporator vessel, water-cooled condenser, tube bundle)
+- toolsPartsDatabase.ts has 22 tools and 15 parts — no Type III-specific tools (micron gauge, low-pressure recovery machine) or parts
+- Buddy's assistantLogic.ts has no chiller / centrifugal / R-123 / R-11 / low-pressure detection
+- LearnPage Type III section is minimal (just key concepts + practice Qs + 1 video) — needs EPA rules, equipment list, safety content
 
 ## Requested Changes (Diff)
 
 ### Add
-- `getOperatingRange(refrigerantId)` — returns the typical HVAC field operating PSI range (not the full table bounds) per refrigerant, used for the "outside typical operating range" warning
-- Dense, accurate PT lookup tables (5–10 PSI steps) for all 11 refrigerants based on standard ASHRAE/REFPROP saturation data
-- Warning message: "Pressure is outside typical operating range for this refrigerant" shown when PSI is outside typical operating range
+- **Type III system type detection** in MentorChat: detect keywords "chiller", "centrifugal", "low-pressure refrigerant", "R-123", "R-11" and set systemType = "type3_chiller"
+- **Type III Buddy mode**: when systemType is "type3_chiller", Buddy uses advanced explanations, moves slower and more precise, emphasizes system sensitivity, vacuum conditions, air/moisture contamination, purge system operation, and leak sensitivity
+- **Type III safety warnings**: auto-inject safety reminders about operating under vacuum, risk of air/moisture contamination, and system sensitivity whenever Type III is detected
+- **6 new Type III parts** in identificationLogic.ts and toolsPartsDatabase.ts:
+  - Purge Unit (Refrigerant/Chiller)
+  - Rupture Disc (Safety/Chiller)
+  - Float Valve (Refrigerant/Chiller)
+  - Evaporator Vessel (Refrigerant/Chiller)
+  - Water-Cooled Condenser (Refrigerant/Chiller)
+  - Tube Bundle (Refrigerant/Chiller)
+- **4 Type III tools** (some already exist, add/update as needed):
+  - Vacuum Pump (already exists — tag as critical for Type III)
+  - Micron Gauge (new — add to tools database)
+  - Low-Pressure Recovery Machine (new)
+  - Leak Detector (already exists — update with Type III context)
+- **EPA Rules content** for Type III in LearnPage:
+  - 35% annual leak rate repair threshold (commercial > 50 lbs)
+  - Evacuation: pressurize to 0 psig before opening (not vacuum like high-pressure)
+  - Recovery requirements (use low-pressure rated equipment)
+- **Enhanced LearnPage Type III section**: add Equipment section (chiller, centrifugal chiller, absorption system), Safety section, EPA Rules section
+- **Type III troubleshooting guidance**: when chiller/Type III is active, Buddy emphasizes vacuum conditions, air and moisture contamination, purge system operation, leak sensitivity
 
 ### Modify
-- Replace sparse PT tables in `PTChartData.ts` with accurate, dense tabulated data for all 11 refrigerants
-- Update PTChart, SuperheatCalculator, SubcoolingCalculator to call `getOperatingRange` and show the new warning message when PSI is outside typical operating range
-- Keep existing out-of-table-bounds null return (extrapolation guard)
+- MentorChat system type detection: add "chiller", "centrifugal", "r-123", "r-11", "low pressure chiller" to detection keywords, route to type3_chiller mode
+- MentorChat system type quick answers: add "Chiller / Low Pressure" button
+- assistantLogic.ts: add Type III-aware troubleshooting responses for chiller symptoms
+- identificationLogic.ts: add 6 new Type III component entries (no images for new parts — follow strict no-guess rule)
+- toolsPartsDatabase.ts: add micron gauge and low-pressure recovery machine; tag vacuum pump as Type III critical
+- LearnPage Type III section: enrich with equipment, EPA rules, safety warnings
 
 ### Remove
-- Old sparse PT table data
-- Old warning message wording (replaced with new exact wording)
+- Nothing removed
 
 ## Implementation Plan
-
-1. Replace `PTChartData.ts` with accurate dense tables + `getOperatingRange()` function
-   - R-22: 0–300 PSI, typical operating 30–250 PSI, 5-PSI steps
-   - R-410A: 0–500 PSI, typical operating 50–450 PSI, 5-PSI steps
-   - R-134a: 0–280 PSI, typical operating 10–230 PSI, 5-PSI steps
-   - R-32: 0–500 PSI, typical operating 50–450 PSI, 10-PSI steps
-   - R-454B: 0–450 PSI, typical operating 50–400 PSI, 10-PSI steps
-   - R-1234yf: 0–280 PSI, typical operating 10–230 PSI, 5-PSI steps
-   - R-1234ze: 0–200 PSI, typical operating 5–170 PSI, 5-PSI steps
-   - R-404A: 0–400 PSI, typical operating 20–300 PSI, 5-PSI steps
-   - R-407C: 0–400 PSI, typical operating 20–300 PSI, 5-PSI steps
-   - R-448A: 0–400 PSI, typical operating 20–300 PSI, 5-PSI steps
-   - R-449A: 0–400 PSI, typical operating 20–300 PSI, 5-PSI steps
-2. Update PTChart.tsx — replace out-of-range warning with new wording, use `getOperatingRange`
-3. Update SuperheatCalculator.tsx — same warning update
-4. Update SubcoolingCalculator.tsx — same warning update
+1. **MentorChat.tsx**: Add Type III keyword detection ("chiller", "centrifugal", "r-123", "r-11"). When detected, set systemType = "type3_chiller". Add "Chiller / Low Pressure" as a quick answer option. When systemType is type3_chiller, auto-inject Type III safety reminders (vacuum, moisture, sensitivity) into Buddy responses.
+2. **identificationLogic.ts**: Add 6 new entries for purge unit, rupture disc, float valve, evaporator vessel, water-cooled condenser, tube bundle. No images (no verified files). Add keywords to detect these parts from user queries.
+3. **toolsPartsDatabase.ts**: Add micron gauge and low-pressure recovery machine as new tools. Add 6 Type III parts to parts array. Add Type III flag to vacuum pump and leak detector.
+4. **assistantLogic.ts**: Add Type III troubleshooting responses — focus on vacuum conditions, air/moisture contamination, purge system, leak sensitivity. Add chiller-specific symptom patterns.
+5. **LearnPage.tsx**: Enhance Type III section with Equipment subsection (chiller types, absorption awareness), EPA Rules subsection (35% threshold, evacuation requirements, recovery rules), Safety subsection (vacuum warnings, contamination risks).

@@ -332,6 +332,125 @@ export const COMPONENT_IDENTIFICATIONS: ComponentIdentification[] = [
       "Catches airborne particles before they reach the coil and blower. A clogged filter restricts airflow and is the single most common cause of reduced system performance and coil icing.",
     imageKey: "air_filter",
   },
+  // ─ Type III Low-Pressure Chiller Parts (no verified images — strict no-guess) ─
+  {
+    id: "purge_unit",
+    name: "Purge Unit",
+    category: "Refrigerant",
+    associatedSystem: "Chiller",
+    keywords: ["purge unit", "purge", "purger", "chiller purge"],
+    definition:
+      "A purge unit is an automatic device on low-pressure centrifugal chillers that continuously removes non-condensables (air, moisture) that accumulate because the system operates below atmospheric pressure.",
+    whatItLooksLike:
+      "A small metal cabinet or box mounted on the side of the chiller, typically 12–18 inches tall, with refrigerant connections going to the condenser and evaporator shells. It has indicator lights and a counter that logs purge cycles. A small recovery vessel may be attached.",
+    whereFound:
+      "Mounted on the chiller itself, usually near the condenser shell. It has a refrigerant line connecting to the top of the condenser where non-condensables accumulate.",
+    whatItDoes:
+      "Draws off non-condensable gases (air, nitrogen, moisture vapor) from the top of the condenser shell, compresses them, and separates them. Refrigerant is recovered; non-condensables are safely discharged. High purge rates indicate a refrigerant leak allowing air entry.",
+  },
+  {
+    id: "rupture_disc",
+    name: "Rupture Disc",
+    category: "Safety",
+    associatedSystem: "Chiller",
+    keywords: [
+      "rupture disc",
+      "rupture disk",
+      "pressure relief disc",
+      "burst disc",
+    ],
+    definition:
+      "A rupture disc is a one-time-use pressure safety device that protects a low-pressure chiller from dangerously high internal pressure — typically from fire or abnormal conditions that could cause refrigerant to reach unsafe pressures.",
+    whatItLooksLike:
+      "A thin metal disc, typically 2–4 inches in diameter, clamped between two flanges on the chiller shell or pressure vessel. The disc is designed to rupture at a specific pressure, releasing refrigerant safely rather than allowing an explosion.",
+    whereFound:
+      "On the pressure vessel shell of the chiller (evaporator or condenser), often near a pressure relief valve. Required by ASME code on refrigerant pressure vessels.",
+    whatItDoes:
+      "Acts as a last-resort pressure safety device. If system pressure exceeds the design limit (e.g., during a fire or major system failure), the disc ruptures and vents refrigerant, preventing catastrophic vessel failure.",
+  },
+  {
+    id: "float_valve_chiller",
+    name: "Float Valve (Chiller)",
+    category: "Refrigerant",
+    associatedSystem: "Chiller",
+    keywords: [
+      "float valve",
+      "high side float",
+      "low side float",
+      "chiller float",
+    ],
+    definition:
+      "A float valve in a centrifugal chiller is the metering device that controls refrigerant flow from the condenser to the evaporator shell, replacing the TXV used in smaller systems.",
+    whatItLooksLike:
+      "A ball float attached to a linkage arm connected to a needle valve, housed inside the chiller's condenser or evaporator shell. It is not externally visible without opening the chiller — it looks similar to a toilet tank float but built for refrigerant service.",
+    whereFound:
+      "Inside the chiller's condenser shell (high-side float) or evaporator shell (low-side float), submerged in the refrigerant liquid level.",
+    whatItDoes:
+      "Maintains the correct refrigerant liquid level in the shell. As liquid refrigerant accumulates, the float rises and opens the valve, allowing refrigerant to flow to the evaporator. This is a simple, reliable metering method suited to the large-capacity, low-pressure chiller design.",
+  },
+  {
+    id: "evaporator_vessel",
+    name: "Evaporator Vessel",
+    category: "Refrigerant",
+    associatedSystem: "Chiller",
+    keywords: [
+      "evaporator vessel",
+      "evaporator shell",
+      "chiller evaporator",
+      "cooler shell",
+      "barrel evaporator",
+    ],
+    definition:
+      "The evaporator vessel (also called the cooler shell) is the large heat exchanger in a centrifugal chiller where refrigerant evaporates and absorbs heat from the chilled water circuit.",
+    whatItLooksLike:
+      "A large horizontal cylindrical steel vessel, typically 3–6 feet in diameter and 6–15 feet long, with chilled water inlet/outlet nozzles on each end and refrigerant connections on top. It dominates the lower section of the chiller package.",
+    whereFound:
+      "On the bottom half of the chiller package. The chilled water circuit runs through tubes inside the vessel, while refrigerant evaporates around the outside of those tubes.",
+    whatItDoes:
+      "Chilled water flows through copper or steel tubes inside the vessel. Low-pressure refrigerant on the shell side evaporates at around 34–40°F, absorbing heat from the water and cooling it. The cooled water is then pumped to air handling units throughout the building.",
+  },
+  {
+    id: "water_cooled_condenser",
+    name: "Water-Cooled Condenser",
+    category: "Refrigerant",
+    associatedSystem: "Chiller",
+    keywords: [
+      "water cooled condenser",
+      "water-cooled condenser",
+      "condenser shell",
+      "chiller condenser",
+      "shell and tube condenser",
+    ],
+    definition:
+      "The water-cooled condenser in a centrifugal chiller is a shell-and-tube heat exchanger where hot refrigerant vapor condenses by transferring heat to condenser water, which carries the heat to a cooling tower.",
+    whatItLooksLike:
+      "A large horizontal cylindrical steel vessel, similar in appearance to the evaporator vessel but typically mounted above it. Has condenser water inlet/outlet nozzles and refrigerant vapor inlet from the compressor on one end. The two vessels (evaporator below, condenser above) are the most visible parts of the chiller package.",
+    whereFound:
+      "On the top half of the chiller package, directly above the evaporator vessel. The refrigerant circuit connects compressor discharge to the condenser, and the condenser to the evaporator.",
+    whatItDoes:
+      "High-pressure refrigerant vapor from the compressor enters the condenser shell and condenses on the water-cooled tubes, releasing heat. Condenser water (cooled by a cooling tower) flows through the tubes and carries the rejected heat to the outdoors. The condensed liquid refrigerant then flows to the evaporator through the float valve.",
+  },
+  {
+    id: "tube_bundle",
+    name: "Tube Bundle",
+    category: "Refrigerant",
+    associatedSystem: "Chiller",
+    keywords: [
+      "tube bundle",
+      "tubes",
+      "chiller tubes",
+      "heat exchanger tubes",
+      "copper tubes",
+    ],
+    definition:
+      "The tube bundle is the assembly of heat transfer tubes inside the evaporator or condenser vessel of a centrifugal chiller. It is the critical heat exchange surface that transfers heat between the refrigerant and the water circuits.",
+    whatItLooksLike:
+      "A cylindrical bundle of hundreds of copper or enhanced-surface steel tubes, typically 3/4 to 1 inch in diameter, arranged in a pattern inside the shell. The ends of the tubes are expanded into tube sheets at each end of the vessel. Individual tubes can be plugged if they develop leaks.",
+    whereFound:
+      "Inside both the evaporator and condenser shells of the chiller. The tube bundle fills most of the interior volume of each vessel.",
+    whatItDoes:
+      "In the evaporator: chilled water flows through the tubes; refrigerant evaporates on the outside, cooling the water. In the condenser: condenser water flows through the tubes; hot refrigerant vapor condenses on the outside, transferring heat to the water. Tube fouling (scale, biological deposits) significantly reduces chiller efficiency.",
+  },
 ];
 
 // ─── Verified image map ───────────────────────────────────────────────────────

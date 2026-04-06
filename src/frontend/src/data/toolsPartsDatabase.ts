@@ -461,6 +461,62 @@ export const TOOLS_DB: ToolData[] = [
     safety: "electrical",
     aliases: ["crimpers", "crimping tool", "wire crimper"],
   },
+  // ─── Type III Low-Pressure Tools ──────────────────────────────────────────
+  {
+    name: "Micron Gauge",
+    category: "Refrigerant",
+    usedFor: [
+      "vacuum measurement",
+      "evacuation verification",
+      "moisture detection",
+    ],
+    explanation:
+      "An electronic vacuum measurement instrument that reads in microns (millitorr) for precise evacuation verification — required for Type III low-pressure chiller service.",
+    whenToUse:
+      "Always use when verifying system evacuation depth before charging. Required for Type III low-pressure chiller service to monitor vacuum levels accurately.",
+    steps: [
+      "Connect the micron gauge to the vacuum pump manifold or directly to the refrigerant circuit via a dedicated port.",
+      "Close the vacuum pump valve and observe the micron reading.",
+      "A reading of 500 microns or below indicates acceptable vacuum for charging.",
+      "Watch for rising micron levels after isolating — a rapid rise indicates a leak or moisture still present.",
+      "For Type III systems: vacuum levels must be stable before the system is closed up.",
+    ],
+    safety: "refrigerant",
+    aliases: [
+      "micron gauge",
+      "micron meter",
+      "vacuum gauge",
+      "electronic vacuum gauge",
+    ],
+  },
+  {
+    name: "Low-Pressure Recovery Machine",
+    category: "Refrigerant",
+    usedFor: [
+      "refrigerant recovery",
+      "low-pressure refrigerant",
+      "chiller service",
+    ],
+    explanation:
+      "Recovery machine specifically rated for low-pressure refrigerants (R-11, R-113, R-123) used in centrifugal chillers — standard high-pressure machines are NOT suitable.",
+    whenToUse:
+      "Required when recovering refrigerant from Type III (low-pressure) centrifugal chiller systems. Must be EPA-certified and rated for the specific low-pressure refrigerant being recovered.",
+    steps: [
+      "Verify the recovery machine is rated for low-pressure refrigerant (R-123, R-11, R-113).",
+      "Connect recovery hoses to the chiller service valves — use correct low-pressure fittings.",
+      "Pressurize the chiller to 0 psig with dry nitrogen before beginning recovery.",
+      "Start recovery machine and monitor recovery cylinder weight — never fill above 80% capacity.",
+      "Continue recovery until system reaches 0 psig or specified evacuation level.",
+      "Log the amount of refrigerant recovered as required by EPA regulations.",
+    ],
+    safety: "refrigerant",
+    aliases: [
+      "low pressure recovery machine",
+      "low-pressure recovery",
+      "chiller recovery machine",
+      "r-123 recovery",
+    ],
+  },
 ];
 
 export const PARTS_DB: PartData[] = [
@@ -559,6 +615,159 @@ export const PARTS_DB: PartData[] = [
       "Clean before replacing — a coil with good airflow and refrigerant charge rarely needs replacement.",
     safety: "refrigerant",
     aliases: ["evaporator coil", "evap coil", "indoor coil", "a-coil"],
+  },
+  // ─── Type III Low-Pressure Chiller Parts ──────────────────────────────────
+  {
+    name: "Purge Unit",
+    category: "Refrigerant",
+    explanation:
+      "Automatic device on low-pressure chillers that removes non-condensable gases (air, moisture) from the system to maintain efficiency and detect leaks.",
+    commonSymptoms: [
+      "high head pressure",
+      "reduced cooling capacity",
+      "excessive purge cycles",
+      "air in system",
+    ],
+    steps: [
+      "Monitor the purge unit cycle counter — excessive cycles indicate an active refrigerant leak.",
+      "Check purge refrigerant losses — excessive purging triggers EPA reporting requirements.",
+      "Inspect refrigerant lines connecting purge unit to condenser and evaporator shells.",
+      "If purge rate is abnormally high, initiate leak detection on all service valves, joints, and seals.",
+    ],
+    replacementNote:
+      "Purge units require specialized service. Excessive operation triggers EPA reporting requirements for systems with more than 50 lbs of refrigerant.",
+    safety: "refrigerant",
+    aliases: ["purge unit", "purge", "purger", "chiller purge unit"],
+  },
+  {
+    name: "Rupture Disc",
+    category: "Refrigerant",
+    explanation:
+      "One-time pressure safety device on the chiller shell that protects against dangerously high pressure in emergency conditions.",
+    commonSymptoms: [
+      "visible disc damage",
+      "evidence of venting",
+      "disc deformation or corrosion",
+    ],
+    steps: [
+      "Visual inspection only — check disc for deformation, corrosion, or evidence of activation.",
+      "Never test by pressurizing past the rated pressure.",
+      "Check for signs of leakage around the disc flanges.",
+      "Document any abnormalities and schedule immediate replacement if disc shows damage.",
+    ],
+    replacementNote:
+      "Replace any disc that shows deformation, corrosion, or has activated. Must match original pressure rating and be installed in correct orientation.",
+    safety: "pressure",
+    aliases: [
+      "rupture disc",
+      "rupture disk",
+      "burst disc",
+      "pressure relief disc",
+    ],
+  },
+  {
+    name: "Float Valve (Chiller)",
+    category: "Refrigerant",
+    explanation:
+      "Internal metering device in centrifugal chillers that controls refrigerant flow based on liquid level — the chiller's equivalent of a TXV.",
+    commonSymptoms: [
+      "flooded evaporator",
+      "poor cooling performance",
+      "unstable suction pressure",
+      "high superheat at compressor",
+    ],
+    steps: [
+      "Monitor refrigerant level in evaporator and operating pressures to assess float valve function.",
+      "Check for unstable suction pressure that may indicate float valve malfunction.",
+      "Note: internal inspection requires opening the chiller vessel.",
+      "Schedule internal inspection with a qualified chiller technician if float valve is suspected.",
+    ],
+    replacementNote:
+      "Float valve service requires opening the chiller vessel — a major maintenance item. Follow manufacturer procedures and ensure proper refrigerant recovery first.",
+    safety: "refrigerant",
+    aliases: [
+      "float valve",
+      "chiller float",
+      "high side float",
+      "low side float",
+      "float valve chiller",
+    ],
+  },
+  {
+    name: "Evaporator Vessel",
+    category: "Refrigerant",
+    explanation:
+      "The main shell-and-tube heat exchanger in a centrifugal chiller where refrigerant evaporates and cools the chilled water circuit.",
+    commonSymptoms: [
+      "poor cooling capacity",
+      "high leaving water temperature",
+      "fouled tubes",
+      "refrigerant in water circuit",
+    ],
+    steps: [
+      "Check chilled water temperatures in and out — note entering and leaving water temps.",
+      "Use eddy current testing for tube condition assessment.",
+      "Monitor approach temperatures — greater than 2°F difference may indicate tube fouling.",
+      "Check for refrigerant in the water circuit — indicates a tube leak requiring immediate attention.",
+    ],
+    replacementNote:
+      "Tube plugging is used for isolated tube failures. Major repairs require draining the water side, full refrigerant recovery, and confined space procedures.",
+    safety: "refrigerant",
+    aliases: [
+      "evaporator vessel",
+      "evaporator shell",
+      "chiller evaporator",
+      "cooler shell",
+    ],
+  },
+  {
+    name: "Water-Cooled Condenser",
+    category: "Refrigerant",
+    explanation:
+      "Shell-and-tube heat exchanger in a centrifugal chiller where hot refrigerant vapor condenses by transferring heat to condenser water going to a cooling tower.",
+    commonSymptoms: [
+      "high condensing pressure",
+      "poor chiller efficiency",
+      "high leaving condenser water temperature",
+      "fouled tubes",
+    ],
+    steps: [
+      "Check condenser water temperatures and flow rate through the vessel.",
+      "High condensing pressure with high outlet water temp indicates fouling or insufficient flow.",
+      "Approach temperature greater than 2°F indicates tube fouling — schedule cleaning.",
+      "Verify condenser water flow rate meets manufacturer specification.",
+    ],
+    replacementNote:
+      "Annual condenser tube cleaning is standard practice. Chemical descaling or mechanical brushing removes scale and biological deposits that reduce heat transfer efficiency.",
+    safety: "refrigerant",
+    aliases: [
+      "water cooled condenser",
+      "water-cooled condenser",
+      "condenser shell",
+      "chiller condenser",
+    ],
+  },
+  {
+    name: "Tube Bundle",
+    category: "Refrigerant",
+    explanation:
+      "The assembly of heat transfer tubes inside the evaporator or condenser vessels of the chiller — the critical heat exchange surface.",
+    commonSymptoms: [
+      "reduced heat transfer efficiency",
+      "water and refrigerant contamination",
+      "high approach temperatures",
+      "individual tube leaks",
+    ],
+    steps: [
+      "Use eddy current testing to identify wall thinning and defects without removing tubes.",
+      "Monitor for refrigerant in the water circuit — indicates a tube leak.",
+      "Check for water in the oil separator — indicates a condenser tube failure.",
+      "Compare current approach temperatures to historical baseline for the chiller.",
+    ],
+    replacementNote:
+      "Individual leaking tubes can be plugged to restore service temporarily. Full re-tube restores full capacity and is required when multiple tubes fail. Schedule with chiller manufacturer.",
+    safety: "refrigerant",
+    aliases: ["tube bundle", "chiller tubes", "heat exchanger tubes", "tubes"],
   },
 ];
 

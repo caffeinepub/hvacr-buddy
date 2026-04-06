@@ -426,3 +426,59 @@ export function parseMeasurementsText(text: string): {
     subcooling: extract(["subcooling", "sc", "sub"]),
   };
 }
+
+// ─── Type III Chiller Symptom Detection ──────────────────────────────────────
+
+export const TYPE3_CHILLER_SYMPTOMS = [
+  "chiller not cooling",
+  "chiller down",
+  "chiller offline",
+  "chiller problem",
+  "centrifugal chiller",
+  "low pressure chiller",
+  "r-123",
+  "r-11 system",
+  "purge unit running",
+  "purge running constantly",
+  "high purge rate",
+  "chiller efficiency",
+  "chiller water temp",
+  "leaving water temperature",
+  "condenser water",
+  "cooling tower",
+];
+
+export function isChillerSymptom(input: string): boolean {
+  const lower = input.toLowerCase();
+  return TYPE3_CHILLER_SYMPTOMS.some((kw) => lower.includes(kw));
+}
+
+export function getType3ChillerResponse(input: string): string | null {
+  const lower = input.toLowerCase();
+
+  // Purge unit issues
+  if (
+    lower.includes("purge") &&
+    (lower.includes("running") ||
+      lower.includes("constantly") ||
+      lower.includes("too much") ||
+      lower.includes("high purge") ||
+      lower.includes("excessive"))
+  ) {
+    return "Excessive purge unit operation typically means air is entering the system through a refrigerant leak. Since this system runs below atmospheric pressure, any leak point pulls in air instead of leaking refrigerant out. Next step: Check for refrigerant leaks at all service valves, joints, and seals using an electronic leak detector rated for R-123 or R-11. Is this a known leak or has the purge rate increased recently?";
+  }
+
+  // General chiller not cooling
+  if (
+    (lower.includes("chiller") || lower.includes("centrifugal")) &&
+    (lower.includes("not cooling") ||
+      lower.includes("not working") ||
+      lower.includes("down") ||
+      lower.includes("offline") ||
+      lower.includes("problem"))
+  ) {
+    return "Low-pressure chiller systems are sensitive to several conditions. Before diagnosing the cooling issue, I need to understand the current system readings. Can you check the current evaporator leaving water temperature and the condenser entering water temperature? Also check if the purge unit is running normally or excessively — this is an important indicator for air/moisture contamination.";
+  }
+
+  return null;
+}
